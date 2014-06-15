@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>fsTimer documentation - Section 3.1: Suggestions for race setup</title>
+<meta name="description" content="fsTimer - free, open source software for race timing">
+<link rel="stylesheet" type="text/css" href="style_doc.css">
+</head>
+<body>
+<div id="top-box">
+<h3><a href="http://fstimer.org/">fsTimer</a> documentation</h3>
+</div>
+
+<div id="lower-box">
+
+<b>Section 1</b> <a href="http://fstimer.org/download.htm">Installing fsTimer</a><br>
+<b>Section 2</b> <a href="documentation_sec2.htm">Overview</a><br>
+<!--
+<h5><b>2.1</b> <a href="documentation_sec2_1.htm">Opening and main windows</a><br></h5>
+<h5><b>2.2</b> <a href="documentation_sec2_2.htm">Importing preregistration</a><br></h5>
+<h5><b>2.3</b> <a href="documentation_sec2_3.htm">Registration</a><br></h5>
+<h5><b>2.4</b> <a href="documentation_sec2_4.htm">Compiling registrations</a><br></h5>
+<h5><b>2.5</b> <b>Race timing</b><br></h5>
+-->
+<b>Section 3</b> <a href="documentation_sec3.htm">Checklist for timing with fsTimer</a><br>
+<h5><b>3.1</b> <b>Suggestions for race setup</b><br></h5>
+<b>Section 4</b> <a href="documentation_sec4.htm">Detailed descriptions of fsTimer components</a><br>
+<!--
+<h5><b>4.1</b> <a href="download.htm">Setting up for a new race</a><br></h5>
+<h5><b>4.2</b> <a href="download.htm">Importing preregistration - details</a><br></h5>
+<h5><b>4.3</b> <a href="download.htm">Registration - details</a><br></h5>
+<h5><b>4.4</b> <a href="download.htm">Compiling registrations - details</a><br></h5>
+<h5><b>4.5</b> <a href="download.htm">Race timing - details</a><br></h5>
+-->
+<b>Section 5</b> <a href="documentation_sec5.htm">Additional details for developers</a><br>
+</div>
+
+<div id="lower-box">
+<h3>Section 3.1 - Suggestions for managing a race</h3><br>
+
+The race timing software (fsTimer) is only one part of running (as in managing) a successful race. Having things organized in the right way is also extremely important. Here we describe everything that we do to organize and time a race using fsTimer, and you can take this strategy and adapt it as needed to your race.<br><br>
+
+The general process of timing the race will be:
+<ul>
+<li>Some racers pre-register, and that information is imported (via the Preregistration window) or entered (via the Registration window) into fsTimer.
+<li>Day of the race, racers that didn't pre-register can register on the spot, and their information is entered into fsTimer. All racers (both those that pre-registered and those that didn't) pick up their race bibs. Bib ID numbers are not pre-assigned, rather when a person shows up to pick up their bib, one is taken from a stack and whatever number it has is assigned to them in fsTimer.
+<li>Registration is closed and the registration database (consisting of name/age/gender/etc and the bib numbers that were assigned that day) is compiled. 
+<li>The race is timed. The basic principle behind fsTimer is to keep two sets of information: Finish times, and bib IDs. These are generally collected separately - One person is on the timing computer hitting spacebar in fsTimer to mark times as people cross the finish line. Separately, another person (probably people) are recording the bib numbers in the order that they crossed. As long as the list of bib IDs is in the correct order and nobody was missed, it can be correlated correctly with the marked times. Doing this in a robust way for large races can be quite challenging - We give tips below on how to organize the finish line crew.
+<li>Results are printed. Based on the bib IDs that were recorded, fsTimer will automatically look up name, age, and gender and will generate nicely formatted results sheets that can be printed.
+</ul>
+
+We'll go over the whole process in detail.<br><br>
+
+<h4>Bibs, barcodes, project setup</h4><br>
+
+The first thing you will have to do is order race bibs. We find that the best race bibs are ones with tear-away bottoms and a hole in the tear-away part, like the one:<br><br>
+
+<img width="512" height="384" src="documentation_figs/fstimer_fig22.png"><br><br> <!--640x480-->
+
+We use the tear-away bottoms to form our ordered record of bib IDs that crossed the finish line, by stacking them on a dowel stand (you'll have to make or buy those as well) like this: <br><br>
+
+<img width="384" height="512" src="documentation_figs/fstimer_fig23.png"><br><br> <!--640x480-->
+
+Using a barcode scanner to enter the bib IDs into fsTimer is a great way to speed up the process and minimize errors. We have had great success even with cheap ($20) USB barcode scanners (like <a target="_blank" href="http://www.amazon.com/Handheld-Automatic-Barcode-Scanner-Reader/dp/B003OUQ174/">this one</a>). Sometimes the bibs will come with barcode stickers already on them, otherwise it is easy to print them and attach them yourself (see our barcode section TBD). Make sure that the barcode is on the tear-away bottom part of the bib, as that is the part that is collected from the racers. Of course, using barcodes and a barcode scanner is entirely optional; you can always enter the bib IDs just using the keyboard or numpad.<br><br>
+
+To create the new project in fsTimer, you will have to work with the race director to determine what age/gender divisions to use for divisional results, and what the registration fields should be. fsTimer requires name, age, and gender as registration fields, and you can add as many or as few as you'd like to those, although you won't want to be typing in large amounts of information during day-of registration.<br><br>
+
+<h4>Pre-registration and registration</h4><br>
+
+Racers appreciate not having to wait in a long registration line the morning of the race, and allowing racers to pre-register helps alot. We allow racers to pre-register on our website, and then enter the information into a spreadsheet which is then imported into fsTimer before the day of the race. For those without a website, pre-registration can also be done using paper forms, and again the information is entered into fsTimer before the day of the race. Information could also be entered directly into fsTimer using the Registration window. Notice that these racers are not being assigned bib numbers when they pre-register; we are simply collecting their information so that it is in the database and does not need to be typed in the day of the race.<br><br>
+
+<b>Pro tip:</b> If entering data from pre-registration by hand either into a spreadsheet or directly into fsTimer, double check the age and gender. Having males incorrectly listed as females can really make a mess of divisional results.<br><br>
+
+After pre-registration is closed, you will import or enter the information into fsTimer and generate a pre-registration database which is saved into the project subdirectory (the files for a project named project_name will be saved in fstimer/project_name).<br><br>
+
+fsTimer was designed to allow multiple computers for day-of registration. If there is only one computer for day-of registrations, there will likely be a long queue which means racers will have less fun - nobody likes waiting in line! We have found that the right number of computers (and thus the right number of people helping out at the registration table) is about one per 50 racers. Thus, if you are expecting 300 racers at your race, you probably want to have six people day of the race with computers running fsTimer.<br><br>
+
+We have had success with sending registration volunteers directly to the fsTimer webpage (<a href="http://fstimer.org/download.htm">http://fstimer.org/download.htm</a>) to download the software and install it on their own computers, which they then bring the day of the race. fsTimer is truly cross-platform and will work on most computers, although not on iPads (that is a frequently asked question).<br><br>
+
+Morning of race, the registration computers are prepared by:
+<ul>
+<li>Copy the project subdirectory, containing the pre-registration database, into the fsTimer directory of the registration computer. Notice that you will need to bring a USB flash drive day of the race in order to do this.
+<li>Open fsTimer, and select the project that you created. The main window loads.
+<li>Click on Registration. Choose a registration number that is different from that used by any of the other registration computers, and select the pre-registration database that you already created.
+<li>The registration window will now be open, with all of the information for the racers that pre-registered loaded.
+</ul>
+
+Because the pre-registration databaes is loaded on all of the registration computers, a runner who pre-registered can walk up to any computer and their information will be there. We put a stack of bibs next to each registration computer, as the registration crew will be responsible for assigning bib numbers in fsTimer and handing out the bibs.<br><br>
+
+When a person walks up to the registration counter, the person running the registration computer will need to follow one of two sets of steps. These are the steps that you will need to train the volunteers at the registration table to do:<br><br>
+
+<u>A pre-registered runner</u>:<br>
+This runner's information is already in the database, but we need to give them a bib and assign the corresponding bib number to their entry in fsTimer.
+<ul>
+<li>Find the person in the database by filtering by their last name.
+<li>Select their entry, and press "Edit."
+<li>Pick up a bib, and type into the "ID" field the number that is on the bib. Press OK.
+<li>Verify that the entry now has the correct bib number, and hand the racer the bib.
+<li>Press "Save."
+</ul>
+
+<u>A runner that has not pre-registered</u>:<br>
+We need to type in the information for this runner, assign them a bib number, and give them the corresponding bib.
+<ul>
+<li>Click "New" to add a new entry.
+<li>Enter their information from the registration form that they have filled out. For the "ID" field, use a bib that you have. Press OK.
+<li>Verify that the entry now has the correct bib number, and hand the racer the bib.
+<li>If the runner has come with family members that are also not registered and share the same last name (and other info), then select the runner's entry that you just created, and click "Add family," to add a family member. Type in the missing information (first name, age, gender, bib ID) and give the family member the bib, as before.
+<li>Press "Save."
+</ul>
+
+<b>Pro tip:</b> For individuals that haven't pre-registered, we have paper forms for them to register day-of, and we put these on a separate table away from the registration tables and make people fill the form out before coming to the registration table. You don't want to have people holding up the line while they stand in front of the computer filling out their registration form.<br><br>
+
+<b>Pro tip:</b> Name, age, gender, and bib ID are the very important fields. Errors in registration will mean errors in results, so double check these!<br><br>
+
+<b>Pro tip:</b> Name, age, gender, and bib ID are the only truly important fields. When people have not pre-registered, we usually skip typing in the other fields (things like address that are good to know but not critical for running the race). This helps to keep the queue short - you don't want people waiting in line while you type in information that could just as well be typed in after the race is finished!<br><br>
+
+<b>Pro tip:</b> Keeping the queue short the morning of the race is important for keeping things running smoothly, and making sure racers have fun. One thing that we have found makes a <i>huge</i> difference is to actually allow racers to check-in and pick up their bibs the night before the race. We specify a 2-hour period where we will be at the race location, and people can show up and do exactly the same things that they do day-of (pick up their bib if they pre-registered, and register and pick up their bib if not). We found that about half of racers exercised this option, thus cutting the morning-of crowd in half.<br><br>
+
+<h4>Compiling, timing, and results</h4><br>
+
+Close registration 15 minutes before the race is to begin. Note that in order to be reasonable doing this, it is important to not have a long queue of people still waiting to register - See the above tips on how to keep the line short. If people show up after registration has closed and want to run, it actually isn't a big issue. You can give them a bib and they will still show up in the overall results, just not in the divisional results (because fsTimer won't know their name/age/gender).<br><br>
+
+Use a USB flash drive to collect the registration databases from each of the computers used in registration. The database file will be in the project subdirectory, and will have in the filename the registration number that you assigned to that computer. (You can see on the bottom of the registration window what the filename is every time you hit "Save"). Put all of the registration databases onto the computer that you will use for timing at the finish line, and compile them.
+
+When compiling, fsTimer will check that no IDs are overloaded (meaning, one bib ID was assigned to multiple people). This can and does happen due to entry error - have the registration volunteers triple check bib ID when they enter it in and hand out the bib! If fsTimer finds this type of error, it will tell you, but you generally won't have time to try and find out who actually has that bib number, and so fsTimer will autocorrect the error for you in the only reasonable way (see <a href="documentation_sec4_4.htm">Section 4.4</a> for details on the autocorrect).<br><br>
+
+The end result of compilation is the timing dictionary, which is what basically a big table that matches bib IDs to name, age, and gender. Take the computer out to the finish line, enter the Timing module, load the timing dictionary you just created, choose a pass ID (usually 0, the number zero) and enter the timing window.<br><br>
+
+<b>Note:</b> The tips about operating the finish line below are for races with only one lap, where the racers have a bib bottom that can be torn off. Races with multiple laps will not allow for the bib bottom to be torn off at each lap, and so these tips won't apply. Section 4.5 gives a description of how lap timing works.<br><br>
+
+We will now discuss how to organize the finish line crew. The key to successful timing with fsTimer is to make sure that all of the times are marked, and all of the bib IDs are recorded in the order that they crossed. For races with 50 or fewer runners, this is not too difficult - it is easy to have one person marking times on the computer, and one or two others manually (as in, writing down on a pad of paper) listing the bib IDs in the order that they cross. With more than 50 runners, a more complex strategy will be important to be able to handle the load. We have done 5k races with 500 runners, and from around 25 minutes to around 35 minutes it is a solid stream of runners, and one could not possibly write all of the bib numbers down manually. We have found the following finish line setup to work with 500 runners on a 5k - you could make adjustments and scale it as you think necessary for your race.<br><br>
+
+<img width="292" height="329" src="documentation_figs/fstimer_finishline_drawing.png"><br><br> <!--973x1095-->
+
+From the finish line, we form a "funnel" out of cones and caution tape that forces down into a single-file line. The chute needs to be long enough for the fast runners to slow down enough by the end of the chute for their bib bottom to be torn off. It also needs to be long enough that if things start to get a little backed up due to runners coming in faster than their bib tags can be torn off, the queue doesn't spill back over the finish line. We find that about 40 feet is the right chute length. It will seem long, but if you have fast runners or a large number of runners, you'll be glad you did it. The chute is indicated with dashed lines in the illustration above. At the finish line, there is a table on which the timing computer is put.<br><br>
+
+We now describe the roles of each of the finish line crew. Keep in mind the general philosophy of timing with fsTimer: keep track of crossing times, separately keep track of bib IDs that cross, and then correlate the two as frequently as possible. We'll first describe the procedure for "normal" operations, and then will get into the complications that will arise and how the finish line crew need to be ready for them.<br><br>
+
+<b>Crew 1:</b> Crew 1 is responsible for marking times. They will be on the phone with the person starting the race, and will press the "Start!" button at the same time as the race begins. Whenever a racer crosses the finish line, they will press spacebar to mark the time.<br><br>
+
+<b>Crew 5:</b> Crew 5 is responsible for tearing off the bib bottoms and handing them to Crew 4. Their focus is to be sure that every person that for every person that crossed the finish line, a bib bottom is handed to Crew 4 so that the bib ID record stays synchronized with the marked times.<br><br>
+
+<b>Crew 4:</b> Crew 4 holds the dowel stand, takes the bib bottoms from Crew 5 and places them, face down, on the dowel stand, just like in the picture above. The stack of bibs on the dowel stand forms a record of who crossed.<br><br>
+
+<b>Crew 7:</b> For larges races, things will get busy in the middle and there will be clumps of people that come faster than Crew 5 can rip off the bib bottoms, and a line will start to form inside the chute. Crew 7 has two important jobs: The first job is to make sure that nobody cuts out of the chute (this person already had their time marked, and we must collect a bib bottom from them or things will get out of sync). The second job is to actually go through the line of people in the chute and help them rip off their bib bottoms, and have the runners holding their own bib bottoms. That way when they reach the end of the chute (the front of the line), they just have to hand their bib bottom to Crew 5 and the line can move faster.<br><br>
+
+<b>Pro tip:</b> It is extremely important that all bib bottoms go through Crew 5, so that they stay in the right order. Crew 7 should help runners tear their bottoms, but should not collect them, because Crew 4 would not be able to merge stacks of bib bottoms from both Crew 5 and Crew 4 in the correct order.<br><br>
+
+<b>Crews 2 and 3:</b> It is useful to enter the bib IDs into fsTimer as close to "real-time" as possible. Thus, while the race is going, Crew 2 will be responsible for entering the bib IDs into fsTimer, on the timing computer. They will do this using either a barcode scanner if the bib bottoms have barcodes (highly recommended), or using a usb keyboard or numpad that is plugged into the timing computer. Crew 3 is responsible for bringing the bib bottoms from Crew 4 (who is forming the stack) to Crew 2. With a chute length of 40 feet, this means that Crew 2 will be doing a lot of running back and forth.<br><br>
+
+We use a collection of 4 dowel stands for transferring bib bottoms from the end of the chute, where they are torn off, to Crew 2 where they are entered into fsTimer. We call them the "collection," "transfer," "scanning," and "entered" dowels.
+
+<ul>
+<li>Crew 4 is holding the "collection" dowel, and is taking all of the bib bottoms from Crew 5 and placing them (face down) onto the "collection" dowel.
+<li>Crew 2 at all times has two dowel stands: a "scanning" dowel stand, and an "entered" dowel stand. The "entered" dowel stand will form the final, complete record of bib IDs and eventually all bib IDs will be put (in correct order) on it. The "scanning" dowel stand is that one from which Crew 2 is actively entering bib IDs. If Crew 4 puts the bib bottoms on face down, then it is quite easy for Crew 2 to quickly go through the whole stack of bibs from the bottom up by laying the dowel on its side, and moving the tags from one side to the other as he/she scans:<br><br>
+
+<img width="512" height="384" src="documentation_figs/fstimer_fig24.png"><br><br> <!--640x480-->
+
+When all of the bib bottoms from the "scanning" dowel have been entered, he/she takes the bibs bottoms off of the "scanning" dowel and puts them (maintaining order, of course) onto the "entered" dowel stand. At this point the "scanning" dowel is empty.
+<li>Crew 3 is holding an empty dowel stand (the "transfer" dowel stand) and is hanging out near Crew 4. When he/she notices that Crew 2's "scanning" dowel is nearly finished, he/she will swap dowels with Crew 4. Thus, Crew 4's "collection" dowel is now empty, and all of the bib bottoms that have been collected since the last swap are on the "transfer" dowel in Crew 3's hand.
+<li>Crew 3 takes the "transfer" dowel to the timing table and, when the "scanning" dowel is empty, will swap dowels with Crew 4. Then, Crew 3 has an empty "transfer" dowel stand and returns to stand near Crew 4, and Crew 3 has a full "scanning" dowel from which to enter bib IDs into fsTimer.
+</ul>
+
+This process is a little complex, and should absolutely be practiced before the race!<br><br>
+
+<b>Pro tip:</b>The reason for trying to enter the bib IDs as close to real-time as possible is that if the bib IDs and the marked times do get out of sync (for instance, someone cut out of the queue and wasn't noticed), then anytime there is a pause in the oncoming runners long enough for Crews 2 and 3 to clear through the whole stack of collected bib tags, Crews 1 and 2 will be able to see on the timing computer if everything has matched up correctly. If there are extra marked times (for instance, because someone cut out of the queue), then this can be repaired by filling the blank times with "pass" IDs. Thus future times will not be affected by the error. Although there will be errors in times in these situations, the errors will never be larger than the amount of time it takes to clear through the collected bibs (and will generally be much smaller).<br><br>
+
+<b>Pro tip:</b>One might be tempted to try to actually use the barcode scanner at the finish line to directly scan people's bibs as they exit the chute. Then times and bib IDs are correlated almost immediately (as fast as they make it through the chute), and we can frequently be sure that the bib IDs and marked times did not get out of sync. While we have tried this with great success before, we have found that this is in general a very bad idea because if something happens (for example, if the barcodes get faded from rubbing against people's jackets and the scanner has a hard time reading them, or if a small child trips on the USB cable and unplugs the scanner - both of these things happened) then noone can be checked in, a queue will quickly spill back over the finish line, and times will be lost. Even in small races, your timing strategy should never rely on being able to enter IDs into fsTimer as fast as runners arrive. Having Crew 4 means that even if Crew 2 has difficulties entering the times into fsTimer, we still have a record of who crossed and in what order. For large races (300-500), at the peak runners will be arriving faster than Crew 2 can enter their IDs into fsTimer, even with a barcode scanner.<br><br>
+
+<b>Pro tip:</b>Another tempting strategy would be to use a USB extension cable to move Crew 2 next to Crew 4, so that Crew 3 doesn't have to run back and forth the whole race. We have found that this is also a bad idea as long cables can easily come loose or disconnected (e.g., by being tripped on by small children), and the IDs might not be getting scanned in.<br><br>
+
+<b>Crew 3:</b>Crew 3 can also have a side-duty of ensuring that runners are not cutting out of the chute on that side.<br><br>
+
+<b>Crew 8:</b>Several times througout the race, runners will cross the finish line (and thus have their time marked) but will for whatever reason not want to run through the chute (maybe they are crossing for a second time, or maybe they aren't registered for the race, or...). Everyone that crosses the finish line must exit the chute to be recorded by Crews 4 and 5, otherwise the list of bib IDs and the list of marked times will get out of sync. Crew 8's job is to ensure that nobody crosses the finish line, and then attempts to back out and go around the chute. Of course, if someone doesn't cross the finish line and wants to run outside the chute, that is OK; it's only a problem if Crew 1 marked the time for them, which will generally happen when they crossed the finish line.<br><br>
+
+That is the workflow for "normal" operations: Crew 1 marks times, Crew 5 tears bib bottoms, Crew 4 collects bib bottoms, Crew 3 takes bib bottoms from Crew 4 to Crew 2, Crew 2 enters the bib IDs into fsTimer, and Crew 8 keeps people from crossing the finish line and then cutting back around the chute. Unfortunately there are a number of complications that can arise, and Crew 5 and Crew 6 will be responsible for handling these complications.<br><br>
+
+<b>Crew 5:</b> Crew 5's role is to rip off bib bottoms, and ensure that for every person that crossed the finish line, a bib bottom is handed to Crew 4 so that Crew 4's record will be synchronized to the marked times. Unfortunately, probably about 10 times per 100 racers there will be situations where Crew 5 will not be able to tear off a bib bottom, or will not want to. Some of these situations (the common ones that we have seen repeatedly) are:
+
+<ul>
+<li> The runner already crossed the finish line, had their bib bottom torn off, and went back to finish the race with someone else. They have now crossed a second time, and don't have a bib bottom.
+<li> Someone who is not registered for the race thought it looked like fun, and crossed the finish line without a bib at all.
+<li> The runner left their bib on their sweatshirt that they threw aside at the beginning of the race.
+<li> The runner's bib bottom is mangled. A specific thing to look out for is if there is a tear in the hole on the bib bottom, meaning it will fall off of the dowel. Do not collect mangled bib bottoms or bib bottoms with tears in the hole!
+<li> The runner pinned their bib bottom to their shirt, so that ripping it off will require holding up the line while trying to unpin it. If there aren't many racers coming this might not be a problem, but in the peak part of a race with 500 runners, there is no time to unpin a bib bottom.
+<li> The runner's bib is twisted up in their sweatshirt somewhere and will require time to find and tear. Again, if there is a line forming in the chute, there is no time for this.
+</ul>
+
+For all of these situations (and any other new situation that might arise where a bib bottom is either unavailable, not quickly available, or in bad shape and might fall off of the dowel), Crew 5 will use what we call a "blank." A blank is a piece of heavy stock paper (or something better if you think there might be rain) that is approximately the same size as the bib bottom, and has the "pass" ID barcode on it.<br><br>
+
+<img width="512" height="384" src="documentation_figs/fstimer_fig25.png"><br><br> <!--640x480-->
+
+The most important thing for Crew 5 to keep in mind is (again) that for every person that crosses the finish line, something needs to be handed to Crew 4 - either the runner's bib bottom, or, if it isn't available, a blank. The blanks thus keep the bib IDs synchronized with the marked times, regardless of complicated situations that may arise. Crew 2 will then scan the blanks (thus entering the "pass" ID) just the same as if they were a proper bib bottom.<br><br>
+
+<b>Crew 6:</b> Crew 6 is then what we refer to as the "error-corrector." Anytime Crew 5 uses a blank, the runner for whom the blank was used will be given to Crew 6 who will then make a record that will be used to retroactively fill in the correct bib ID in the place of the "pass" ID. Crew 6 will have a clipboard and a sheet of paper in which to write the true bib IDs of the runers for which blanks were used. He/she will also write the bib number of the runner that followed the "blank"-ed runner, so that the appropriate blank in the results can be found and filled. You can download our sheet <a href="track_errors.pdf">here</a>:<br><br>
+
+<img width="529" height="179" src="documentation_figs/fstimer_fig26.png"><br><br> <!--1057x359-->
+
+We strongly recommend gathering the finish line crew together the week before the race, going over each of their roles, describing the types of complications that can arise (like those listed above), and actually simulating the whole finish line process (together with some complications). If everyone knows what to do, then things will go smoothly and you will have accurate times.<br><br>
+
+When the race is finished (the last bib ID has been entered into fsTimer), you must use the error tracking sheet from Crew 6 to retroactively correct any blank times with the correct bib ID. This should not take more than a few minutes, and then the times are ready to be printed and posted.<br><br>
+
+<b>Pro tip:</b> Any time you press "Print" in the timing window, the "as-of-now" formatted results are saved to html files that can be printed. When possible, it's great to post "as-of-now" results at around the 70% mark of the race so that the fastest runners don't have to wait quite so long to see what their results are. Be sure to emphasize that these are preliminary results, especially as the people from Crew 6's list will not be entered until the end of the race. Of course, printing results mid-race requires using a USB flash drive to copy the html files off of the race timing computer, to be taken to another computer for printing. This works great for smaller races, but for larger races there might not be any pauses in the flow of runners long enough to copy the files to the USB drive (notice that Crews 1 and 2 will have to pause their work for the duration of time required to get the files onto the USB drive).<br><br>
+
+
+Continue on to <a href="documentation_sec4.htm">Section 4 Detailed descriptions of fsTimer components</a>.
+</div>
+
+
+</body></html>

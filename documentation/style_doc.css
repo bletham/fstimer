@@ -1,0 +1,12 @@
+body{ font: 16px sans-serif; font-weight: normal; background: rgb(255,255,255); }
+h1{margin: 0px; font:72px sans-serif;}
+h2{margin: 0px; font:36px sans-serif;}
+h3{margin: 0px; font:24px sans-serif;}
+h4{margin: 0px; font:20px sans-serif;}
+h5{padding-left:62px; font: 16px sans-serif; margin:0px}
+#top-box{    margin-top: 10px; margin-left: 10px; width:800px;                                     background: rgb(255,255,255);  padding-top: 30px; padding-left:30px; padding-right:30px; padding-bottom: 20px; -moz-border-radius: 10px; -webkit-border-radius: 10px; }
+#second-box{ margin-top: 10px; margin-left: 10px; width:800px;                                     background: rgb(255,255,255);  padding-top: 20px; padding-left:30px; padding-right:30px; padding-bottom: 20px; -moz-border-radius: 10px; -webkit-border-radius: 10px; }
+#lower-box{  margin-top: 10px; margin-left: 10px; width:800px; border: 2px solid rgb(245,245,245); background: rgb(255,255,255);        padding-top: 20px; padding-left:30px; padding-right:30px; padding-bottom: 20px; -moz-border-radius: 10px; -webkit-border-radius: 10px; }
+#footer{ margin-top: 10px; margin-left: 10px; font: 14px sans-serif;}
+#ul a{padding:15px; color:blue}
+#ul b{padding:15px; color: black; font-weight: normal;}

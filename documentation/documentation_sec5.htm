@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>fsTimer documentation - Section 5: Additional details for developers</title>
+<meta name="description" content="fsTimer - free, open source software for race timing">
+<link rel="stylesheet" type="text/css" href="style_doc.css">
+</head>
+<body>
+<div id="top-box">
+<h3><a href="http://fstimer.org/">fsTimer</a> documentation</h3>
+</div>
+
+<div id="lower-box">
+
+<b>Section 1</b> <a href="http://fstimer.org/download.htm">Installing fsTimer</a><br>
+<b>Section 2</b> <a href="documentation_sec2.htm">Overview</a><br>
+<b>Section 3</b> <a href="documentation_sec3.htm">Checklist for timing with fsTimer</a><br>
+<b>Section 4</b> <a href="documentation_sec4.htm">Detailed descriptions of fsTimer components</a><br>
+<b>Section 5</b> <b>Additional details for developers</b><br>
+</div>
+
+<div id="lower-box">
+<h3>Section 5 - Additional details for developers</h3><br>
+
+In this section we will put some comments about the source code that will make it easier for developers to modify and extend fsTimer; this section is still a work in progress.<br><br>
+
+<b>Features for fsTimer 0.5</b><br><br>
+
+There are several items that are on the "to-do" list for fsTimer 0.5, which currently will be released sometime in Fall 2014. Let me know if there are any features that would be useful to you.
+<ul>
+<li>I am considering introducing ties in places for racers that have the same time (to the second). Right now they are sorted in the order that their bib IDs were entered, which is essentially arbitrary for two people that crossed at the same time.
+<li>Figure out what's the deal with this Mac OS issue where the area around the "Edit" and "New" buttons is selected instead of clicking on the button. I don't have a Mac so it might take some more time.
+<li>Make it an option to do timing by entering ID only. In versions earlier than 0.4, entering an ID without a time in the stack would assign the current time to that ID. In v0.4, it was changed so that IDs form a stack themselves and times must be separately marked for every ID. It may be useful for timing with RFIDs to have a separate timing mode where times are marked always (and only) when an ID is entered.
+<li>Complete support of an RFID tag solution.
+<li>Larger font size in the timing entrybox, to be easier to see outdoors.
+</ul>
+
+<b>Changelog for fsTimer 0.4</b><br><br>
+fsTimer 0.4 was released on Mar. 24, 2014 and is the third major release. Version 0.4 came with several large improvements. The major changes since version 0.3 are:
+<ul>
+<li>Entirely customizable divisional results: Any combination of age and "combobox" registration fields can be used to create a division.
+<li>We now support lap timing: Simply mark the time at the end of each lap and lap times and total times will be computed.
+<li>IDs have a buffer as well. In previous versions, if an ID was entered and there was no available time in the stack, the current time was used. This was under the assumption that someone's ID will always be entered after their time was marked, however it is conceivable when lap timing (bib tag will not be removed) that one may want to enter an ID as a racer is approaching the finish line. IDs now form a stack in the same way that times always have.
+<li>Added headers to the CSV saving.
+<li>The results saved to CSV include as columns all of the fields used to define divisional results. These columns are also included in the HTML version, if there is space on the page.
+<li>"Drop ID" and "Drop time" buttons in the timing window make it easier to correct for erroneously added times or IDs that get the stacks out of sync.
+</ul><br><br>
+
+<b>Changelog for fsTimer 0.3</b><br><br>
+fsTimer 0.3 was released on Nov. 17, 2013 and is the second major release. Below are listed the major changes since version 0.2 (which was the first major release):
+<ul>
+<li>It now ships with the completed documentation.
+<li>The process for removing duplicates from the compiled registration was corrected (previously not all duplicates were removed) and made more efficient.
+<li>New option to strip leading zeros from IDs as they are entered in the timing window.
+<li>The timing window now allows for selecting multiple entries at the same time, and a "block editing" feature was added whereby increments of time can be added or subtracted to all selected entries.
+<li>The maximum entry size of the timing window entry box was increased to 40.
+<li>The timing screen now contains a new option to save the results to a csv file, in a similar way that the results can already be saved to html.
+<li>Previously the feature tracking the number of racers checked in did not work when timing was resumed. This has been corrected.
+<li>Printing of results was improved to use a more efficient data structure for tracking which IDs have already been added.
+</ul><br><br>
+
+<!--
+Continue on to <a href="documentation_sec5.htm">Additional details for developers</a>.
+-->
+</div>
+
+</body></html>

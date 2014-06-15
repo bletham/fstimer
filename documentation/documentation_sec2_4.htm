@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>fsTimer documentation - Section 2.4: Compiling registrations</title>
+<meta name="description" content="fsTimer - free, open source software for race timing">
+<link rel="stylesheet" type="text/css" href="style_doc.css" />
+</head>
+<body>
+<div id="top-box">
+<h3><a href="http://fstimer.org">fsTimer</a> documentation</h3>
+</div>
+
+<div id="lower-box">
+
+<b>Section 1</b> <a href="http://fstimer.org/download.htm">Installing fsTimer</a><br>
+<b>Section 2</b> <a href="documentation_sec2.htm">Overview</a><br>
+<h5><b>2.1</b> <a href="documentation_sec2_1.htm">Opening and main windows</a><br></h5>
+<h5><b>2.2</b> <a href="documentation_sec2_2.htm">Importing preregistration</a><br></h5>
+<h5><b>2.3</b> <a href="documentation_sec2_3.htm">Registration</a><br></h5>
+<h5><b>2.4</b> <b>Compiling registrations</b><br></h5>
+<h5><b>2.5</b> <a href="documentation_sec2_5.htm">Race timing</a><br></h5>
+<h5><b>2.6</b> <a href="documentation_sec2_6.htm">Creating a new project</a><br></h5>
+<b>Section 3</b> <a href="documentation_sec3.htm">Checklist for timing with fsTimer</a><br>
+<!--
+<h5><b>3.1</b> <a href="download.htm">Checklist for timing with fsTimer</a><br></h5>
+-->
+<b>Section 4</b> <a href="documentation_sec4.htm">Detailed descriptions of fsTimer components</a><br>
+<!--
+<h5><b>4.1</b> <a href="download.htm">Setting up for a new race</a><br></h5>
+<h5><b>4.2</b> <a href="download.htm">Importing preregistration - details</a><br></h5>
+<h5><b>4.3</b> <a href="download.htm">Registration - details</a><br></h5>
+<h5><b>4.4</b> <a href="download.htm">Compiling registrations - details</a><br></h5>
+<h5><b>4.5</b> <a href="download.htm">Race timing - details</a><br></h5>
+-->
+<b>Section 5</b> <a href="documentation_sec5.htm">Additional details for developers</a><br>
+</div>
+
+<div id="lower-box">
+<h3>Section 2.4 - Compiling registrations</h3><br>
+
+The Compile window allows us to compile registration databases from multiple files (e.g., that were made on separate computers during day-of registration). It is important to note that even if we only have one registration database because we did it all on one computer, we must still compile that one database, as the compilation process generates a timing dictionary that is necessary for race timing. The compilation window begins as a blank field:<br><br>
+
+<img width="482" height="381" src="documentation_figs/fstimer_fig11.png"><br><br> <!--602x476-->
+
+We must press "Add" to choose all of the registration databases that we wish to compile together. For now we only have one registration database (fstimer_demo_registration_1.json), so we press "Add" and select it. The names of the registration files that we add show up in the field in the center of the window, and can be removed by selecting them and pressing "Remove." After we have added all of the registration databases to be compiled, we press "Merge."<br><br>
+
+<img width="482" height="381" src="documentation_figs/fstimer_fig12.png"><br><br> <!--602x476-->
+
+This will check for a certain type of database error (more details on that in <a href="documentation_sec4_4.htm">Section 4.4</a>), and will write two files: the compiled registration, and the timing dictionary. The compiled registration is an fsTimer registration database that can be opened using the Register window just as any other fsTimer registration database, except it now contains the information merged across all of the input databases. The timing dictionary is a special file that is required for race timing.<br><br>
+
+Continue on to <a href=documentation_sec2_5.htm>Section 2.5 Race timing</a>.
+</div>
+
+<!--
+<div id="footer">
+Questions? Problems? <strike>Bugs</strike> Unanticipated features? Send us an email, at <a href="mailto:admin@fstimer.org">admin@fstimer.org</a>.<br>Copyright 2012 <a href="http://web.mit.edu/bletham/www/" target="_blank">Ben Letham</a>.
+</div>
+-->
+</body>
+</html>

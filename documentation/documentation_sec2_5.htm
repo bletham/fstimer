@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>fsTimer documentation - Section 2.5: Race timing</title>
+<meta name="description" content="fsTimer - free, open source software for race timing">
+<link rel="stylesheet" type="text/css" href="style_doc.css" />
+</head>
+<body>
+<div id="top-box">
+<h3><a href="http://fstimer.org">fsTimer</a> documentation</h3>
+</div>
+
+<div id="lower-box">
+
+<b>Section 1</b> <a href="http://fstimer.org/download.htm">Installing fsTimer</a><br>
+<b>Section 2</b> <a href="documentation_sec2.htm">Overview</a><br>
+<h5><b>2.1</b> <a href="documentation_sec2_1.htm">Opening and main windows</a><br></h5>
+<h5><b>2.2</b> <a href="documentation_sec2_2.htm">Importing preregistration</a><br></h5>
+<h5><b>2.3</b> <a href="documentation_sec2_3.htm">Registration</a><br></h5>
+<h5><b>2.4</b> <a href="documentation_sec2_4.htm">Compiling registrations</a><br></h5>
+<h5><b>2.5</b> <b>Race timing</b><br></h5>
+<h5><b>2.6</b> <a href="documentation_sec2_6.htm">Creating a new project</a><br></h5>
+<b>Section 3</b> <a href="documentation_sec3.htm">Checklist for timing with fsTimer</a><br>
+<!--
+<h5><b>3.1</b> <a href="download.htm">Checklist for timing with fsTimer</a><br></h5>
+-->
+<b>Section 4</b> <a href="documentation_sec4.htm">Detailed descriptions of fsTimer components</a><br>
+<!--
+<h5><b>4.1</b> <a href="download.htm">Setting up for a new race</a><br></h5>
+<h5><b>4.2</b> <a href="download.htm">Importing preregistration - details</a><br></h5>
+<h5><b>4.3</b> <a href="download.htm">Registration - details</a><br></h5>
+<h5><b>4.4</b> <a href="download.htm">Compiling registrations - details</a><br></h5>
+<h5><b>4.5</b> <a href="download.htm">Race timing - details</a><br></h5>
+-->
+<b>Section 5</b> <a href="documentation_sec5.htm">Additional details for developers</a><br>
+</div>
+
+<div id="lower-box">
+<h3>Section 2.5 - Race timing</h3><br>
+
+Now that the registration database has been created and compiled, we are (finally?) ready to time the race. Click "Time" from the main window. We are first asked to specify a timing dictionary, a "pass" ID, and the key to be used for marking times.<br><br>
+
+<img width="522" height="270" src="documentation_figs/fstimer_fig13.png"><br><br> <!--651x287 --> 
+
+The timing dictionary is what allows the racer times to be correlated to the registration database entries. During timing, we assign race times to racer ID numbers (that is, bib numbers) as they cross the finish line. The timing dictionary is the database that looks up registration information (name, age, gender) by ID. Press "Choose file" and select the timing dictionary that we created at the Compile window (fstimer_demo_timing_dict.json). The "pass" ID is used to leave a marked time "blank", without any bib ID assigned to it. This will be useful for a number of scenarios that are described in <a href="documentation_sec3_1.htm">Section 3.1</a>. We usually use 0 (as in, the number zero) as the pass ID, just be sure that 0 isn't one of your bib numbers. By default, spacebar will be used to mark times as runners cross the finish line but this can be changed to one of a few options.<br><br> 
+
+It is possible to strip leading zeros from IDs as they are recorded, for example, if 021 is scanned or entered, then the ID that is actually recorded is 21. If the race consists of multiple laps, then the number of laps to be used is specified here.<br><br>
+
+Pressing "OK" leads us to the timing window.<br><br>
+
+<img width="362" height="381" src="documentation_figs/fstimer_fig14.png"><br><br> <!--452x476-->
+
+We press "Start!" right when the race begins, and this starts the clock ticking in the software.<br><br>
+
+There are two main steps to timing: marking the times, and entering in the corresponding bib IDs. When each racer crosses the finish line, we press spacebar right when they cross and this saves the time at which they crossed. Also, the ID number of each racer that crosses must be stored in the database. When a large crowd of racers come all at the same time, it is not feasible to enter their ID numbers as fast as they cross the finish line; thus these two jobs can be done separately, in parallel. In <a href="documentation_sec3.htm">Section 3</a> we give a suggested way of operating the finish line, in which one person is responsible for marking the times for everyone that crosses, while other people are responsible for maintaining a record of the bib numbers in the order in which people crossed, and then entering those into the computer (for instance, using a barcode scanner). As long as people are checked in (that is, their IDs are entered into the system) in the same order as they cross the finish line, fsTimer will match up all of the IDs to their corresponding times.<br><br>
+
+To make this a little more concrete, we give an example here. Pressing spacebar to mark times puts "blank" times into the record, meaning, a time that does not yet have an ID associated with it. Here we have marked 3 times, and you can see that the "ID" column is blank for each time:<br><br>
+
+<img width="362" height="381" src="documentation_figs/fstimer_fig15.png"><br><br> <!--452x476-->
+
+This is the stack of marked times, with the oldest (fastest) time on the bottom and the most recent time on the top. We now give fsTimer the ID (bib) numbers associated with these three times. We just type the numbers in and press "Enter." Or, if we have a barcode scanner, we scan the barcode. fsTimer will associate the IDs to the times in the order that we enter them. So entering IDs "1," "2," and then "3" (without the quotation marks or commas of course) gives:<br><br>
+
+<img width="362" height="381" src="documentation_figs/fstimer_fig16.png"><br><br> <!--452x476-->
+
+That is really the key to timing: Mark the times when people cross the finish line, and then enter in the IDs in the same order that they crossed. Notice that if there is a large rush of people, you can focus on marking all of the times, and then come back and enter the IDs whenever things open up a bit; there is no hurry.<br><br>
+
+Pressing "Save" will save the current results to a file. Pressing "Print" will generate nicely formatted results files that will show the times along with names, ages, and genders. "Print" does not actually physically print the files, rather it saves them as html files that you can open with any web browser and then physically print from there:<br><br>
+
+<img width="531" height="199" src="documentation_figs/fstimer_fig17.png"><br><br> <!--664x249-->
+
+"Print" will automatically generate two html files in fact: Overall results that include everyone, and divisional results. Note that if you enter the pass ID (0) as the bib number for a time, then that time will not show up in the results at all. Basically the pass ID "skips" times, and leaves them out of the results.<br><br>
+
+The other buttons (two Edit buttons, Drop ID, Drop time, Resume, and Save CSV) will be described in <a href="documentation_sec4_5.htm">Section 4.5</a>.<br><br>
+
+Press "Done" to exit the timing window. At this point the race will have finished, the results printed, and timing is done! Now that you have a general idea of how the software works, we will describe creating a new project, and then will go into details about both the process of timing the race, and details about the software.
+
+Continue on to <a href=documentation_sec2_6.htm>Section 2.6 Creating a new project</a>.
+</div>
+
+<!--
+<div id="footer">
+Questions? Problems? <strike>Bugs</strike> Unanticipated features? Send us an email, at <a href="mailto:admin@fstimer.org">admin@fstimer.org</a>.<br>Copyright 2012 <a href="http://web.mit.edu/bletham/www/" target="_blank">Ben Letham</a>.
+</div>
+-->
+</body>
+</html>

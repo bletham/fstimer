@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>fsTimer documentation - Section 4.4: Compiling registrations - details</title>
+<meta name="description" content="fsTimer - free, open source software for race timing">
+<link rel="stylesheet" type="text/css" href="style_doc.css">
+</head>
+<body>
+<div id="top-box">
+<h3><a href="http://fstimer.org/">fsTimer</a> documentation</h3>
+</div>
+
+<div id="lower-box">
+
+<b>Section 1</b> <a href="http://fstimer.org/download.htm">Installing fsTimer</a><br>
+<b>Section 2</b> <a href="documentation_sec2.htm">Overview</a><br>
+<!--
+<h5><b>2.1</b> <a href="documentation_sec2_1.htm">Opening and main windows</a><br></h5>
+<h5><b>2.2</b> <a href="documentation_sec2_2.htm">Importing preregistration</a><br></h5>
+<h5><b>2.3</b> <a href="documentation_sec2_3.htm">Registration</a><br></h5>
+<h5><b>2.4</b> <a href="documentation_sec2_4.htm">Compiling registrations</a><br></h5>
+<h5><b>2.5</b> <b>Race timing</b><br></h5>
+-->
+<b>Section 3</b> <a href="documentation_sec3.htm">Checklist for timing with fsTimer</a><br>
+<b>Section 4</b> <a href="documentation_sec4.htm">Detailed descriptions of fsTimer components</a><br>
+<h5><b>4.1</b> <a href="documentation_sec4_1.htm">Setting up for a new race</a><br></h5>
+<h5><b>4.2</b> <a href="documentation_sec4_2.htm">Importing preregistration - details</a><br></h5>
+<h5><b>4.3</b> <a href="documentation_sec4_3.htm">Registration - details</a><br></h5>
+<h5><b>4.4</b> <b>Compiling registrations - details</b><br></h5>
+<h5><b>4.5</b> <a href="documentation_sec4_5.htm">Race timing - details</a><br></h5>
+<b>Section 5</b> <a href="documentation_sec5.htm">Additional details for developers</a><br>
+</div>
+
+<div id="lower-box">
+<h3>Section 4.4 - Compiling registrations - details</h3><br>
+
+When registration is done on multiple computers, each one will have saved on it (in the project directory) a registration database. For a project named project_name and 3 computers that were given registration IDs 1, 2, and 3, you will create the combined database by merging the files project_name_registration_1.json, project_name_registration_2.json, and project_name_registration_3.json.<br><br>
+
+All of these files are put on one computer (we use a USB flash stick), and are then merged using the "Compile" module in fsTimer. The "Add" button is used to select the files that are to be merged:<br><br>
+
+<img width="545" height="402" src="documentation_figs/fstimer_fig38.png"><br><br> <!--681x502-->
+
+The "Remove" button removes a selected filename from the list. When all of the registration databases to be compiled are on the list, then press "Merge". The "Merge" operation will create two new files: A merged registration, that will be saved as project_name_registration_compiled.json, and a timing dictionary, that will be saved as project_name_timing_dict.json. The merged registration is a normal fsTimer registration database file that could be opened, for instance, in the Registration window. It contains all of the entries from all of the compiled databases. The timing dictionary is a dictionary that allows fsTimer to look up runner information (name, age, and gender) by bib ID. When a runner's bib ID is entered into the Timing module of fsTimer, it will use the the timing dictionary to look up what the corresponding name, age, and gender are. Under normal operation, pressing merge will work nicely, the registration databases will be combined and the files written:<br><br>
+
+
+In some instances, fsTimer will find a particular type of error in the registration databases. The particular error that it checks for are <i>overloaded IDs</i>. This means that the same ID was (in the registration databases) assigned to multiple runners. For instance, ID "110" might have been assigned to "John Smith" in project_name_registration_1.json, and assigned to "John Doe" in project_name_registration_2.json. This is an issue when forming the timing dictionary, because now when fsTimer wants to look up the information for bib ID 110, it doesn't know if it should use John Smith or John Doe. If fsTimer finds overloaded IDs, it will raise an error and tell you:<br><br>
+
+<img width="545" height="402" src="documentation_figs/fstimer_fig39.png"><br><br> <!--681x502-->
+
+Notice that on the Compile window it now says "Errors found!" in red on the bottom, and a new window has popped up with a list of the overloaded IDs. In the above screenshot, IDs 110 and 120 were overloaded, meaning that they were assigned to multiple entries. We should briefly note that this means unique entries - if the same ID is used in multiple registration database files along with the same other information (Name, age,... all of the registration fields), then this is not a problem.<br><br>
+
+For medium to large races of more than 100 runners, it is quite likely to have overloaded IDs due to entry error by the people running the registration computers. If you click on an ID and press "View ID entries", it will bring up another window that will list for you the conflicting registration entries:<br><br>
+
+<img width="656" height="420" src="documentation_figs/fstimer_fig40.png"><br><br> <!--820x525-->
+
+In the image above, we see that Willie Hansen and Nicholas Dyer were both assigned bib ID 120. When this happens, there are two ways to proceed. If you know which of the entries is the actual runner with bib 120, then you can select that entry and press "Keep entry". For example, selecting Willie Hansen and clicking "Keep entry" will mean that in the merged database (and the timing dictionary), Willie will have the ID 120, and Nicholas will be left with a blank ID field. Usually, however, you will not know which entry is the correct one. In a real race scenario, the time interval between closing registration and starting the race is usually pretty short (we close registration 15 minutes before the race starts), and so there simply is not time to figure out which is the correct entry. In this situation, just press "OK" and then press "OK" in the overloaded IDs window:<br><br>
+
+<img width="545" height="402" src="documentation_figs/fstimer_fig39.png"><br><br> <!--681x502-->
+
+When you press "OK" in the window above, it leaves all overloaded IDs unassigned. This is the right thing to do, unless you actually know which are the correct entries. When the runners cross the finish line, they will still show up in the results, they will just show up by bib number alone, and without their name, age, and gender. Unfortunately this means that they will not show up in the divisional results, but this is something that you can correct after the race when you have time to actually figure out what the correct entries are.<br><br>
+
+Pressing "OK" in the overloaded IDs window will unassign all of the overloaded IDs, thus allowing the merging and creation of the timing dictionary to continue.<br><br>
+
+<img width="545" height="402" src="documentation_figs/fstimer_fig41.png"><br><br> <!--681x502-->
+
+The Compile window will then say at the bottom "errors corrected" and will print the names of the compiled registration database file and the timing dictionary file.<br><br>
+
+In addition to the timing dictionary and the compiled registration database in fsTimer format, fsTimer will also save a csv spreadhseet containing the merged registration information to the file project_name_registration.csv. This is useful for giving the final registration information to the race director, to use for contacting people the following year.<br><br>
+
+As a final note, as was mentioned in <a href="documentation_sec2_4.htm">Section 2.4</a>, even if there is only one registration database to be used for timing (i.e., there is nothing to merge), you must still compile that one registration database so as to create the timing dictionary.<br><br>
+
+Continue on to <a href="documentation_sec4_5.htm">Race timing - details</a>.
+</div>
+
+</body></html>
