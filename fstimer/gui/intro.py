@@ -21,14 +21,15 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os
+import fstimer.gui
 
 class IntroWin(gtk.Window):
     '''Handles an introduction window to select/create a project'''
 
-    def __init__(self, fsTimer):
+    def __init__(self, load_project_cb, create_project_cb):
         '''Builds and display the introduction window'''
         super(IntroWin, self).__init__(gtk.WINDOW_TOPLEVEL)
-        self.modify_bg(gtk.STATE_NORMAL, fsTimer.bgcolor)
+        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
         self.set_icon_from_file('fstimer_icon.png')
         self.set_title('fsTimer')
         self.set_position(gtk.WIN_POS_CENTER)
@@ -54,9 +55,9 @@ class IntroWin(gtk.Window):
         #An hbox for the buttons.
         hbox = gtk.HBox(False, 0)
         btnNEW = gtk.Button(stock=gtk.STOCK_NEW)
-        btnNEW.connect('clicked', fsTimer.createProject)
+        btnNEW.connect('clicked', create_project_cb)
         btnOK = gtk.Button(stock=gtk.STOCK_OK)
-        btnOK.connect('clicked', fsTimer.load_project, combobox, projectlist)
+        btnOK.connect('clicked', load_project_cb, combobox, projectlist)
         btnOK.set_sensitive(False)
         #Set combobox to lock btnOK, so we can't press OK until we have selected a project
         combobox.connect('changed', self.lock_btnOK, combobox, btnOK)

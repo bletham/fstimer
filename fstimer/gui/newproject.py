@@ -21,16 +21,17 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os, re
+import fstimer.gui
 
 class NewProjectWin(gtk.Window):
     '''Handles the creation of a new project'''
 
-    def __init__(self, fsTimer):
+    def __init__(self, define_fields_cb, parent):
         '''Creates new project window'''
         super(NewProjectWin, self).__init__(gtk.WINDOW_TOPLEVEL)
-        self.fsTimer = fsTimer
-        self.modify_bg(gtk.STATE_NORMAL, fsTimer.bgcolor)
-        self.set_transient_for(fsTimer.introwin)
+        self.define_fields_cb = define_fields_cb
+        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.set_transient_for(parent)
         self.set_modal(True)
         self.set_title('fsTimer - New project')
         self.set_position(gtk.WIN_POS_CENTER)
@@ -87,4 +88,4 @@ class NewProjectWin(gtk.Window):
         else:
             label.set_markup('')
             self.hide()
-            self.fsTimer.defineFields(entry_text+'/')
+            self.define_fields_cb(entry_text+'/')
