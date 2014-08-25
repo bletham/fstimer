@@ -23,6 +23,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os,re,time,json,datetime,sys,csv,webbrowser,string
+import fstimer.gui.intro
 from collections import defaultdict
 
 class PyTimer:
@@ -33,84 +34,20 @@ class PyTimer:
   
   def __init__(self):
     self.bgcolor = gtk.gdk.color_parse('#F0F0F0') #choose the background color for all windows
-    self.intro_window() #load the first window
+    self.introwin = fstimer.gui.intro.IntroWin(self)
     
-  # Intro window --------------------------------------------------------------------------
-  # Generate the window
-  def intro_window(self):
-    #Setup the window
-    self.win0 = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.win0.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.win0.set_icon_from_file('fstimer_icon.png')
-    self.win0.set_title('fsTimer')
-    self.win0.set_position(gtk.WIN_POS_CENTER)
-    self.win0.set_border_width(20)
-    self.win0.connect('delete_event',self.delete_event)
-    #Create the vbox that will contain everything
-    vbox0 = gtk.VBox(False,10)
-    self.win0.add(vbox0)
-    #Main logo
-    logo = gtk.Image()
-    logo.set_from_file('fstimer_logo.png')
-    #Welcome text
-    #label00 = gtk.Label('Copyright 2012 Ben Letham')
-    label00 = gtk.Label('')
-    #
-    label0 = gtk.Label('Select an existing project, or begin a new project.')
-    #A combobox to select the project
-    combobox0 = gtk.combo_box_new_text()
-    projectlist = [' -- Select an existing project --']
-    projectlist.extend([i for i in os.listdir('.') if os.path.isdir(i) and os.path.exists(i+'/'+i+'.reg')]) #List the folders in pwd that contain a .reg registration file
-    projectlist.sort()
-    for project in projectlist:
-      combobox0.append_text(project)
-    combobox0.set_active(0)
-    #An hbox for the buttons.
-    hbox0 = gtk.HBox(False,0)
-    btnNEW0 = gtk.Button(stock=gtk.STOCK_NEW)
-    btnNEW0.connect('clicked',self.new_project,projectlist)
-    btnOK0 = gtk.Button(stock=gtk.STOCK_OK)
-    btnOK0.connect('clicked',self.load_project,combobox0,projectlist)
-    btnOK0.set_sensitive(False)
-    #Set combobox0 to lock btnOK0, so we can't press OK until we have selected a project
-    combobox0.connect('changed',self.lock_btnOK0,combobox0,btnOK0)
-    btnCANCEL0 = gtk.Button(stock=gtk.STOCK_CANCEL)
-    btnCANCEL0.connect('clicked',self.delete_event)
-    #Now fill the hbox.
-    hbox0.pack_start(btnCANCEL0,True,True,0)
-    hbox0.pack_start(btnNEW0,True,True,50)
-    hbox0.pack_start(btnOK0,True,True,0)
-    #Now build the vbox
-    vbox0.pack_start(logo,False,False,0)
-    vbox0.pack_start(label00,False,False,0)
-    vbox0.pack_start(label0,False,False,0)
-    vbox0.pack_start(combobox0,False,False,0)
-    vbox0.pack_start(hbox0,False,False,0)
-    #And show everything.
-    self.win0.show_all()
-    return
-    
-  #Here we have selected a project with combobox0. We define path, load the registration settings, and goto rootwin
-  def load_project(self,jnk,combobox0,projectlist):
-    self.path = projectlist[combobox0.get_active()]+'/'
+  #Here we have selected a project with combobox from intro window. We define path, load the registration settings, and goto rootwin
+  def load_project(self,jnk,combobox,projectlist):
+    self.path = projectlist[combobox.get_active()]+'/'
     with open(self.path+self.path[:-1]+'.reg','rb') as fin:
       regdata = json.load(fin)
     self.fields = regdata['fields']
     self.fieldsdic = regdata['fieldsdic']
     self.clear_for_fam = regdata['clear_for_fam']
     self.divisions = regdata['divisions']
-    self.win0.hide()
+    self.introwin.hide()
     self.root_window()
-    return
-    
-  #Here we lock btnOK0 if we haven't selected a project
-  def lock_btnOK0(self,jnk,combobox0,btnOK0):
-    index = combobox0.get_active()
-    if index:
-      btnOK0.set_sensitive(True)
-    else:
-      btnOK0.set_sensitive(False)
-    return
+    return    
     
   # End intro window --------------------------------------------------------------------------
   # New project window 1 --------------------------------------------------------------------------
@@ -120,7 +57,7 @@ class PyTimer:
     #Create a new window and define handlers
     self.win1_1 = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.win1_1.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.win1_1.set_transient_for(self.win0)
+    self.win1_1.set_transient_for(self.introwin)
     self.win1_1.set_modal(True)
     self.win1_1.set_title('fsTimer - New project')
     self.win1_1.set_position(gtk.WIN_POS_CENTER)
@@ -186,7 +123,7 @@ class PyTimer:
     #Create a new window and define handlers
     self.win1_2 = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.win1_2.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.win1_2.set_transient_for(self.win0)
+    self.win1_2.set_transient_for(self.introwin)
     self.win1_2.set_modal(True)
     self.win1_2.set_title('fsTimer - New project')
     self.win1_2.set_position(gtk.WIN_POS_CENTER)
@@ -526,7 +463,7 @@ class PyTimer:
     #Create a new window and define handlers
     self.win1_3 = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.win1_3.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.win1_3.set_transient_for(self.win0)
+    self.win1_3.set_transient_for(self.introwin)
     self.win1_3.set_modal(True)
     self.win1_3.set_title('fsTimer - New project')
     self.win1_3.set_position(gtk.WIN_POS_CENTER)
@@ -582,7 +519,7 @@ class PyTimer:
     #Create a new window and define handlers
     self.win1_4 = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.win1_4.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.win1_4.set_transient_for(self.win0)
+    self.win1_4.set_transient_for(self.introwin)
     self.win1_4.set_modal(True)
     self.win1_4.set_title('fsTimer - New project')
     self.win1_4.set_position(gtk.WIN_POS_CENTER)
@@ -898,7 +835,7 @@ class PyTimer:
     md.run()
     md.destroy()
     self.win1_4.hide()
-    self.win0.hide()
+    self.introwin.hide()
     self.root_window()
     return
       
