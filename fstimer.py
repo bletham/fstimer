@@ -23,7 +23,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os,re,time,json,datetime,sys,csv,webbrowser,string
-import fstimer.gui.intro
+import fstimer.gui.intro, fstimer.gui.newproject
 from collections import defaultdict
 
 class PyTimer:
@@ -48,75 +48,15 @@ class PyTimer:
     self.introwin.hide()
     self.root_window()
     return    
-    
-  # End intro window --------------------------------------------------------------------------
-  # New project window 1 --------------------------------------------------------------------------
-  #Here we have chosen to create a new project.
-  #We will generate a series of new windows 
-  def new_project(self,jnk,projectlist):
-    #Create a new window and define handlers
-    self.win1_1 = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.win1_1.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.win1_1.set_transient_for(self.introwin)
-    self.win1_1.set_modal(True)
-    self.win1_1.set_title('fsTimer - New project')
-    self.win1_1.set_position(gtk.WIN_POS_CENTER)
-    self.win1_1.set_border_width(20)
-    self.win1_1.connect('delete_event',lambda b,jnk: self.win1_1.hide())
-    ##Now create the vbox.
-    vbox1 = gtk.VBox(False,10)
-    self.win1_1.add(vbox1)
-    ##Now add the text.
-    label1_0 = gtk.Label('Enter a name for the new project.\nOnly letters, numbers, and underscore.')
-    ##And an error, if needed..
-    label1_1 = gtk.Label()
-    label1_1.set_line_wrap(True)
-    ##And the text entry
-    entry1 = gtk.Entry(max=32)
-    ##And an hbox with 2 buttons
-    hbox1 = gtk.HBox(False,0)
-    btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
-    btnCANCEL.connect('clicked',lambda btn: self.win1_1.hide())
-    alignCANCEL = gtk.Alignment(0,0,0,0)
-    alignCANCEL.add(btnCANCEL)
-    btnNEXT = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
-    btnNEXT.connect('clicked',self.win1_1_next,entry1,label1_1)
-    alignNEXT = gtk.Alignment(1,0,1,0)
-    alignNEXT.add(btnNEXT)
-    entry1.connect("changed",self.lock_btn_title,entry1,btnNEXT)
-    btnNEXT.set_sensitive(False)
-    ##And populate
-    hbox1.pack_start(alignCANCEL,True,True,0)
-    hbox1.pack_start(alignNEXT,False,False,0)
-    vbox1.pack_start(label1_0,False,False,0)
-    vbox1.pack_start(entry1,False,False,0)
-    vbox1.pack_start(label1_1,False,False,0)
-    vbox1.pack_start(hbox1,False,False,0)
-    self.win1_1.show_all()
-    return
-    
-  #This actually creates the new project specified in win1, and continues to registration settings
-  def win1_1_next(self,jnk,entry1,label1_1):
-    entry_text = str(entry1.get_text())
-    if os.path.exists(entry_text):
-      #Add the error text.
-      label1_1.set_markup('<span color="red">Error! File or directory named "'+entry_text+'" already exists. Try again.</span>')
-      label1_1.show()
-    else:
-      self.path = entry_text+'/'
-      label1_1.set_markup('')
-      self.win1_1.hide()
-      self.genwin1_2()
-    return
-    
-  #Here we lock btnNEXT if the project name doesn't mean specifications
-  def lock_btn_title(self,jnk,entry1,btnNEXT):
-    txt = entry1.get_text()
-    if not txt or re.search('[^a-zA-Z0-9_]+',txt):
-      btnNEXT.set_sensitive(False)
-    else:
-      btnNEXT.set_sensitive(True)
-    return
+
+  def createProject(self, jnk):
+    '''creates a new project'''
+    self.newprojectwin = fstimer.gui.newproject.NewProjectWin(self)
+
+  def defineFields(self, path):
+    '''Handled the definition of fields when creating a new project'''
+    self.path = path
+    self.genwin1_2()
   
   #Here we generate the next registration setting window, win1_2
   def genwin1_2(self):
@@ -240,7 +180,7 @@ class PyTimer:
   
   def win1_2_back(self,jnk):
     self.win1_2.hide()
-    self.win1_1.show_all()
+    self.newprojectwin.show_all()
     return
     
   def win1_2_next(self,jnk):

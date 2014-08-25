@@ -54,7 +54,7 @@ class IntroWin(gtk.Window):
         #An hbox for the buttons.
         hbox = gtk.HBox(False, 0)
         btnNEW = gtk.Button(stock=gtk.STOCK_NEW)
-        btnNEW.connect('clicked', fsTimer.new_project, projectlist)
+        btnNEW.connect('clicked', fsTimer.createProject)
         btnOK = gtk.Button(stock=gtk.STOCK_OK)
         btnOK.connect('clicked', fsTimer.load_project, combobox, projectlist)
         btnOK.set_sensitive(False)
