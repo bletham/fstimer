@@ -23,7 +23,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os,re,time,json,datetime,sys,csv,string
-import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root, fstimer.gui.about
+import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root, fstimer.gui.about, fstimer.gui.importprereg
 from collections import defaultdict
 
 class PyTimer:
@@ -35,17 +35,17 @@ class PyTimer:
     
   #Here we have selected a project with combobox from intro window. We define path, load the registration settings, and goto rootwin
   def load_project(self,jnk,combobox,projectlist):
-    self.path = projectlist[combobox.get_active()]+'/'
-    with open(self.path+self.path[:-1]+'.reg','rb') as fin:
+    self.path = projectlist[combobox.get_active()]
+    with open(os.sep.join([self.path,self.path+'.reg']),'rb') as fin:
       regdata = json.load(fin)
     self.fields = regdata['fields']
     self.fieldsdic = regdata['fieldsdic']
     self.clear_for_fam = regdata['clear_for_fam']
     self.divisions = regdata['divisions']
     self.introwin.hide()
-    self.rootwin = fstimer.gui.root.RootWin(self.path[:-1],
+    self.rootwin = fstimer.gui.root.RootWin(self.path,
                                             self.show_about,
-                                            self.importprereg_window,
+                                            self.import_prereg,
                                             self.prereg_window,
                                             self.compreg_window,
                                             self.gen_pretimewin)
@@ -55,10 +55,9 @@ class PyTimer:
     self.newprojectwin = fstimer.gui.newproject.NewProjectWin(self.define_fields,
                                                               self.introwin)
 
-  def define_fields(self, path):
+  def define_fields(self, jnk_unused):
     '''Handled the definition of fields when creating a new project'''
-    self.path = path
-            #this is really just fsTimer.fieldsdic.keys(), but is important because it defines the order in which fields show up on the registration screen
+    #this is really just fsTimer.fieldsdic.keys(), but is important because it defines the order in which fields show up on the registration screen
     self.fields = ['Last name', 'First name', 'ID', 'Age', 'Gender',
                           'Address', 'Email', 'Telephone', 'Contact for future races',
                           'How did you hear about race']
@@ -117,22 +116,22 @@ class PyTimer:
     return
     
   def store_new_project(self,jnk):
-    os.system('mkdir '+self.path[:-1])
+    os.system('mkdir '+self.path)
     regdata = {}
     regdata['fields'] = self.fields
     regdata['fieldsdic'] = self.fieldsdic
     regdata['clear_for_fam'] = self.clear_for_fam
     regdata['divisions'] = self.divisions
-    with open(self.path+self.path[:-1]+'.reg','wb') as fout:
+    with open(os.sep.join([self.path, self.path+'.reg']),'wb') as fout:
       json.dump(regdata,fout)
-    md = gtk.MessageDialog(self.divisionswin,gtk.DIALOG_MODAL,gtk.MESSAGE_INFO,gtk.BUTTONS_OK,'Project '+self.path[:-1]+' successfully created!')
+    md = gtk.MessageDialog(self.divisionswin,gtk.DIALOG_MODAL,gtk.MESSAGE_INFO,gtk.BUTTONS_OK,'Project '+self.path+' successfully created!')
     md.run()
     md.destroy()
     self.divisionswin.hide()
     self.introwin.hide()
-    self.rootwin = fstimer.gui.root.RootWin('fsTimer - '+self.path[:-1],
+    self.rootwin = fstimer.gui.root.RootWin('fsTimer - '+self.path,
                                             self.show_about,
-                                            self.importprereg_window,
+                                            self.import_prereg,
                                             self.prereg_window,
                                             self.compreg_window,
                                             self.gen_pretimewin)
@@ -140,174 +139,11 @@ class PyTimer:
   def show_about(self, jnk_unused):
     '''Displays the about window'''
     fstimer.gui.about.AboutWin()
-    
-  # Import pre-registration window --------------------------------------------------------------------------
-  #With this window we import pre-registration from a csv
-  def importprereg_window(self,jnk):
-    #Define the window
-    self.importpreregwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.importpreregwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.importpreregwin.set_icon_from_file('fstimer/data/icon.png')
-    self.importpreregwin.set_title('fsTimer - '+self.path[:-1])
-    self.importpreregwin.set_position(gtk.WIN_POS_CENTER)
-    self.importpreregwin.connect('delete_event',lambda b,jnk: self.importpreregwin.hide())
-    self.importpreregwin.set_border_width(10)
-    self.importpreregwin.set_size_request(600,400)
-    # Start with some intro text.
-    label1 = gtk.Label('Select a pre-registration csv file to import.')
-    #Continue to the load file.
-    btnFILE = gtk.Button(stock=gtk.STOCK_OPEN)
-    ## Textbuffer
-    textbuffer = gtk.TextBuffer()
-    textview = gtk.TextView(textbuffer)
-    textview.set_editable(False)
-    textview.set_cursor_visible(False)
-    textsw = gtk.ScrolledWindow()
-    textsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-    textsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    textsw.add(textview)
-    textalgn = gtk.Alignment(0,0,1,1)
-    textalgn.add(textsw)
-    hbox2 = gtk.HBox(False,5)
-    btnFILE.connect('clicked',self.preregimp,textbuffer)
-    btn_algn = gtk.Alignment(1,0,1,0)
-    hbox2.pack_start(btnFILE,False,False,0)
-    hbox2.pack_start(btn_algn,True,True,0)
-    ## buttons
-    btnOK = gtk.Button(stock=gtk.STOCK_OK)
-    btnOK.connect('clicked',lambda b: self.importpreregwin.hide())
-    cancel_algn = gtk.Alignment(0,0,1,0)
-    hbox3 = gtk.HBox(False,10)
-    hbox3.pack_start(cancel_algn,True,True,0)
-    hbox3.pack_start(btnOK,False,False,0)
-    vbox = gtk.VBox(False,0)
-    vbox.pack_start(label1,False,False,5)
-    vbox.pack_start(hbox2,False,True,5)
-    vbox.pack_start(textalgn,True,True,5)
-    vbox.pack_start(hbox3,False,False,0)
-    self.importpreregwin.add(vbox)
-    self.importpreregwin.show_all()
-    return
-    
-  #Here we have selected to use a pre-reg file. We do this with a filechooser.
-  def preregimp(self,jnk,textbuffer):
-    chooser = gtk.FileChooserDialog(title='Select pre-registration csv',action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OK,gtk.RESPONSE_OK))
-    ffilter = gtk.FileFilter()
-    ffilter.set_name('csv files')
-    ffilter.add_pattern('*.csv')
-    chooser.add_filter(ffilter)
-    self.pwd = os.getcwd()
-    chooser.set_current_folder(self.pwd+'/'+self.path)
-    response = chooser.run()
-    if response == gtk.RESPONSE_OK:
-      filename = chooser.get_filename()
-      textbuffer.set_text('Loading '+os.path.basename(filename)+'...\n')
-      try:
-        fin = csv.DictReader(open(filename,'r'))
-        csvreg = []
-        for row in fin:
-          csvreg.append(row)
-        csv_fields = csvreg[0].keys()
-        try:
-          textbuffer.create_tag("blue",  foreground = "blue")
-          textbuffer.create_tag("red",  foreground = "red")
-        except TypeError:
-          pass
-        printstr = 'Found csv fields: '
-        if csv_fields:
-          for field in csv_fields:
-            printstr+=field+', '
-          printstr = printstr[:-2]
-        printstr+='\n'
-        iter1 = textbuffer.get_end_iter()
-        textbuffer.insert(iter1,printstr)
-        iter1 = textbuffer.get_iter_at_line(1)
-        iter2 = textbuffer.get_iter_at_line_offset(1,17)
-        textbuffer.apply_tag_by_name("blue", iter1, iter2)
-        printstr = 'Using csv fields: '
-        fields_use = [field for field in csv_fields if field in self.fields]
-        if fields_use:
-          for field in fields_use:
-            printstr+=field+', '
-          printstr = printstr[:-2]
-        printstr+='\n'
-        iter1 = textbuffer.get_end_iter()
-        textbuffer.insert(iter1,printstr)
-        iter1 = textbuffer.get_iter_at_line(2)
-        iter2 = textbuffer.get_iter_at_line_offset(2,17)
-        textbuffer.apply_tag_by_name("blue", iter1, iter2)
-        printstr = 'Ignoring csv fields: '
-        fields_ignore = [field for field in csv_fields if field not in self.fields]
-        if fields_ignore:
-          for field in fields_ignore:
-            printstr+=field+', '
-          printstr = printstr[:-2]
-        printstr+='\n'
-        iter1 = textbuffer.get_end_iter()
-        textbuffer.insert(iter1,printstr)
-        iter1 = textbuffer.get_iter_at_line(3)
-        iter2 = textbuffer.get_iter_at_line_offset(3,20)
-        textbuffer.apply_tag_by_name("red", iter1, iter2)
-        printstr = 'Did not find: '
-        fields_notuse = [field for field in self.fields if field not in csv_fields]
-        if fields_notuse:
-          for field in fields_notuse:
-            printstr+=field+', '
-          printstr = printstr[:-2]
-        printstr+='\n'
-        iter1 = textbuffer.get_end_iter()
-        textbuffer.insert(iter1,printstr)
-        iter1 = textbuffer.get_iter_at_line(4)
-        iter2 = textbuffer.get_iter_at_line_offset(4,13)
-        textbuffer.apply_tag_by_name("red", iter1, iter2)
-        iter1 = textbuffer.get_end_iter()
-        textbuffer.insert(iter1,'Importing registration data...\n')
-        preregdata = []
-        breakloop = 0
-        row = 1
-        for reg in csvreg:
-          if breakloop == 0:
-            tmpdict = {}
-            for field in fields_notuse:
-              tmpdict[field] = ''
-            for field in fields_use:
-              if self.fieldsdic[field]['type'] == 'combobox':
-                if reg[field] and reg[field] not in self.fieldsdic[field]['options']:
-                  breakloop = 1
-                  optstr = ''
-                  for opt in self.fieldsdic[field]['options']:
-                    optstr+='"'+opt+'", '
-                  optstr += 'and blank'
-                  iter1 = textbuffer.get_end_iter()
-                  textbuffer.insert(iter1,'Error in csv row '+str(row+1)+'! Found value "'+reg[field]+'" in field "'+field+'". Not a valid value!\nValid values (case sensitive) are: '+optstr+'.\nNothing was imported. Correct the error and try again.')
-                  iter1 = textbuffer.get_iter_at_line(6)
-                  iter2 = textbuffer.get_end_iter()
-                  textbuffer.apply_tag_by_name("red", iter1, iter2)
-              tmpdict[field] = str(reg[field])
-            preregdata.append(tmpdict.copy())
-            row += 1
-        if breakloop ==0:
-          with open(self.path+self.path[:-1]+'_registration_prereg.json','wb') as fout:
-            json.dump(preregdata,fout)
-          iter1 = textbuffer.get_end_iter()
-          textbuffer.insert(iter1,'Success! Imported pre-registration saved to '+self.path[:-1]+'_registration_prereg.json\nFinished!')
-          iter1 = textbuffer.get_iter_at_line(6)
-          iter2 = textbuffer.get_end_iter()
-          textbuffer.apply_tag_by_name("blue", iter1, iter2)
-      except (IOError,IndexError):
-        iter1 = textbuffer.get_end_iter()
-        try:
-          textbuffer.create_tag("red",  foreground = "red")
-        except TypeError:
-          pass
-        textbuffer.insert(iter1,'Error! Could not open file, or no data found in file. Nothing was imported, try again.')
-        iter1 = textbuffer.get_iter_at_line(1)
-        iter2 = textbuffer.get_end_iter()
-        textbuffer.apply_tag_by_name("red", iter1, iter2)
-    chooser.destroy()
-    return
+
+  def import_prereg(self, jnk_unused):
+    '''import pre-registration from a csv'''
+    self.importpreregwin = fstimer.gui.importprereg.ImportPreRegWin(os.getcwd(), self.path, self.fields, self.fieldsdic)
   
-  # End import pre-registration window --------------------------------------------------------------------------  
   # Pre-registration window --------------------------------------------------------------------------
   #With this window we set the computers registration ID, and optionally choose a pre-registration json
   def prereg_window(self,jnk):
