@@ -22,8 +22,8 @@
 import pygtk
 pygtk.require('2.0')
 import gtk
-import os,re,time,json,datetime,sys,csv,webbrowser,string
-import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions
+import os,re,time,json,datetime,sys,csv,string
+import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root
 from collections import defaultdict
 
 class PyTimer:
@@ -43,7 +43,12 @@ class PyTimer:
     self.clear_for_fam = regdata['clear_for_fam']
     self.divisions = regdata['divisions']
     self.introwin.hide()
-    self.root_window()
+    self.rootwin = fstimer.gui.root.RootWin(self.path[:-1],
+                                            self.show_about,
+                                            self.importprereg_window,
+                                            self.prereg_window,
+                                            self.compreg_window,
+                                            self.gen_pretimewin)
 
   def create_project(self, jnk):
     '''creates a new project'''
@@ -125,95 +130,18 @@ class PyTimer:
     md.destroy()
     self.divisionswin.hide()
     self.introwin.hide()
-    self.root_window()
-    return
+    self.rootwin = fstimer.gui.root.RootWin('fsTimer - '+self.path[:-1],
+                                            self.show_about,
+                                            self.importprereg_window,
+                                            self.prereg_window,
+                                            self.compreg_window,
+                                            self.gen_pretimewin)
       
-  # Root window --------------------------------------------------------------------------    
-  ##This defines the root window with choices for the tasks
-  def root_window(self):
-    #Set up the window
-    self.rootwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.rootwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.rootwin.set_icon_from_file('fstimer_icon.png')
-    self.rootwin.set_title('fsTimer - '+self.path[:-1])
-    self.rootwin.set_position(gtk.WIN_POS_CENTER)
-    self.rootwin.connect('delete_event',gtk.main_quit)
-    self.rootwin.set_border_width(0)
-    #Generate the menubar
-    mb = gtk.MenuBar()
-    helpmenu = gtk.Menu()
-    helpm = gtk.MenuItem('Help')
-    helpm.set_submenu(helpmenu)
-    menuhelp = gtk.ImageMenuItem(gtk.STOCK_HELP)
-    menuhelp.connect('activate',lambda jnk: webbrowser.open('documentation/documentation_sec2.htm'))
-    helpmenu.append(menuhelp)
-    menuabout = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
-    menuabout.connect('activate',self.show_about)
-    helpmenu.append(menuabout)
-    mb.append(helpm)
-    ### Frame
-    rootframe = gtk.Frame(label='al')
-    self.rootframe_label = gtk.Label('')
-    self.rootframe_label.set_markup('<b>fsTimer project '+self.path[:-1]+'</b>')
-    rootframe.set_label_widget(self.rootframe_label)
-    rootframe.set_border_width(20)
-    #And now fill the frame with a table
-    roottable = gtk.Table(4,2,False)
-    roottable.set_row_spacings(20)
-    roottable.set_col_spacings(20)
-    roottable.set_border_width(10)
-    #And internal buttons
-    rootbtnPREREG = gtk.Button('Preregister')
-    rootbtnPREREG.connect('clicked',self.importprereg_window)
-    rootlabelPREREG = gtk.Label('')
-    rootlabelPREREG.set_alignment(0,0.5)
-    rootlabelPREREG.set_markup('Prepare pre-registration file.')
-    rootbtnREG = gtk.Button('Register')
-    rootbtnREG.connect('clicked',self.prereg_window)
-    rootlabelREG = gtk.Label('')
-    rootlabelREG.set_alignment(0,0.5)
-    rootlabelREG.set_markup('Register racer information and assign ID numbers.')
-    rootbtnCOMP = gtk.Button('Compile')
-    rootbtnCOMP.connect('clicked',self.compreg_window)
-    rootlabelCOMP = gtk.Label('')
-    rootlabelCOMP.set_alignment(0,0.5)
-    rootlabelCOMP.set_markup('Compile registrations from multiple computers.')
-    rootbtnTIME = gtk.Button('Time')
-    rootbtnTIME.connect('clicked',self.gen_pretimewin)
-    rootlabelTIME = gtk.Label('')
-    rootlabelTIME.set_alignment(0,0.5)
-    rootlabelTIME.set_markup('Record race times on the day of the race.')
-    roottable.attach(rootbtnPREREG,0,1,0,1)
-    roottable.attach(rootlabelPREREG,1,2,0,1)    
-    roottable.attach(rootbtnREG,0,1,1,2)
-    roottable.attach(rootlabelREG,1,2,1,2)
-    roottable.attach(rootbtnCOMP,0,1,2,3)
-    roottable.attach(rootlabelCOMP,1,2,2,3)
-    roottable.attach(rootbtnTIME,0,1,3,4)
-    roottable.attach(rootlabelTIME,1,2,3,4)
-    rootframe.add(roottable)
-    ### Buttons
-    roothbox = gtk.HBox(True,0)
-    rootbtnQUIT = gtk.Button(stock=gtk.STOCK_QUIT)
-    rootbtnQUIT.connect('clicked', gtk.main_quit)
-    roothbox.pack_start(rootbtnQUIT,False,False,5)
-    #Vbox
-    rootvbox = gtk.VBox(False,0)
-    btnhalign = gtk.Alignment(1, 0, 0, 0)
-    btnhalign.add(roothbox)
-    rootvbox.pack_start(mb,False,False,0)
-    rootvbox.pack_start(rootframe,True,True,0)
-    rootvbox.pack_start(btnhalign,False,False,5)
-    self.rootwin.add(rootvbox)
-    self.rootwin.show_all()
-    return
-    
-  # End root window --------------------------------------------------------------------------
   # About window --------------------------------------------------------------------------
   #This defines the about window.
   def show_about(self,jnk):
     about = gtk.AboutDialog()
-    about.set_logo(gtk.gdk.pixbuf_new_from_file("fstimer_icon.png"))
+    about.set_logo(gtk.gdk.pixbuf_new_from_file("fstimer/data/icon.png"))
     about.set_program_name('fsTimer')
     about.set_version('0.4')
     about.set_copyright('Copyright 2012-14 Ben Letham\nThis program comes with ABSOLUTELY NO WARRANTY; for details see license.\nThis is free software, and you are welcome to redistribute it under certain conditions; see license for details')
@@ -235,7 +163,7 @@ class PyTimer:
     #Define the window
     self.importpreregwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.importpreregwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.importpreregwin.set_icon_from_file('fstimer_icon.png')
+    self.importpreregwin.set_icon_from_file('fstimer/data/icon.png')
     self.importpreregwin.set_title('fsTimer - '+self.path[:-1])
     self.importpreregwin.set_position(gtk.WIN_POS_CENTER)
     self.importpreregwin.connect('delete_event',lambda b,jnk: self.importpreregwin.hide())
@@ -402,7 +330,7 @@ class PyTimer:
     #Define the window
     self.preregwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.preregwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.preregwin.set_icon_from_file('fstimer_icon.png')
+    self.preregwin.set_icon_from_file('fstimer/data/icon.png')
     self.preregwin.set_title('fsTimer - '+self.path[:-1])
     self.preregwin.set_position(gtk.WIN_POS_CENTER)
     self.preregwin.connect('delete_event',lambda b,jnk: self.preregwin.hide())
@@ -497,7 +425,7 @@ class PyTimer:
     #Now let us actually build the window
     self.regwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.regwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.regwin.set_icon_from_file('fstimer_icon.png')
+    self.regwin.set_icon_from_file('fstimer/data/icon.png')
     self.regwin.set_title('fsTimer - '+self.path[:-1])
     self.regwin.set_position(gtk.WIN_POS_CENTER)
     self.regwin.connect('delete_event',lambda b,jnk: self.reg_ok(jnk))
@@ -805,7 +733,7 @@ class PyTimer:
     #Create the window
     self.compregwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.compregwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.compregwin.set_icon_from_file('fstimer_icon.png')
+    self.compregwin.set_icon_from_file('fstimer/data/icon.png')
     self.compregwin.set_title('fsTimer - '+self.path[:-1])
     self.compregwin.set_position(gtk.WIN_POS_CENTER)
     self.compregwin.connect('delete_event', lambda b,jnk: self.compregwin.hide())
@@ -1134,7 +1062,7 @@ class PyTimer:
   def gen_pretimewin(self,jnk):
     self.pretimewin = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.pretimewin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.pretimewin.set_icon_from_file('fstimer_icon.png')
+    self.pretimewin.set_icon_from_file('fstimer/data/icon.png')
     self.pretimewin.set_title('fsTimer - Project '+self.path[:-1])
     self.pretimewin.set_position(gtk.WIN_POS_CENTER)
     self.pretimewin.connect('delete_event',lambda b,jnk: self.pretimewin.hide())

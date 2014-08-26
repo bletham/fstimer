@@ -30,7 +30,7 @@ class IntroWin(gtk.Window):
         '''Builds and display the introduction window'''
         super(IntroWin, self).__init__(gtk.WINDOW_TOPLEVEL)
         self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
-        self.set_icon_from_file('fstimer_icon.png')
+        self.set_icon_from_file('fstimer/data/icon.png')
         self.set_title('fsTimer')
         self.set_position(gtk.WIN_POS_CENTER)
         self.set_border_width(20)
