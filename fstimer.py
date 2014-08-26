@@ -23,14 +23,13 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os,re,time,json,datetime,sys,csv,webbrowser,string
-import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields
+import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset
 from collections import defaultdict
 
 class PyTimer:
   
   def delete_event(*args):
     gtk.main_quit()
-    return
   
   def __init__(self):
     self.bgcolor = fstimer.gui.bgcolor
@@ -48,7 +47,6 @@ class PyTimer:
     self.divisions = regdata['divisions']
     self.introwin.hide()
     self.root_window()
-    return    
 
   def create_project(self, jnk):
     '''creates a new project'''
@@ -73,71 +71,29 @@ class PyTimer:
     self.fieldsdic['Telephone'] = {'type':'entrybox', 'max':20}
     self.fieldsdic['Contact for future races'] = {'type':'combobox', 'options':['yes', 'no']}
     self.fieldsdic['How did you hear about race'] = {'type':'entrybox', 'max':40}
-    self.definefieldswin = fstimer.gui.definefields.DefineFieldsWin(self.fields, self.fieldsdic, self.back_to_define_fields, self.define_family_reset, self.introwin)
+    self.definefieldswin = fstimer.gui.definefields.DefineFieldsWin \
+      (self.fields, self.fieldsdic, self.back_to_new_project,
+       self.define_family_reset, self.introwin)
   
-  def back_to_define_fields(self,jnk):
+  def back_to_new_project(self,jnk):
     self.definefieldswin.hide()
     self.newprojectwin.show_all()
-    return
     
   def define_family_reset(self,jnk):
     self.definefieldswin.hide()
-    self.gen_win1_3()
-    return  
-    
-  def gen_win1_3(self):
-    #Create a new window and define handlers
-    self.win1_3 = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.win1_3.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.win1_3.set_transient_for(self.introwin)
-    self.win1_3.set_modal(True)
-    self.win1_3.set_title('fsTimer - New project')
-    self.win1_3.set_position(gtk.WIN_POS_CENTER)
-    self.win1_3.set_border_width(20)
-    self.win1_3.connect('delete_event',lambda b,jnk: self.win1_3.hide())
-    ##Now create the vbox.
-    vbox1 = gtk.VBox(False,2)
-    self.win1_3.add(vbox1)
-    ##Now add the text.
-    label1_0 = gtk.Label("Choose the fields to clear when adding a new family member.\nPress 'Forward' to continue with the default settings, or make edits below.")
-    vbox1.pack_start(label1_0,False,False,0)
-    btnlist = []
-    for field in self.fields:
-      btnlist.append(gtk.CheckButton(field))
-      if field in ['First name','Gender','Age', 'ID']:
-        btnlist[-1].set_active(True)
-      else:
-        btnlist[-1].set_active(False)
-      vbox1.pack_start(btnlist[-1])
-    ##And an hbox with 2 buttons
-    hbox3 = gtk.HBox(False,0)
-    btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
-    btnCANCEL.connect('clicked',lambda btn: self.win1_3.hide())
-    alignCANCEL = gtk.Alignment(0,0,0,0)
-    alignCANCEL.add(btnCANCEL)
-    btnBACK = gtk.Button(stock=gtk.STOCK_GO_BACK)
-    btnBACK.connect('clicked',self.win1_3_back)
-    btnNEXT = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
-    btnNEXT.connect('clicked',self.win1_3_next,btnlist)
-    ##And populate
-    hbox3.pack_start(alignCANCEL,True,True,0)
-    hbox3.pack_start(btnBACK,False,False,2)
-    hbox3.pack_start(btnNEXT,False,False,0)
-    vbox1.pack_start(hbox3,False,False,8)
-    self.win1_3.show_all()
-    return
-    
-  def win1_3_back(self,jnk):
-    self.win1_3.hide()
+    self.familyresetwin = fstimer.gui.definefamilyreset.FamilyResetWin \
+      (self.fields, self.back_to_define_fields, self.define_divisions, self.introwin)
+
+  def back_to_define_fields(self,jnk):
+    self.familyresetwin.hide()
     self.definefieldswin.show_all()
-    return
     
-  def win1_3_next(self,jnk,btnlist):
+  def define_divisions(self,jnk,btnlist):
     self.clear_for_fam = []
     for (field,btn) in zip(self.fields,btnlist):
       if btn.get_active():
         self.clear_for_fam.append(field)
-    self.win1_3.hide()
+    self.definefieldswin.hide()
     self.gen_win1_4()
     return
     
@@ -266,7 +222,7 @@ class PyTimer:
   
   def win1_4_back(self,jnk):
     self.win1_4.hide()
-    self.win1_3.show_all()
+    self.definefieldswin.show_all()
     return
   
   def div_up(self,jnk,selection):
