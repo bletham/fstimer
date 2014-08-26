@@ -23,7 +23,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os,re,time,json,datetime,sys,csv,string
-import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root, fstimer.gui.about, fstimer.gui.importprereg
+import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root, fstimer.gui.about, fstimer.gui.importprereg, fstimer.gui.preregister, fstimer.gui.register
 from collections import defaultdict
 
 class PyTimer:
@@ -32,6 +32,7 @@ class PyTimer:
     self.bgcolor = fstimer.gui.bgcolor
     self.introwin = fstimer.gui.intro.IntroWin(self.load_project,
                                                self.create_project)
+    self.prereg = []
     
   #Here we have selected a project with combobox from intro window. We define path, load the registration settings, and goto rootwin
   def load_project(self,jnk,combobox,projectlist):
@@ -46,7 +47,7 @@ class PyTimer:
     self.rootwin = fstimer.gui.root.RootWin(self.path,
                                             self.show_about,
                                             self.import_prereg,
-                                            self.prereg_window,
+                                            self.handle_preregistration,
                                             self.compreg_window,
                                             self.gen_pretimewin)
 
@@ -132,7 +133,7 @@ class PyTimer:
     self.rootwin = fstimer.gui.root.RootWin('fsTimer - '+self.path,
                                             self.show_about,
                                             self.import_prereg,
-                                            self.prereg_window,
+                                            self.handle_preregistration,
                                             self.compreg_window,
                                             self.gen_pretimewin)
       
@@ -143,410 +144,31 @@ class PyTimer:
   def import_prereg(self, jnk_unused):
     '''import pre-registration from a csv'''
     self.importpreregwin = fstimer.gui.importprereg.ImportPreRegWin(os.getcwd(), self.path, self.fields, self.fieldsdic)
-  
-  # Pre-registration window --------------------------------------------------------------------------
-  #With this window we set the computers registration ID, and optionally choose a pre-registration json
-  def prereg_window(self,jnk):
-    #Define the window
-    self.preregwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.preregwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.preregwin.set_icon_from_file('fstimer/data/icon.png')
-    self.preregwin.set_title('fsTimer - '+self.path[:-1])
-    self.preregwin.set_position(gtk.WIN_POS_CENTER)
-    self.preregwin.connect('delete_event',lambda b,jnk: self.preregwin.hide())
-    self.preregwin.set_border_width(10)
-    # Start with some intro text.
-    prereglabel1 = gtk.Label('Give a unique number to each computer used for registration.\nSelect a pre-registration file, if available.')
-    #Continue to the spinner.
-    preregtable = gtk.Table(3,2,False)
-    preregtable.set_row_spacings(5)
-    preregtable.set_col_spacings(5)
-    preregtable.set_border_width(10)    
-    regid = gtk.Adjustment(value=1,lower=1,upper=99,step_incr=1)
-    self.regid_btn = gtk.SpinButton(regid,digits=0,climb_rate=0)
-    preregtable.attach(self.regid_btn,0,1,0,1)
-    preregtable.attach(gtk.Label("This computer's registration number"),1,2,0,1)
-    preregbtnFILE = gtk.Button('Select pre-registration')
-    preregbtnFILE.connect('clicked',self.preregsel)
-    preregtable.attach(preregbtnFILE,0,1,2,3)
-    self.preregfilelabel = gtk.Label('')
-    self.preregfilelabel.set_markup('<span color="blue">No pre-registration selected.</span>')
-    preregtable.attach(self.preregfilelabel,1,2,2,3)
-    ## buttons
-    prereghbox = gtk.HBox(True,0)
-    preregbtnOK = gtk.Button(stock=gtk.STOCK_OK)
-    preregbtnOK.connect('clicked',self.reg_window)
-    preregbtnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
-    preregbtnCANCEL.connect('clicked',lambda b: self.preregwin.hide())
-    prereghbox.pack_start(preregbtnOK,False,False,5)
-    prereghbox.pack_start(preregbtnCANCEL,False,False,5)
-    #Vbox
-    preregvbox = gtk.VBox(False,0)
-    preregbtnhalign = gtk.Alignment(1, 0, 0, 0)
-    preregbtnhalign.add(prereghbox)
-    preregvbox.pack_start(prereglabel1,False,False,5)
-    preregvbox.pack_start(preregtable,False,False,5)
-    preregvbox.pack_start(preregbtnhalign,False,False,5)
-    self.preregwin.add(preregvbox)
-    self.preregwin.show_all()
-    return
-    
-  #Here we have selected to use a pre-reg file. We do this with a filechooser.
-  def preregsel(self,jnk):
-    chooser = gtk.FileChooserDialog(title='Select pre-registration file',action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OK,gtk.RESPONSE_OK))
-    ffilter = gtk.FileFilter()
-    ffilter.set_name('Registration files')
-    ffilter.add_pattern('*_registration_*.json')
-    chooser.add_filter(ffilter)
-    self.pwd = os.getcwd()
-    chooser.set_current_folder(self.pwd+'/'+self.path)
-    response = chooser.run()
-    if response == gtk.RESPONSE_OK:
-      filename = chooser.get_filename()
-      try:
-        with open(filename,'rb') as fin:
-          self.prereg = json.load(fin)
-        self.preregfilelabel.set_markup('<span color="blue">Pre-registration '+os.path.basename(filename)+' loaded.</span>')
-      except (IOError, ValueError):
-        self.preregfilelabel.set_markup('<span color="red">ERROR! Failed to load '+os.path.basename(filename)+'.</span>')
-    chooser.destroy()
-    return
-  
-  # End pre-registration window --------------------------------------------------------------------------  
-  # Registration window --------------------------------------------------------------------------
-  #With this window we show the registration table.
-  def reg_window(self,jnk):
-    #This is the important information to take from the pre-registration window.
-    self.regid = self.regid_btn.get_value_as_int()
-    self.preregwin.hide()
-    #First we define the registration model.
-    #We will setup a liststore that is wrapped in a treemodelfilter that is wrapped in a treemodelsort that is put in a treeview that is put in a scrolled window. Eesh.
-    self.regmodel = gtk.ListStore(*[str for field in self.fields])
-    self.modelfilter = self.regmodel.filter_new()
-    self.modelfiltersorted = gtk.TreeModelSort(self.modelfilter)
-    self.treeview = gtk.TreeView()
-    #Now we define each column in the treeview. We take these from self.fields, defined in __init__
-    for (colid,field) in enumerate(self.fields):
-      column = gtk.TreeViewColumn(field,gtk.CellRendererText(),text=colid)
-      column.set_sort_column_id(colid)
-      self.treeview.append_column(column)
-    self.lastnamecol = self.fields.index('Last name')
-    #Now we populate the model with the pre-registration info, if there is any.
-    #self.prereg is a list of dictionaries.
-    try:
-      for reg in self.prereg:
-        self.regmodel.append([reg[field] for field in self.fields])
-    except AttributeError:
-      self.prereg = [] #We start with a blank prereg if none was loaded, or it did not have the correct fields. 
-    self.searchstr = '' #This is the string that we filter based on.
-    self.modelfilter.set_visible_func(self.visible_filter)
-    self.treeview.set_model(self.modelfiltersorted)
-    self.treeview.set_enable_search(False)
-    #Now let us actually build the window
-    self.regwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.regwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.regwin.set_icon_from_file('fstimer/data/icon.png')
-    self.regwin.set_title('fsTimer - '+self.path[:-1])
-    self.regwin.set_position(gtk.WIN_POS_CENTER)
-    self.regwin.connect('delete_event',lambda b,jnk: self.reg_ok(jnk))
-    self.regwin.set_border_width(10)
-    self.regwin.set_size_request(850, 450)
-    #Now the filter entrybox
-    filterbox = gtk.HBox(False,8)
-    filterbox.pack_start(gtk.Label('Filter by last name:'),False,False,0)
-    self.filterentry = gtk.Entry(max=40)
-    self.filterentry.connect('changed',self.filter_apply)
-    self.filterbtnCLEAR = gtk.Button(stock=gtk.STOCK_CLEAR)
-    self.filterbtnCLEAR.connect('clicked',self.filter_clear)
-    self.filterbtnCLEAR.set_sensitive(False)
-    filterbox.pack_start(self.filterentry,False,False,0)
-    filterbox.pack_start(self.filterbtnCLEAR,False,False,0)
-    #Now the scrolled window that contains the treeview
-    regsw = gtk.ScrolledWindow()
-    regsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-    regsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    regsw.add(self.treeview)
-    #And a message that says if we have saved or not.
-    self.regstatus = gtk.Label('')
-    #Some boxes for all the stuff on the left
-    regvbox1 = gtk.VBox(False,8)
-    regvbox1.pack_start(filterbox,False,False,0)
-    regvbox1.pack_start(regsw,True,True,0)
-    regvbox1.pack_start(self.regstatus,False,False,0)
-    vbox1align = gtk.Alignment(0,0,1,1)
-    vbox1align.add(regvbox1)
-    #And boxes/table for the buttons on the right
-    regtable = gtk.Table(2,1,False)
-    regtable.set_row_spacings(5)
-    regtable.set_col_spacings(5)
-    regtable.set_border_width(5)
-    btnEDIT = gtk.Button(stock=gtk.STOCK_EDIT)
-    btnEDIT.connect('clicked',self.edit_reg)
-    btnREMOVE = gtk.Button(stock=gtk.STOCK_REMOVE)
-    btnREMOVE.connect('clicked',self.rm_reg)
-    btnFAM = gtk.Button('Add family')
-    btnFAM.connect('clicked',self.fam_reg)
-    btnNEW = gtk.Button(stock=gtk.STOCK_NEW)
-    btnNEW.connect('clicked',self.new_reg)
-    btnSAVE = gtk.Button(stock=gtk.STOCK_SAVE)
-    btnSAVE.connect('clicked',self.save_reg)
-    btnOK = gtk.Button('Done')
-    btnOK.connect('clicked',self.reg_ok)
-    vsubbox = gtk.VBox(False,8)
-    vsubbox.pack_start(btnSAVE,False,False,0)
-    vsubbox.pack_start(btnOK,False,False,0)
-    regvspacer = gtk.Alignment(1, 1, 0, 0)
-    regvspacer.add(vsubbox)
-    regtable.attach(regvspacer,0,1,1,2)
-    regvbox2 = gtk.VBox(False,8)
-    regvbox2.pack_start(btnEDIT,False,False,0)
-    regvbox2.pack_start(btnREMOVE,False,False,0)
-    regvbox2.pack_start(btnFAM,False,False,0)
-    regvbox2.pack_start(btnNEW,False,False,0)
-    regvbalign = gtk.Alignment(1, 0, 0, 0)
-    regvbalign.add(regvbox2)
-    regtable.attach(regvbalign,0,1,0,1)
-    #Now we pack everything together
-    reghbox = gtk.HBox(False,8)
-    reghbox.pack_start(vbox1align,True,True,0)
-    reghbox.pack_start(regtable,False,False,0)
-    self.regwin.add(reghbox)
-    #And show.
-    self.regwin.show_all()
-    return
-    
-  #Here we have modified the contents of the filter box. 
-  #We will set self.searchstr to the current entrybox contents and refilter.
-  def filter_apply(self,jnk):
-    self.searchstr = self.filterentry.get_text()
-    self.filterbtnCLEAR.set_sensitive(True)
-    self.modelfilter.refilter()
-    return
-    
-  #Here we have cleared the filter box. Set self.searchstr to blank and refilter.
-  def filter_clear(self,jnk):
-    self.searchstr = ''
-    self.filterentry.set_text('')
-    self.filterbtnCLEAR.set_sensitive(False)
-    self.modelfilter.refilter()
-    return
-    
-  #This is the function we use to filter. It checks if self.searchstr is contained in column self.lastnamecol, case insensitive.
-  def visible_filter(self,model,titer):
-    if self.searchstr:
-      if not model.get_value(titer,self.lastnamecol):
-        return False
-      elif self.searchstr.lower() in model.get_value(titer,self.lastnamecol).lower():
-        return True
-      else:
-        return False
-    else:
-      return True
-  
-  #Here we have clicked for a new registration
-  #Create the editreg window with a None treeiter and clear initial values.
-  def new_reg(self,jnk):
-    self.gen_editregwin(None,None,None)
-    return
-  
-  #Here we have chosen to remove a registration entry.
-  #Throw up an 'are you sure' dialog box, and delete if yes.
-  def rm_reg(self,jnk):
-    selection = self.treeview.get_selection()
-    model,treeiter = selection.get_selected()
-    #if nothing is selected, do nothing.
-    if treeiter:
-      rmreg_dialog = gtk.MessageDialog(self.regwin,gtk.DIALOG_MODAL,gtk.MESSAGE_QUESTION,gtk.BUTTONS_YES_NO,'Are you sure you want to delete this entry?\nThis cannot be undone.')
-      rmreg_dialog.set_title('Woah!')
-      rmreg_dialog.set_default_response(gtk.RESPONSE_NO)
-      response = rmreg_dialog.run()
-      rmreg_dialog.destroy()
-      if response == gtk.RESPONSE_YES:
-        #We convert the treeiter from sorted to filter to model, and remove
-        self.regmodel.remove(self.modelfilter.convert_iter_to_child_iter(self.modelfiltersorted.convert_iter_to_child_iter(None,treeiter)))
-        self.regstatus.set_markup('') #The latest stuff has no longer been saved.
-    return
-  
-  #Here we have clicked to save the current registration information. We do a json dump of self.prereg.
-  def save_reg(self,jnk):
-    with open(self.path+self.path[:-1]+'_registration_'+str(self.regid)+'.json','wb') as fout:
+
+  def handle_preregistration(self, jnk_unused):
+    '''handles preregistration'''
+    self.preregistrationwin = fstimer.gui.preregister.PreRegistrationWin(os.getcwd(), self.path, lambda fn: self.set_registration_file(fn), self.handle_registration)
+
+  def set_registration_file(self, filename):
+    '''set a preregistration file'''
+    with open(filename,'rb') as fin:
+      self.prereg = json.load(fin)
+
+  def handle_registration(self, jnk_unused, regid_btn):
+    '''handles registration'''
+    self.regid = regid_btn.get_value_as_int()
+    self.preregistrationwin.hide()
+    self.registrationwin = fstimer.gui.register.RegistrationWin(self.path, self.fields, self.fieldsdic, self.prereg, self.clear_for_fam, self.save_registration)
+
+  def save_registration(self):
+    '''saves registration'''
+    filename = os.sep.join([self.path,self.path+'_registration_'+str(self.regid)+'.json'])
+    with open(filename, 'wb') as fout:
       json.dump(self.prereg,fout)
-    self.regstatus.set_markup('<span color="blue">Registration saved to '+self.path+self.path[:-1]+'_registration_'+str(self.regid)+'.json</span>')
-    return
+    return filename
   
-  #We have clicked 'OK' on the registration window.
-  #Throw up a 'do you want to save' dialog, and close the window.
-  def reg_ok(self,jnk):
-    okreg_dialog = gtk.MessageDialog(self.regwin,gtk.DIALOG_MODAL,gtk.MESSAGE_QUESTION,gtk.BUTTONS_YES_NO,'Do you want to save before finishing?\nUnsaved data will be lost.')
-    okreg_dialog.set_title('Save?')
-    okreg_dialog.set_default_response(gtk.RESPONSE_YES)
-    response = okreg_dialog.run()
-    okreg_dialog.destroy()
-    if response == gtk.RESPONSE_YES:
-      self.save_reg(None) #this will save.
-    self.regwin.hide()
-    #Clear the file setting from pre-reg, in case pre-reg is re-run without selecting a file
-    del self.prereg
-    return
+
   
-  #Here we have clicked 'edit' on the registration window.
-  def edit_reg(self,jnk):
-    selection = self.treeview.get_selection()
-    model,treeiter = selection.get_selected()
-    #if no selection, do nothing.
-    if treeiter:
-      #Grab the current information.
-      current_info = {}
-      for (colid,field) in enumerate(self.fields):
-        current_info[field] = self.modelfiltersorted.get_value(treeiter,colid)
-      ##Find where this is in self.prereg.
-      preregiter = self.prereg.index(current_info)
-      #Generate the window
-      self.gen_editregwin(treeiter,preregiter,current_info)
-    return
-    
-  #Here we have clicked 'add family' on the registration window.
-  #We construct current_info the same as in self.edit_reg, but pass None instead of treeiter.
-  def fam_reg(self,jnk):
-    selection = self.treeview.get_selection()
-    model,treeiter = selection.get_selected()
-    #if no selection, do nothing.
-    if treeiter:
-      #Grab the current information.
-      current_info = {}
-      for (colid,field) in enumerate(self.fields):
-        current_info[field] = self.modelfiltersorted.get_value(treeiter,colid)
-      #Drop some info
-      for field in self.clear_for_fam:
-        current_info[field] = ''
-      #Generate the window
-      self.gen_editregwin(None,None,current_info)
-    return
-  
-  # End registration window --------------------------------------------------------------------------  
-  # Edit registration window --------------------------------------------------------------------------
-  #This window is used either to create a new entry in the registration table or to modify an existing entry.
-  def gen_editregwin(self,treeiter,preregiter,current_info):
-    #Convert the treeiter from the treemodelsort to the liststore.
-    if treeiter:
-      treeiter = self.modelfilter.convert_iter_to_child_iter(self.modelfiltersorted.convert_iter_to_child_iter(None,treeiter))
-    #Define the window
-    self.editreg_win = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.editreg_win.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.editreg_win.set_title('Registration entry')
-    self.editreg_win.set_transient_for(self.regwin)
-    self.editreg_win.set_modal(True)
-    self.editreg_win.set_position(gtk.WIN_POS_CENTER)
-    self.editreg_win.connect('delete_event',lambda b,jnk: self.editreg_win.hide())
-    self.editreg_win.set_border_width(10)
-    #Create all of the buttons, and fill in current_info if available.
-    self.editregfields = {}
-    for field in self.fields:
-      #Determine which type of entry is appropriate, and create it and fill it.
-      #Entrybox
-      if self.fieldsdic[field]['type'] == 'entrybox':
-        self.editregfields[field] = gtk.Entry(max=self.fieldsdic[field]['max'])
-        if current_info:
-          self.editregfields[field].set_text(current_info[field])
-      #Spinbutton
-      #elif self.fieldsdic[field]['type'] == 'spinbutton':
-      #  self.editregfields[field] = gtk.SpinButton(gtk.Adjustment(value=self.fieldsdic[field]['lower'], lower = self.fieldsdic[field]['lower'], upper = self.fieldsdic[field]['upper'],step_incr=1),digits=0,climb_rate=0)
-      #  if current_info:
-      #    try:
-      #      self.editregfields[field].set_value(int(current_info[field]))
-      #    except ValueError:
-      #      pass #this catches if current_inf[field]='', and the int('') throws a ValueError.
-      #Combobox
-      elif self.fieldsdic[field]['type'] == 'combobox':
-        self.editregfields[field] = gtk.combo_box_new_text()
-        self.editregfields[field].append_text('')
-        for val in self.fieldsdic[field]['options']:
-          self.editregfields[field].append_text(val)
-        if current_info:
-          try:
-            indx = self.fieldsdic[field]['options'].index(current_info[field])
-            self.editregfields[field].set_active(indx+1)
-          except ValueError:
-            self.editregfields[field].set_active(0) #this catches if current_inf[field] is not a valid value. It is probably blank. Otherwise this is an issue, but we will force it blank.
-        else:
-          self.editregfields[field].set_active(0)
-    #Set up the vbox
-    editregvbox = gtk.VBox(False,8)
-    #We will make a smaller hbox for each of the fields.
-    hboxes = {}
-    for field in self.fields:
-      hboxes[field] = gtk.HBox(False,15)
-      hboxes[field].pack_start(gtk.Label(field+':'),False,False,0) #Pack the label
-      hboxes[field].pack_start(self.editregfields[field],False,False,0) #Pack the button/entry/..
-      editregvbox.pack_start(hboxes[field],False,False,0) #Pack this hbox into the big vbox.
-    #An hbox for the buttons
-    editreghbox = gtk.HBox(False,8)
-    editregbtnOK = gtk.Button(stock=gtk.STOCK_OK)
-    editregbtnOK.connect('clicked',self.editentry,treeiter,preregiter)
-    editregbtnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
-    editregbtnCANCEL.connect('clicked',lambda b: self.editreg_win.hide())
-    editreghbox.pack_start(editregbtnOK,False,False,5)
-    editreghbox.pack_start(editregbtnCANCEL,False,False,5)
-    #Pack and show
-    editregvbox.pack_start(editreghbox,False,False,5)
-    self.editreg_win.add(editregvbox)
-    self.editreg_win.show_all()
-    return
-  
-  #Here we have clicked 'OK' from the edit registration window. 
-  #This will read out the inputted information, and write the changes to the treemodel.
-  def editentry(self,jnk,treeiter,preregiter):
-    #First we go through each field and grab the new value.
-    new_vals = {}
-    for field in self.fields:
-      #Entrybox
-      if self.fieldsdic[field]['type'] == 'entrybox':
-        new_vals[field] = self.editregfields[field].get_text()
-      #Spinbutton
-      #elif self.fieldsdic[field]['type'] == 'spinbutton':
-      #  #If it is zero, we will leave it blank.
-      #  idfill = self.editregfields[field].get_value_as_int()
-      #  if idfill == 0:
-      #    idfill = ''
-      #  else:
-      #    if field == 'ID':
-      #      #We pad ID to self.idlen digits
-      #      idfill = str(idfill).zfill(self.idlen)
-      #    else:
-      #      idfill = str(idfill)
-      #  new_vals[field] = idfill
-      #Combobox
-      elif self.fieldsdic[field]['type'] == 'combobox':
-        indx = self.editregfields[field].get_active()
-        if indx == 0:
-          new_vals[field] = ''
-        else:
-          new_vals[field] = self.fieldsdic[field]['options'][indx-1]
-    ##This code will open a dialog box to warn if an ID was not assigned.
-    #if not new_vals['ID']:
-      #checkid_dialog = gtk.MessageDialog(self.regwin,gtk.DIALOG_MODAL,gtk.MESSAGE_INFO,gtk.BUTTONS_YES_NO,'You did not assign an ID.\nAre you sure you want this?')
-      #checkid_dialog.set_title('Woah!')
-      #response = checkid_dialog.run()
-      #checkid_dialog.destroy()
-      #if response == gtk.RESPONSE_NO:
-        #return
-    ##Now we replace or append in the treemodel and in our prereg list-of-dictionaries
-    if treeiter:
-      for (colid,field) in enumerate(self.fields):
-        self.regmodel.set_value(treeiter,colid,new_vals[field])
-      self.prereg[preregiter] = new_vals
-    else:
-      self.regmodel.append([new_vals[field] for field in self.fields])
-      self.prereg.append(new_vals)
-    #The saved status is unsaved
-    self.regstatus.set_markup('')
-    #Filter results by this last name
-    self.filterentry.set_text(new_vals['Last name'])
-    #we're done
-    self.editreg_win.hide()
-    return
-  
-  # End edit registration window --------------------------------------------------------------------------  
   # Compile registration window --------------------------------------------------------------------------
   #Here we merge registration files and create the timing dictionary.
   def compreg_window(self,jnk):
@@ -554,7 +176,7 @@ class PyTimer:
     self.compregwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.compregwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
     self.compregwin.set_icon_from_file('fstimer/data/icon.png')
-    self.compregwin.set_title('fsTimer - '+self.path[:-1])
+    self.compregwin.set_title('fsTimer - '+self.path)
     self.compregwin.set_position(gtk.WIN_POS_CENTER)
     self.compregwin.connect('delete_event', lambda b,jnk: self.compregwin.hide())
     self.compregwin.set_border_width(10)
@@ -639,7 +261,7 @@ class PyTimer:
     ffilter.add_pattern('*registration_*.json')
     chooser.add_filter(ffilter)
     self.pwd = os.getcwd()
-    chooser.set_current_folder(self.pwd+'/'+self.path)
+    chooser.set_current_folder(os.join([self.pwd, self.path]))
     response = chooser.run()
     if response == gtk.RESPONSE_OK:
       filenames = chooser.get_filenames()
@@ -710,7 +332,7 @@ class PyTimer:
         self.comperrorswin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
         self.comperrorswin.set_transient_for(self.compregwin)
         self.comperrorswin.set_modal(True)
-        self.comperrorswin.set_title('fsTimer - '+self.path[:-1])
+        self.comperrorswin.set_title('fsTimer - '+self.path)
         self.comperrorswin.set_position(gtk.WIN_POS_CENTER)
         self.comperrorswin.connect('delete_event',lambda b,jnk: self.cancel_error(jnk))
         self.comperrorswin.set_border_width(10)
@@ -769,7 +391,7 @@ class PyTimer:
       self.corerrorswin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
       self.corerrorswin.set_transient_for(self.comperrorswin)
       self.corerrorswin.set_modal(True)
-      self.corerrorswin.set_title('fsTimer - '+self.path[:-1])
+      self.corerrorswin.set_title('fsTimer - '+self.path)
       self.corerrorswin.set_position(gtk.WIN_POS_CENTER)
       self.corerrorswin.connect('delete_event',lambda b,jnk: self.corerrorswin.hide())
       self.corerrorswin.set_border_width(10)
@@ -864,13 +486,13 @@ class PyTimer:
     else:
       self.comblabel2.set_markup('<span color="blue">Checking for errors... no errors found!</span>')
     #Now save things
-    with open(self.path+self.path[:-1]+'_registration_compiled.json','wb') as fout:
+    with open(os.sep.join([self.path, self.path+'_registration_compiled.json']),'wb') as fout:
       json.dump(self.reg_nodups,fout)
-    with open(self.path+self.path[:-1]+'_timing_dict.json','wb') as fout:
+    with open(os.sep.join([self.path, self.path+'_timing_dict.json']),'wb') as fout:
       json.dump(self.timedict,fout)
-    self.comblabel3.set_markup('<span color="blue">Successfully wrote files:\n'+self.path+self.path[:-1]+'_registration_compiled.json\n'+self.path+self.path[:-1]+'_timing_dict.json</span>')
+    self.comblabel3.set_markup('<span color="blue">Successfully wrote files:\n'+os.sep.join([self.path, self.path+'_registration_compiled.json'])+'\n'+os.sep.join([self.path, self.path+'_timing_dict.json'])+'</span>')
     #And write the compiled registration to csv
-    with open(self.path+self.path[:-1]+'_registration.csv','wb') as fout:
+    with open(os.sep.join([self.path, self.path+'_registration.csv']),'wb') as fout:
       dict_writer = csv.DictWriter(fout,self.fields)
       dict_writer.writer.writerow(self.fields)
       dict_writer.writerows(self.reg_nodups)
@@ -883,7 +505,7 @@ class PyTimer:
     self.pretimewin = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.pretimewin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
     self.pretimewin.set_icon_from_file('fstimer/data/icon.png')
-    self.pretimewin.set_title('fsTimer - Project '+self.path[:-1])
+    self.pretimewin.set_title('fsTimer - Project '+self.path)
     self.pretimewin.set_position(gtk.WIN_POS_CENTER)
     self.pretimewin.connect('delete_event',lambda b,jnk: self.pretimewin.hide())
     self.pretimewin.set_border_width(10)
@@ -943,7 +565,7 @@ class PyTimer:
   def choose_timingdict(self,jnk):
     chooser = gtk.FileChooserDialog(title='Choose timing dictionary',action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OK,gtk.RESPONSE_OK))
     self.pwd = os.getcwd()
-    chooser.set_current_folder(self.pwd+'/'+self.path)
+    chooser.set_current_folder(os.sep.join([self.pwd, self.path]))
     ffilter = gtk.FileFilter()
     ffilter.set_name('Timing dictionaries')
     ffilter.add_pattern('*_timing_dict.json')
@@ -984,7 +606,7 @@ class PyTimer:
     self.timewin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
     self.timewin.set_transient_for(self.rootwin)
     self.timewin.set_modal(True)
-    self.timewin.set_title('fsTimer - '+self.path[:-1])
+    self.timewin.set_title('fsTimer - '+self.path)
     self.timewin.set_position(gtk.WIN_POS_CENTER)
     self.timewin.connect('delete_event',lambda b,jnk: self.done_timing(b))
     self.timewin.set_border_width(10)
@@ -1098,7 +720,7 @@ class PyTimer:
   def edit_t0(self,jnk):
     self.t0win = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self.t0win.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.t0win.set_title('fsTimer - '+self.path[:-1])
+    self.t0win.set_title('fsTimer - '+self.path)
     self.t0win.set_position(gtk.WIN_POS_CENTER)
     self.t0win.set_transient_for(self.timewin)
     self.t0win.set_modal(True)
@@ -1431,7 +1053,7 @@ class PyTimer:
   def resume_times(self,jnk):
     chooser = gtk.FileChooserDialog(title='Choose timing results to resume',action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OK,gtk.RESPONSE_OK))
     self.pwd = os.getcwd()
-    chooser.set_current_folder(self.pwd+'/'+self.path)
+    chooser.set_current_folder(os.sep.join([self.pwd, self.path]))
     ffilter = gtk.FileFilter()
     ffilter.set_name('Timing results')
     ffilter.add_pattern('*_times.json')
@@ -1482,7 +1104,7 @@ class PyTimer:
     saveresults['rawtimes'] = self.rawtimes
     saveresults['timestr'] = self.timestr
     saveresults['t0'] = self.t0
-    with open(self.path+self.path[:-1]+'_'+self.timestr+'_times.json','wb') as fout:
+    with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_times.json']),'wb') as fout:
       json.dump(saveresults,fout)
     md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, "Times saved!")
     md.run()
@@ -1673,9 +1295,9 @@ class PyTimer:
               divresults[divindx] += '<tr><td>'+str(divplace[divindx])+tableentry
               divplace[divindx]+=1
         #And write to file.
-        with open(self.path+self.path[:-1]+'_'+self.timestr+'_alltimes.html','w') as fout:
+        with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_alltimes.html']),'w') as fout:
           fout.write(fullresults+tablefoot+htmlfoot)
-        with open(self.path+self.path[:-1]+'_'+self.timestr+'_divtimes.html','w') as fout:
+        with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_divtimes.html']),'w') as fout:
           fout.write(htmlhead)
           for (divindx,divstr) in enumerate(divresults):
             if divplace[divindx] >1:
@@ -1719,7 +1341,7 @@ class PyTimer:
         adj_ids = list(self.rawtimes['ids'])
       printed_ids = set([self.junkid]) #keep track of the ones we've already seen
       #We will write the alltimes csv online, while storing up the strings for the div results, so they can be properly headered
-      with open(self.path+self.path[:-1]+'_'+self.timestr+'_alltimes.csv','w') as fout:
+      with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_alltimes.csv']),'w') as fout:
         #Write out the header
         fout.write(tablehead)
         for (tag,time) in sorted(zip(adj_ids,self.rawtimes['times']), key=lambda entry: entry[1]):
@@ -1757,7 +1379,7 @@ class PyTimer:
                 divresults[divindx] += str(divplace[divindx])+tableentry
                 divplace[divindx]+=1
       #Now write out the divisional results
-      with open(self.path+self.path[:-1]+'_'+self.timestr+'_divtimes.csv','w') as fout:
+      with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_divtimes.csv']),'w') as fout:
         for i,divresult in enumerate(divresults):
           if divplace[i] > 1:
             fout.write(divresult)
@@ -1910,9 +1532,9 @@ class PyTimer:
             divresults[divindx] += '<tr><td><>'+tableentry
           divplace[divindx]+=1
       #And write to file.
-      with open(self.path+self.path[:-1]+'_'+self.timestr+'_alltimes.html','w') as fout:
+      with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_alltimes.html']),'w') as fout:
         fout.write(fullresults+tablefoot+htmlfoot)
-      with open(self.path+self.path[:-1]+'_'+self.timestr+'_divtimes.html','w') as fout:
+      with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_divtimes.html']),'w') as fout:
         fout.write(htmlhead)
         for (divindx,divstr) in enumerate(divresults):
           if divplace[divindx] >1:
@@ -1967,7 +1589,7 @@ class PyTimer:
       #And now the subsequent laps
       laptimesdic2[tag].extend([str(laptimesdic[tag][ii+1] - laptimesdic[tag][ii]) for ii in range(len(laptimesdic[tag])-1)])
     #Now run through the data one more time and print the results.
-    with open(self.path+self.path[:-1]+'_'+self.timestr+'_alltimes.csv','w') as fout:
+    with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_alltimes.csv']),'w') as fout:
       fout.write(tablehead)
       for (tag,times) in sorted(laptimesdic2.items(), key=lambda entry: entry[1][0]):
         age = self.timing[tag]['Age']
@@ -2015,7 +1637,7 @@ class PyTimer:
               divresults[divindx] += '<>'+tableentry
             divplace[divindx]+=1
     #Now write out the divisional results
-    with open(self.path+self.path[:-1]+'_'+self.timestr+'_divtimes.csv','w') as fout:
+    with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_divtimes.csv']),'w') as fout:
       for i,divresult in enumerate(divresults):
         if divplace[i] > 1:
           fout.write(divresult)
