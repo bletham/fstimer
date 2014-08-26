@@ -23,7 +23,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os,re,time,json,datetime,sys,csv,string
-import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root
+import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root, fstimer.gui.about
 from collections import defaultdict
 
 class PyTimer:
@@ -137,26 +137,10 @@ class PyTimer:
                                             self.compreg_window,
                                             self.gen_pretimewin)
       
-  # About window --------------------------------------------------------------------------
-  #This defines the about window.
-  def show_about(self,jnk):
-    about = gtk.AboutDialog()
-    about.set_logo(gtk.gdk.pixbuf_new_from_file("fstimer/data/icon.png"))
-    about.set_program_name('fsTimer')
-    about.set_version('0.4')
-    about.set_copyright('Copyright 2012-14 Ben Letham\nThis program comes with ABSOLUTELY NO WARRANTY; for details see license.\nThis is free software, and you are welcome to redistribute it under certain conditions; see license for details')
-    about.set_comments('free, open source software for race timing.')
-    about.set_website('http://fstimer.org')
-    about.set_wrap_license(True)
-    with open('COPYING','r') as fin:
-      gpl = fin.read()
-    about.set_license(gpl)
-    about.set_authors(['Ben Letham','Testing by Stewart Hamblin'])
-    about.run()
-    about.destroy()
-    return
-  
-  # End about window --------------------------------------------------------------------------
+  def show_about(self, jnk_unused):
+    '''Displays the about window'''
+    fstimer.gui.about.AboutWin()
+    
   # Import pre-registration window --------------------------------------------------------------------------
   #With this window we import pre-registration from a csv
   def importprereg_window(self,jnk):
