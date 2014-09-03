@@ -23,7 +23,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os,re,time,json,datetime,sys,csv,string
-import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root, fstimer.gui.about, fstimer.gui.importprereg, fstimer.gui.preregister, fstimer.gui.register
+import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root, fstimer.gui.about, fstimer.gui.importprereg, fstimer.gui.preregister, fstimer.gui.register, fstimer.gui.compile, fstimer.gui.compileerrors
 from collections import defaultdict
 
 class PyTimer:
@@ -166,331 +166,89 @@ class PyTimer:
     with open(filename, 'wb') as fout:
       json.dump(self.prereg,fout)
     return filename
-  
 
-  
-  # Compile registration window --------------------------------------------------------------------------
-  #Here we merge registration files and create the timing dictionary.
   def compreg_window(self,jnk):
-    #Create the window
-    self.compregwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.compregwin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.compregwin.set_icon_from_file('fstimer/data/icon.png')
-    self.compregwin.set_title('fsTimer - '+self.path)
-    self.compregwin.set_position(gtk.WIN_POS_CENTER)
-    self.compregwin.connect('delete_event', lambda b,jnk: self.compregwin.hide())
-    self.compregwin.set_border_width(10)
-    self.compregwin.set_size_request(600, 450)
-    #We will use a liststore to hold the filenames of the registrations to be merged,
-    #and put the liststore in a scrolledwindow
-    compregsw = gtk.ScrolledWindow()
-    compregsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-    compregsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    self.reglist = gtk.ListStore(str)
-    self.comptreeview = gtk.TreeView()
-    rendererText = gtk.CellRendererText()
-    column = gtk.TreeViewColumn('Registration files',rendererText,text=0)
-    column.set_sort_column_id(0)
-    self.comptreeview.append_column(column)
-    self.comptreeview.set_model(self.reglist)
-    compregsw.add(self.comptreeview)
-    #We have text below the window to explain what is happening during merging
-    self.comblabel1 = gtk.Label('')
-    self.comblabel1.set_alignment(0,0.5)
-    self.comblabel2 = gtk.Label('')
-    self.comblabel2.set_alignment(0,0.5)
-    self.comblabel3 = gtk.Label('')
-    self.comblabel3.set_alignment(0,0.5)
-    #Pack it all
-    regvbox1 = gtk.VBox(False,8)
-    regvbox1.pack_start(gtk.Label('Select all of the registration files to merge'),False,False,0)
-    regvbox1.pack_start(compregsw,True,True,0)
-    regvbox1.pack_start(self.comblabel1,False,False,0)
-    regvbox1.pack_start(self.comblabel2,False,False,0)
-    regvbox1.pack_start(self.comblabel3,False,False,0)
-    vbox1align = gtk.Alignment(0,0,1,1)
-    vbox1align.add(regvbox1)
-    #The buttons in a table
-    regtable = gtk.Table(2,1,False)
-    regtable.set_row_spacings(5)
-    regtable.set_col_spacings(5)
-    regtable.set_border_width(5)
-    btnREMOVE = gtk.Button(stock=gtk.STOCK_REMOVE)
-    btnREMOVE.connect('clicked',self.rm_compreg)
-    btnADD = gtk.Button(stock=gtk.STOCK_ADD)
-    btnADD.connect('clicked',self.add_compreg)
-    btnMERGE = gtk.Button('Merge')
-    btnMERGE.connect('clicked',self.merge_compreg)
-    btnOK = gtk.Button('Done')
-    btnOK.connect('clicked', lambda jnk: self.compregwin.hide())
-    vsubbox = gtk.VBox(False,8)
-    vsubbox.pack_start(btnMERGE,False,False,0)
-    vsubbox.pack_start(btnOK,False,False,0)
-    regvspacer = gtk.Alignment(1, 1, 0, 0)
-    regvspacer.add(vsubbox)
-    regtable.attach(regvspacer,0,1,1,2)
-    regvbox2 = gtk.VBox(False,8)
-    regvbox2.pack_start(btnREMOVE,False,False,0)
-    regvbox2.pack_start(btnADD,False,False,0)
-    regvbalign = gtk.Alignment(1, 0, 0, 0)
-    regvbalign.add(regvbox2)
-    regtable.attach(regvbalign,0,1,0,1)
-    reghbox = gtk.HBox(False,8)
-    reghbox.pack_start(vbox1align,True,True,0)
-    reghbox.pack_start(regtable,False,False,0)
-    #Add and show
-    self.compregwin.add(reghbox)
-    self.compregwin.show_all()
-    return
-  
-  #Here we have selected to remove a pre-reg file from the list
-  def rm_compreg(self,jnk):
-    selection = self.comptreeview.get_selection()
-    model,comptreeiter = selection.get_selected()
-    #if something was selected...
-    if comptreeiter:
-      model.remove(comptreeiter)
-    return
-    
-  #Here we have selected to add a pre-reg file to the list. We do this with a filechooser.
-  def add_compreg(self,jnk):
-    chooser = gtk.FileChooserDialog(title='Select registration files',action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_ADD,gtk.RESPONSE_OK))
-    chooser.set_select_multiple(True)
-    ffilter = gtk.FileFilter()
-    ffilter.set_name('Registration files')
-    ffilter.add_pattern('*registration_*.json')
-    chooser.add_filter(ffilter)
-    self.pwd = os.getcwd()
-    chooser.set_current_folder(os.join([self.pwd, self.path]))
-    response = chooser.run()
-    if response == gtk.RESPONSE_OK:
-      filenames = chooser.get_filenames()
-      for filenm in filenames:
-        self.reglist.append([filenm])
-    chooser.destroy()
-    return
-  
-  #Here we have chosen to merge all of the files in the treeview.
-  #Create a list of these filenames, and if it is nonempty, json load them and merge.
-  #Also create a timing dictionary, which is a dictionary with IDs as keys.
-  #Finally, we check for errors
-  def merge_compreg(self,jnk):
-    self.regfilelist = []
-    #Grab all of the filenames from the liststore
-    self.reglist.foreach(lambda model,path,titer: self.regfilelist.append(model.get_value(titer,0)))
-    if self.regfilelist:
-      #Here we use labels under the scrolledwindow to keep track of the status.
-      self.comblabel1.set_markup('<span color="blue">Combining registrations...</span>')
-      self.comblabel2.set_markup('')
-      self.comblabel3.set_markup('')
-      #This will be a list of the merged registrations (each registration is a list of dictionaries)
-      self.regmerge = []
-      for fname in self.regfilelist:
-        with open(fname,'rb') as fin:
-          reglist = json.load(fin)
-        self.regmerge.extend(reglist)
-      #Now remove dups
-      self.reg_nodups0 = [dict(tupleized) for tupleized in set(tuple(item.items()) for item in self.regmerge)]
-      #Get rid of entries that differ only by the ID. That is, items that were in the pre-reg and had no changes except an ID was assigned in one reg file.
-      #we'll do this in O(n^2) time:-(
-      self.reg_nodups = []
-      for reg in self.reg_nodups0:
-        if reg['ID']:
-          self.reg_nodups.append(reg)
-        else:
-          #make sure there isn't an entry with everything else the same, but an ID
-          dupcheck = 0
-          for i in range(len(self.reg_nodups0)):
-            dicttmp = self.reg_nodups0[i].copy()
-            if dicttmp['ID']:
-              #lets make sure we aren't a dup of this one
-              dicttmp['ID'] = ''
-              if reg == dicttmp:
-                dupcheck = 1
-          if dupcheck == 0:
-            self.reg_nodups.append(reg)
-      #Now form the Timing dictionary, and check for errors.
-      self.comblabel2.set_markup('<span color="blue">Checking for errors...</span>')
-      self.timedict = {} #the timing dictionary. keys are IDs, values are registration dictionaries
-      self.errors = {} #the errors dictionary. keys are IDs, values are a list registration dictionaries with that ID 
-      for reg in self.reg_nodups:
-        #Any registration without an ID is left out of the timing dictionary
-        if reg['ID']:
-          #have we already added this ID to the timing dictionary?
-          if reg['ID'] in self.timedict.keys():
-            #If not, then we need to first add to the list the reg that was already stored in timedict.
-            if reg['ID'] not in self.errors.keys():
-              self.errors[reg['ID']] = [self.timedict[reg['ID']]]
-            self.errors[reg['ID']].append(reg)
-          else:
-            self.timedict[reg['ID']] = reg
-      #If there are errors, we must correct them
-      if self.errors:
-        self.comblabel2.set_markup('<span color="blue">Checking for errors...</span> <span color="red">Errors found!</span>')
-        #Now we make a dialog to view errors...
-        self.comperrorswin = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.comperrorswin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-        self.comperrorswin.set_transient_for(self.compregwin)
-        self.comperrorswin.set_modal(True)
-        self.comperrorswin.set_title('fsTimer - '+self.path)
-        self.comperrorswin.set_position(gtk.WIN_POS_CENTER)
-        self.comperrorswin.connect('delete_event',lambda b,jnk: self.cancel_error(jnk))
-        self.comperrorswin.set_border_width(10)
-        self.comperrorswin.set_size_request(450, 300)
-        #We will make a liststore with all of the overloaded IDs (that is, the keys of self.errors)
-        #and put it in a scrolled window
-        comperrorsw = gtk.ScrolledWindow()
-        comperrorsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        comperrorsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.errorlist = gtk.ListStore(str)
-        self.errortreeview = gtk.TreeView()
-        rendererText = gtk.CellRendererText()
-        column = gtk.TreeViewColumn('Overloaded IDs',rendererText,text=0)
-        column.set_sort_column_id(0)
-        self.errortreeview.append_column(column)
-        #add on the IDs from self.errors
-        for errorid in self.errors.keys():
-          self.errorlist.append([errorid])
-        self.errortreeview.set_model(self.errorlist)
-        comperrorsw.add(self.errortreeview)
-        errvbox1 = gtk.VBox(False,8)
-        errvbox1.pack_start(gtk.Label('These IDs were assigned to multiple entries.\nThey will be left unassigned.'),False,False,0)
-        errvbox1.pack_start(comperrorsw,True,True,0)
-        vbox1align = gtk.Alignment(0,0,1,1)
-        vbox1align.add(errvbox1)
-        #buttons
-        btnVIEW = gtk.Button('View ID entries')
-        btnVIEW.connect('clicked',self.view_entries) 
-        btnOK = gtk.Button(stock=gtk.STOCK_OK)
-        btnOK.connect('clicked', self.ok_error)
-        errvbalign = gtk.Alignment(1, 0, 0, 0)
-        vbox2 = gtk.VBox(False,10)
-        vbox2.pack_start(errvbalign,True,True,0)
-        vbox2.pack_start(btnVIEW,False,False,0)
-        vbox2.pack_start(btnOK,False,False,0)
-        hbox = gtk.HBox(False,10)
-        hbox.pack_start(vbox1align,False,False,0)
-        hbox.pack_start(vbox2,False,False,0)
-        self.comperrorswin.add(hbox)
-        self.comperrorswin.show_all()
+    '''Merges registration files and create the timing dictionary.'''
+    self.compilewin = fstimer.gui.compile.CompilationWin(self.path, self.merge_compreg)
+
+  def merge_compreg(self, regfilelist):
+    '''Merges the given registration files
+       Loads all given json files and merge.
+       Also creates a timing dictionary, which is a dictionary with IDs as keys.
+       Finally, checks for errors'''
+    if not regfilelist:
+      # case of an empty list : nothing to be done
+      return
+    # Use labels to keep track of the status.
+    self.compilewin.resetLabels()
+    self.compilewin.setLabel(0, '<span color="blue">Combining registrations...</span>')
+    # This will be a list of the merged registrations
+    # each registration is a list of dictionaries
+    self.regmerge = []
+    for fname in regfilelist:
+      with open(fname,'rb') as fin:
+        reglist = json.load(fin)
+      self.regmerge.extend(reglist)
+    # Now remove trivial dups
+    self.reg_nodups0 = [dict(tupleized) for tupleized in set(tuple(item.items()) for item in self.regmerge)]
+    # Get rid of entries that differ only by the ID. That is, items that were in the pre-reg and had no changes except an ID was assigned in one reg file.
+    # we'll do this in O(n^2) time:-(
+    self.reg_nodups = []
+    for reg in self.reg_nodups0:
+      if reg['ID']:
+        self.reg_nodups.append(reg)
       else:
-        #If no errors, continue on
-        self.compreg_noerrors()
-    return
-  
-  #Here we found overloaded IDs while merging, and have chosen to view one.
-  #We will load a new window that will list the registration entries overloaded on this ID.
-  #We will then give an option to keep one of the registration entries associated with this ID.
-  def view_entries(self,jnk):
-    selection = self.errortreeview.get_selection()
-    model,treeiter = selection.get_selected()
-    if treeiter:
-      current_id = self.errorlist.get_value(treeiter,0)
-      #Define the new window
-      self.corerrorswin = gtk.Window(gtk.WINDOW_TOPLEVEL)
-      self.corerrorswin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-      self.corerrorswin.set_transient_for(self.comperrorswin)
-      self.corerrorswin.set_modal(True)
-      self.corerrorswin.set_title('fsTimer - '+self.path)
-      self.corerrorswin.set_position(gtk.WIN_POS_CENTER)
-      self.corerrorswin.connect('delete_event',lambda b,jnk: self.corerrorswin.hide())
-      self.corerrorswin.set_border_width(10)
-      self.corerrorswin.set_size_request(800, 300)
-      #This will be a liststore in a treeview in a scrolled window, as usual
-      corerrorsw = gtk.ScrolledWindow()
-      corerrorsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-      corerrorsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-      self.corerrorlist = gtk.ListStore(*[str for field in self.fields])
-      self.corerrortreeview = gtk.TreeView()
-      #Now we define each column in the treeview. We take these from self.fields, defined in __init__
-      for (colid,field) in enumerate(self.fields):
-        column = gtk.TreeViewColumn(field,gtk.CellRendererText(),text=colid)
-        column.set_sort_column_id(colid)
-        self.corerrortreeview.append_column(column)
-      #And add in the info from self.errors
-      for reg in self.errors[current_id]:
-        self.corerrorlist.append([reg[field] for field in self.fields])
-      self.corerrortreeview.set_model(self.corerrorlist)
-      corerrorsw.add(self.corerrortreeview)
-      errvbox1 = gtk.VBox(False,8)
-      errvbox1.pack_start(gtk.Label('These entries share the same ID.\nUse "Keep entry" to associate an entry with the ID.\nOtherwise, press "OK" to continue, no entry will be associated with this ID.'),False,False,0)
-      errvbox1.pack_start(corerrorsw,True,True,0)
-      vbox1align = gtk.Alignment(0,0,1,1)
-      vbox1align.add(errvbox1)
-      #Now build a table for the buttons
-      errtable = gtk.Table(2,1,False)
-      errtable.set_row_spacings(5)
-      errtable.set_col_spacings(5)
-      errtable.set_border_width(5)
-      btnKEEP = gtk.Button('Keep entry')
-      btnKEEP.connect('clicked',self.keep_correct,current_id,treeiter)
-      btnCANCEL = gtk.Button(stock=gtk.STOCK_OK)
-      btnCANCEL.connect('clicked', lambda b: self.corerrorswin.hide())
-      vsubbox = gtk.VBox(False,8)
-      vsubbox.pack_start(btnCANCEL,False,False,0)
-      errvspacer = gtk.Alignment(1, 1, 0, 0)
-      errvspacer.add(vsubbox)
-      errtable.attach(errvspacer,0,1,1,2)
-      errvbox2 = gtk.VBox(False,8)
-      errvbox2.pack_start(btnKEEP,False,False,0)
-      errvbalign = gtk.Alignment(1, 0, 0, 0)
-      errvbalign.add(errvbox2)
-      errtable.attach(errvbalign,0,1,0,1)
-      errhbox = gtk.HBox(False,8)
-      errhbox.pack_start(vbox1align,True,True,0)
-      errhbox.pack_start(errtable,False,False,0)
-      self.corerrorswin.add(errhbox)
-      #And show
-      self.corerrorswin.show_all()
-    return
-  
-  #Here we have chosen to keep an entry while correcting an error
-  #We replace timingdict with the chosen entry, and remove it from the error list.
-  def keep_correct(self,jnk,current_id,treeiter1):
-    selection = self.corerrortreeview.get_selection()
-    model,treeiter = selection.get_selected()
-    if treeiter:
-      new_vals = {}
-      for (colid,field) in enumerate(self.fields):
-        new_vals[field] = model.get_value(treeiter,colid)
-      #Replace the timedict entry with the selected entry
-      self.timedict[current_id] = new_vals
-      #Remove this ID from the errors list
-      del self.errors[current_id]
-      #And remove it from the error liststore
-      self.errorlist.remove(treeiter1)
-      #we are now done correcting this error
-      self.corerrorswin.hide()
-      #if there are no more errors to correct, we move on.
-      if not self.errorlist.get_iter_first():
-        self.comperrorswin.hide()
-        self.compreg_noerrors(True)
-    return
-    
-  #Here we have chosen ok. We continue with the errors.
-  #Remove the remaining errors from the timingdict.
-  def ok_error(self,jnk):
-    for reg in self.errors.keys():
-      #these are the remaining errors
-      self.timedict.pop(reg)
-    self.comperrorswin.hide()
-    self.compreg_noerrors(True)
-    return
+        # make sure there isn't an entry with everything else the same, but an ID
+        dupcheck = 0
+        for i in range(len(self.reg_nodups0)):
+          dicttmp = self.reg_nodups0[i].copy()
+          if dicttmp['ID']:
+            #lets make sure we aren't a dup of this one
+            dicttmp['ID'] = ''
+            if reg == dicttmp:
+              dupcheck = 1
+        if dupcheck == 0:
+          self.reg_nodups.append(reg)
+    # Now form the Timing dictionary, and check for errors.
+    self.compilewin.setLabel(1, '<span color="blue">Checking for errors...</span>')
+    # the timing dictionary. keys are IDs, values are registration dictionaries
+    self.timedict = {}
+    # the errors dictionary. keys are IDs, values are a list registration dictionaries with that ID 
+    self.errors = {}
+    for reg in self.reg_nodups:
+      # Any registration without an ID is left out of the timing dictionary
+      if reg['ID']:
+        # have we already added this ID to the timing dictionary?
+        if reg['ID'] in self.timedict.keys():
+          # If not, then we need to first add to the list the reg that was already stored in timedict.
+          if reg['ID'] not in self.errors.keys():
+            self.errors[reg['ID']] = [self.timedict[reg['ID']]]
+          self.errors[reg['ID']].append(reg)
+        else:
+          self.timedict[reg['ID']] = reg
+    # If there are errors, we must correct them
+    if self.errors:
+      self.compilewin.setLabel(1, '<span color="blue">Checking for errors...</span> <span color="red">Errors found!</span>')
+      # Now we make a dialog to deal with errors...
+      self.comperrorswin = fstimer.gui.compileerrors.CompilationErrorsWin(self.path, self.compilewin, self.errors, self.fields, self.timedict, self.compreg_noerrors)
+    else:
+      # If no errors, continue on
+      self.compreg_noerrors()
 
   #Here we no longer have any errors (either we had none to begin with, or we have corrected them all)
   #We write the dictionaries to the disk
   #We also write a csv
   def compreg_noerrors(self,errs=False):
     if errs:
-      self.comblabel2.set_markup('<span color="blue">Checking for errors... errors corrected.</span>')
+      self.compilewin.setLabel(1, '<span color="blue">Checking for errors... errors corrected.</span>')
     else:
-      self.comblabel2.set_markup('<span color="blue">Checking for errors... no errors found!</span>')
+      self.compilewin.setLabel(1, '<span color="blue">Checking for errors... no errors found!</span>')
     #Now save things
     with open(os.sep.join([self.path, self.path+'_registration_compiled.json']),'wb') as fout:
       json.dump(self.reg_nodups,fout)
     with open(os.sep.join([self.path, self.path+'_timing_dict.json']),'wb') as fout:
       json.dump(self.timedict,fout)
-    self.comblabel3.set_markup('<span color="blue">Successfully wrote files:\n'+os.sep.join([self.path, self.path+'_registration_compiled.json'])+'\n'+os.sep.join([self.path, self.path+'_timing_dict.json'])+'</span>')
+    self.compilewin.setLabel(2, '<span color="blue">Successfully wrote files:\n'+os.sep.join([self.path, self.path+'_registration_compiled.json'])+'\n'+os.sep.join([self.path, self.path+'_timing_dict.json'])+'</span>')
     #And write the compiled registration to csv
     with open(os.sep.join([self.path, self.path+'_registration.csv']),'wb') as fout:
       dict_writer = csv.DictWriter(fout,self.fields)
