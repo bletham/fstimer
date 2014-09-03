@@ -23,7 +23,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import os,re,time,json,datetime,sys,csv,string
-import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root, fstimer.gui.about, fstimer.gui.importprereg, fstimer.gui.preregister, fstimer.gui.register, fstimer.gui.compile, fstimer.gui.compileerrors
+import fstimer.gui.intro, fstimer.gui.newproject, fstimer.gui.definefields, fstimer.gui.definefamilyreset, fstimer.gui.definedivisions, fstimer.gui.root, fstimer.gui.about, fstimer.gui.importprereg, fstimer.gui.preregister, fstimer.gui.register, fstimer.gui.compile, fstimer.gui.compileerrors, fstimer.gui.pretime
 from collections import defaultdict
 
 class PyTimer:
@@ -256,94 +256,11 @@ class PyTimer:
       dict_writer.writerows(self.reg_nodups)
     return
     
-  # End compile registration window --------------------------------------------------------------------------  
-  # Pre-timing window --------------------------------------------------------------------------
-  #Here we select a timing dictionary to use
   def gen_pretimewin(self,jnk):
-    self.pretimewin = gtk.Window(gtk.WINDOW_TOPLEVEL)
-    self.pretimewin.modify_bg(gtk.STATE_NORMAL, self.bgcolor)
-    self.pretimewin.set_icon_from_file('fstimer/data/icon.png')
-    self.pretimewin.set_title('fsTimer - Project '+self.path)
-    self.pretimewin.set_position(gtk.WIN_POS_CENTER)
-    self.pretimewin.connect('delete_event',lambda b,jnk: self.pretimewin.hide())
-    self.pretimewin.set_border_width(10)
-    # Start with some intro text.
-    btnFILE = gtk.Button('Choose file')
-    btnFILE.connect('clicked',self.choose_timingdict)
-    self.pretimefilelabel = gtk.Label('')
-    self.pretimefilelabel.set_markup('<span color="blue">Select a timing dictionary.</span>')
+    # Selects a timing dictionary to use
     self.timing = defaultdict(lambda: defaultdict(str))
-    entry1 = gtk.Entry(max=6)
-    label2 = gtk.Label('Specify a "pass" ID, not assigned to any racer')
-    timebtncombobox = gtk.combo_box_new_text()
-    timebtnlist = [' ','.','/']
-    timebtndescr = ['Spacebar (" ")','Period (".")','Forward slash ("/")']
-    for descr in timebtndescr:
-      timebtncombobox.append_text(descr)
-    timebtncombobox.set_active(0)
-    label3 = gtk.Label('Specify the key for marking times. It must not be in any of the IDs.')
-    hbox3 = gtk.HBox(False,10)
-    hbox3.pack_start(timebtncombobox,False,False,8)
-    hbox3.pack_start(label3,False,False,8)
-    check_button = gtk.CheckButton(label='Strip leading zeros from IDs? (Probably leave this unchecked)')
-    check_button2 = gtk.CheckButton(label='Multiple laps? Specify number if more than one:')
-    numlapsadj = gtk.Adjustment(value=2,lower=2,upper=10,step_incr=1)
-    numlapsbtn = gtk.SpinButton(numlapsadj,digits=0,climb_rate=0)
-    btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
-    btnCANCEL.connect('clicked',lambda b: self.pretimewin.hide())
-    pretimebtnOK = gtk.Button(stock=gtk.STOCK_OK)
-    pretimebtnOK.connect('clicked',self.gen_timewin,entry1,timebtncombobox,timebtnlist,check_button,check_button2,numlapsbtn)
-    btmhbox = gtk.HBox(False,8)
-    btmhbox.pack_start(pretimebtnOK,False,False,8)
-    btmhbox.pack_start(btnCANCEL,False,False,8)
-    btmalign = gtk.Alignment(1, 0, 0, 0)
-    btmalign.add(btmhbox)
-    hbox = gtk.HBox(False,10)
-    hbox.pack_start(btnFILE,False,False,8)
-    hbox.pack_start(self.pretimefilelabel,False,False,8)
-    hbox2 = gtk.HBox(False,10)
-    hbox2.pack_start(entry1,False,False,8)
-    hbox2.pack_start(label2,False,False,8)
-    hbox4 = gtk.HBox(False,10)
-    hbox4.pack_start(check_button2,False,False,8)
-    hbox4.pack_start(numlapsbtn,False,False,8)
-    vbox = gtk.VBox(False,10)
-    vbox.pack_start(hbox,False,False,8)
-    vbox.pack_start(hbox2,False,False,8)
-    vbox.pack_start(hbox3,False,False,8)
-    vbox.pack_start(check_button,False,False,8)
-    vbox.pack_start(hbox4,False,False,8)
-    vbox.pack_start(btmalign,False,False,8)
-    self.pretimewin.add(vbox)
-    self.pretimewin.show_all()
-    return  
-  
-  #Here we have chosen to load a timing dictionary
-  #We will convert the selected file into a defaultdict
-  def choose_timingdict(self,jnk):
-    chooser = gtk.FileChooserDialog(title='Choose timing dictionary',action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OK,gtk.RESPONSE_OK))
-    self.pwd = os.getcwd()
-    chooser.set_current_folder(os.sep.join([self.pwd, self.path]))
-    ffilter = gtk.FileFilter()
-    ffilter.set_name('Timing dictionaries')
-    ffilter.add_pattern('*_timing_dict.json')
-    chooser.add_filter(ffilter)
-    response = chooser.run()
-    if response == gtk.RESPONSE_OK:
-      filename = chooser.get_filename()
-      self.timing = defaultdict(lambda: defaultdict(str)) #reset
-      try:
-        with open(filename,'rb') as fin:
-          a = json.load(fin)
-        for reg in a.keys():
-          self.timing[reg].update(a[reg])
-        self.pretimefilelabel.set_markup('<span color="blue">'+os.path.basename(filename)+' loaded.</span>')
-      except (IOError, ValueError):
-        self.pretimefilelabel.set_markup('<span color="red">ERROR! '+os.path.basename(filename)+' not valid.</span>')
-    chooser.destroy()
-    return
-    
-  # End pre-timing window --------------------------------------------------------------------------  
+    self.pretimewin = fstimer.gui.pretime.PreTimeWin(self.path, self.timing, self.gen_timewin)
+        
   # Timing window --------------------------------------------------------------------------
   #Now we actually do the timing!
   def gen_timewin(self,jnk,entry1,timebtncombobox,timebtnlist,check_button,check_button2,numlapsbtn):
