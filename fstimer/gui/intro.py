@@ -40,7 +40,7 @@ class IntroWin(gtk.Window):
         self.add(vbox)
         # Main logo
         logo = gtk.Image()
-        logo.set_from_file('fstimer_logo.png')
+        logo.set_from_file('fstimer/data/fstimer_logo.png')
         # Welcome text
         label0 = gtk.Label('')
         label = gtk.Label('Select an existing project, or begin a new project.')
