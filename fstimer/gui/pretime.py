@@ -31,6 +31,7 @@ class PreTimeWin(gtk.Window):
         super(PreTimeWin, self).__init__(gtk.WINDOW_TOPLEVEL)
         self.path = path
         self.timing = timing
+        self.okclicked_cb = okclicked_cb
         self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
         self.set_icon_from_file('fstimer/data/icon.png')
         self.set_title('fsTimer - Project '+self.path)
@@ -42,26 +43,26 @@ class PreTimeWin(gtk.Window):
         btnFILE.connect('clicked', self.choose_timingdict)
         self.pretimefilelabel = gtk.Label('')
         self.pretimefilelabel.set_markup('<span color="blue">Select a timing dictionary.</span>')
-        entry1 = gtk.Entry(max=6)
+        self.entry1 = gtk.Entry(max=6)
         label2 = gtk.Label('Specify a "pass" ID, not assigned to any racer')
-        timebtncombobox = gtk.combo_box_new_text()
-        timebtnlist = [' ', '.', '/']
+        self.timebtncombobox = gtk.combo_box_new_text()
+        self.timebtnlist = [' ', '.', '/']
         timebtndescr = ['Spacebar (" ")', 'Period (".")', 'Forward slash ("/")']
         for descr in timebtndescr:
-          timebtncombobox.append_text(descr)
-        timebtncombobox.set_active(0)
+          self.timebtncombobox.append_text(descr)
+        self.timebtncombobox.set_active(0)
         label3 = gtk.Label('Specify the key for marking times. It must not be in any of the IDs.')
         hbox3 = gtk.HBox(False, 10)
-        hbox3.pack_start(timebtncombobox, False, False, 8)
+        hbox3.pack_start(self.timebtncombobox, False, False, 8)
         hbox3.pack_start(label3, False, False, 8)
-        check_button = gtk.CheckButton(label='Strip leading zeros from IDs? (Probably leave this unchecked)')
-        check_button2 = gtk.CheckButton(label='Multiple laps? Specify number if more than one:')
+        self.check_button = gtk.CheckButton(label='Strip leading zeros from IDs? (Probably leave this unchecked)')
+        self.check_button2 = gtk.CheckButton(label='Multiple laps? Specify number if more than one:')
         numlapsadj = gtk.Adjustment(value=2, lower=2, upper=10, step_incr=1)
-        numlapsbtn = gtk.SpinButton(numlapsadj, digits=0, climb_rate=0)
+        self.numlapsbtn = gtk.SpinButton(numlapsadj, digits=0, climb_rate=0)
         btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
         btnCANCEL.connect('clicked', lambda b: self.hide())
         pretimebtnOK = gtk.Button(stock=gtk.STOCK_OK)
-        pretimebtnOK.connect('clicked', okclicked_cb, entry1, timebtncombobox, timebtnlist, check_button, check_button2, numlapsbtn)
+        pretimebtnOK.connect('clicked', self.okclicked)
         btmhbox = gtk.HBox(False, 8)
         btmhbox.pack_start(pretimebtnOK, False, False, 8)
         btmhbox.pack_start(btnCANCEL, False, False, 8)
@@ -71,16 +72,16 @@ class PreTimeWin(gtk.Window):
         hbox.pack_start(btnFILE, False, False, 8)
         hbox.pack_start(self.pretimefilelabel, False, False, 8)
         hbox2 = gtk.HBox(False, 10)
-        hbox2.pack_start(entry1, False, False, 8)
+        hbox2.pack_start(self.entry1, False, False, 8)
         hbox2.pack_start(label2, False, False, 8)
         hbox4 = gtk.HBox(False, 10)
-        hbox4.pack_start(check_button2, False, False, 8)
-        hbox4.pack_start(numlapsbtn, False, False, 8)
+        hbox4.pack_start(self.check_button2, False, False, 8)
+        hbox4.pack_start(self.numlapsbtn, False, False, 8)
         vbox = gtk.VBox(False, 10)
         vbox.pack_start(hbox, False, False, 8)
         vbox.pack_start(hbox2, False, False, 8)
         vbox.pack_start(hbox3, False, False, 8)
-        vbox.pack_start(check_button, False, False, 8)
+        vbox.pack_start(self.check_button, False, False, 8)
         vbox.pack_start(hbox4, False, False, 8)
         vbox.pack_start(btmalign, False, False, 8)
         self.add(vbox)
@@ -108,3 +109,14 @@ class PreTimeWin(gtk.Window):
             except (IOError, ValueError):
                 self.pretimefilelabel.set_markup('<span color="red">ERROR! '+os.path.basename(filename)+' not valid.</span>')
         chooser.destroy()
+
+    def okclicked(self, jnk_unused):
+        '''Handles click on ok button'''
+        junkid = self.entry1.get_text()
+        timebtn = self.timebtnlist[self.timebtncombobox.get_active()]
+        strpzeros = self.check_button.get_active()
+        if self.check_button2.get_active():
+            numlaps = self.numlapsbtn.get_value_as_int()
+        else:
+            numlaps = 1
+        self.okclicked_cb(junkid, timebtn, strpzeros, numlaps)
