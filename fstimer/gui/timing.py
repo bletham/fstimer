@@ -30,6 +30,9 @@ import os
 import re
 import json
 
+class MergeError(Exception):
+    pass
+
 class TimingWin(gtk.Window):
     '''Handling of the timing window'''
 
@@ -116,7 +119,9 @@ class TimingWin(gtk.Window):
         btnCSV = gtk.Button('Save CSV')
         btnCSV.connect('clicked', print_cb, True)
         btnRESUME = gtk.Button('Resume')
-        btnRESUME.connect('clicked', self.resume_times)
+        btnRESUME.connect('clicked', self.resume_times, False)
+        btnMERGE = gtk.Button('Merge')
+        btnMERGE.connect('clicked', self.resume_times, True)
         btnOK = gtk.Button('Done')
         btnOK.connect('clicked', self.done_timing)
         vsubbox = gtk.VBox(False, 8)
@@ -127,6 +132,7 @@ class TimingWin(gtk.Window):
         vsubbox.pack_start(btnSAVE, False, False, 0)
         vsubbox.pack_start(btnCSV, False, False, 0)
         vsubbox.pack_start(btnRESUME, False, False, 0)
+        vsubbox.pack_start(btnMERGE, False, False, 0)
         vsubbox.pack_start(btnOK, False, False, 0)
         vspacer = gtk.Alignment(1, 1, 0, 0)
         vspacer.add(vsubbox)
@@ -390,7 +396,7 @@ class TimingWin(gtk.Window):
                         treeiter = self.timemodel.get_iter((rowcounter,))
                         self.timemodel.remove(treeiter)
 
-    def resume_times(self, jnk_unused):
+    def resume_times(self, jnk_unused, isMerge):
         '''Handles click on Resume button'''
         chooser = gtk.FileChooserDialog(title='Choose timing results to resume', action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OK, gtk.RESPONSE_OK))
         chooser.set_current_folder(os.sep.join([os.getcwd(), self.path]))
@@ -404,10 +410,17 @@ class TimingWin(gtk.Window):
             try:
                 with open(filename, 'rb') as fin:
                     saveresults = json.load(fin)
-                self.rawtimes = saveresults['rawtimes']
-                self.timestr = saveresults['timestr']
-                self.t0 = saveresults['t0']
-                self.t0_label.set_markup('t0: '+str(self.t0))
+                newrawtimes = saveresults['rawtimes']
+                if isMerge:
+                    if self.rawtimes['ids'] or newrawtimes['times']:
+                        # we only accept merge of pure times with pure ids
+                        raise MergeError('Merge is only dealing with pure ids merged into pure times')
+                    self.rawtimes['ids'] = newrawtimes['ids']
+                else:
+                    self.rawtimes = newrawtimes
+                    self.timestr = saveresults['timestr']
+                    self.t0 = saveresults['t0']
+                    self.t0_label.set_markup('t0: '+str(self.t0))
                 self.offset = len(self.rawtimes['times']) - len(self.rawtimes['ids'])
                 # Compute how many racers have checked in
                 for ID in self.rawtimes['ids']:
@@ -430,9 +443,11 @@ class TimingWin(gtk.Window):
                 for entry in zip(adj_ids, adj_times):
                     self.timemodel.append(list(entry))
                 chooser.destroy()
-            except (IOError, ValueError, TypeError):
+            except (IOError, ValueError, TypeError, MergeError), e:
                 chooser.destroy()
-                error_dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, 'ERROR: Failed to resume.')
+                error_dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL,
+                                                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                                                 'ERROR: Failed to %s : %s.' % ('merge' if isMerge else 'result', e))
                 error_dialog.set_title('Oops...')
                 response = error_dialog.run()
                 error_dialog.destroy()
@@ -458,8 +473,8 @@ class TimingWin(gtk.Window):
             oktime_dialog1.set_title('Really done?')
             response1 = oktime_dialog1.run()
             oktime_dialog1.destroy()
-        elif str(type(source)) == "<type 'gtk.Window'>":
-            # this is a cheap hack b/c when called from delete_event the window closes regardless.
+        else:
+            # in case of delete_event the window closes regardless.
             response1 = gtk.RESPONSE_YES
         if response1 == gtk.RESPONSE_YES:
             oktime_dialog2 = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, 'Do you want to save before finishing?\nUnsaved data will be lost.')
