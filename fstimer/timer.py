@@ -58,6 +58,11 @@ class PyTimer(object):
         self.fieldsdic = regdata['fieldsdic']
         self.clear_for_fam = regdata['clear_for_fam']
         self.divisions = regdata['divisions']
+        try:
+            self.projecttype = regdata['projecttype']
+        except KeyError:
+            # old project, with no type, type is thus standard one
+            self.projecttype = 'standard'
         self.introwin.hide()
         self.rootwin = fstimer.gui.root.RootWin(self.path,
                                                 self.show_about,
@@ -71,13 +76,14 @@ class PyTimer(object):
         self.newprojectwin = fstimer.gui.newproject.NewProjectWin(self.define_fields,
                                                                   self.introwin)
 
-    def define_fields(self, path):
+    def define_fields(self, path, projecttype):
         '''Handled the definition of fields when creating a new project'''
         #this is really just fsTimer.fieldsdic.keys(), but is important because it defines the order in which fields show up on the registration screen
         self.fields = ['Last name', 'First name', 'ID', 'Age', 'Gender',
                        'Address', 'Email', 'Telephone', 'Contact for future races',
                        'How did you hear about race']
         self.path = path
+        self.projecttype = projecttype
         self.fieldsdic = {}
         self.fieldsdic['Last name'] = {'type':'entrybox', 'max':30}
         self.fieldsdic['First name'] = {'type':'entrybox', 'max':30}
@@ -140,6 +146,7 @@ class PyTimer(object):
         '''Stores a new project to file and goes back to root window'''
         os.system('mkdir '+self.path)
         regdata = {}
+        regdata['projecttype'] = self.projecttype
         regdata['fields'] = self.fields
         regdata['fieldsdic'] = self.fieldsdic
         regdata['clear_for_fam'] = self.clear_for_fam
