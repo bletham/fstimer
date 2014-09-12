@@ -78,18 +78,23 @@ class PyTimer(object):
 
     def define_fields(self, path, projecttype):
         '''Handled the definition of fields when creating a new project'''
-        #this is really just fsTimer.fieldsdic.keys(), but is important because it defines the order in which fields show up on the registration screen
-        self.fields = ['Last name', 'First name', 'ID', 'Age', 'Gender',
-                       'Address', 'Email', 'Telephone', 'Contact for future races',
-                       'How did you hear about race']
         self.path = path
         self.projecttype = projecttype
+        #this is really just fsTimer.fieldsdic.keys(), but is important because it defines the order in which fields show up on the registration screen
+        self.fields = ['Last name', 'First name', 'ID', 'Age', 'Gender']
+        if self.projecttype == 'handicap':
+            self.fields.append('Handicap')
+        self.fields.extend(['Address', 'Email', 'Telephone',
+                            'Contact for future races',
+                            'How did you hear about race'])
         self.fieldsdic = {}
         self.fieldsdic['Last name'] = {'type':'entrybox', 'max':30}
         self.fieldsdic['First name'] = {'type':'entrybox', 'max':30}
         self.fieldsdic['ID'] = {'type':'entrybox', 'max':6}
         self.fieldsdic['Age'] = {'type':'entrybox', 'max':3}
         self.fieldsdic['Gender'] = {'type':'combobox', 'options':['male', 'female']}
+        if self.projecttype == 'handicap':
+            self.fieldsdic['Handicap'] = {'type':'durationbox', 'max':20}
         self.fieldsdic['Address'] = {'type':'entrybox', 'max':90}
         self.fieldsdic['Email'] = {'type':'entrybox', 'max':40}
         self.fieldsdic['Telephone'] = {'type':'entrybox', 'max':20}

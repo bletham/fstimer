@@ -46,7 +46,7 @@ class FamilyResetWin(gtk.Window):
         btnlist = []
         for field in fields:
             btnlist.append(gtk.CheckButton(field))
-            if field in ['First name', 'Gender', 'Age', 'ID']:
+            if field in ['First name', 'Gender', 'Age', 'ID', 'Handicap']:
                 btnlist[-1].set_active(True)
             else:
                 btnlist[-1].set_active(False)

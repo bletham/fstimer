@@ -72,7 +72,7 @@ class DefineFieldsWin(gtk.Window):
         self.regfieldview.append_column(column)
         #Now we populate the model with the default fields
         for field in fields:
-            if fieldsdic[field]['type'] == 'entrybox':
+            if fieldsdic[field]['type'] in ['entrybox', 'durationbox']:
                 self.regfieldsmodel.append([field, 'entrybox', 'max characters: '+str(fieldsdic[field]['max'])])
             elif fieldsdic[field]['type'] == 'combobox':
                 optstr = ''
@@ -223,7 +223,7 @@ class DefineFieldsWin(gtk.Window):
         model, treeiter1 = selection.get_selected()
         if treeiter1:
             name = model.get_value(treeiter1, 0)
-            if name in ['Last name', 'First name', 'ID', 'Age', 'Gender']:
+            if name in ['Last name', 'First name', 'ID', 'Age', 'Gender', 'Handicap']:
                 #these are the hard-coded required fields
                 btnREMOVE.set_sensitive(False)
                 btnEDIT.set_sensitive(False)

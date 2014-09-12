@@ -21,6 +21,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import fstimer.gui
+import re
 
 class RegistrationWin(gtk.Window):
     '''Handling of the window dedicated to registration'''
@@ -62,7 +63,7 @@ class RegistrationWin(gtk.Window):
         self.set_icon_from_file('fstimer/data/icon.png')
         self.set_title('fsTimer - ' + path)
         self.set_position(gtk.WIN_POS_CENTER)
-        self.connect('delete_event', lambda b, jnk: self.reg_ok(jnk))
+        self.connect('delete_event', lambda b, jnk: self.ok_clicked(jnk))
         self.set_border_width(10)
         self.set_size_request(850, 450)
         #Now the filter entrybox
@@ -246,15 +247,25 @@ class RegistrationWin(gtk.Window):
         self.editreg_win.set_position(gtk.WIN_POS_CENTER)
         self.editreg_win.connect('delete_event', lambda b, jnk_unused: self.editreg_win.hide())
         self.editreg_win.set_border_width(10)
-        #Create all of the buttons, and fill in current_info if available.
+        #An hbox for the buttons
+        editreghbox = gtk.HBox(False, 8)
+        editregbtnOK = gtk.Button(stock=gtk.STOCK_OK)
+        editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter)
+        editregbtnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        editregbtnCANCEL.connect('clicked', lambda b: self.editreg_win.hide())
+        editreghbox.pack_start(editregbtnOK, False, False, 5)
+        editreghbox.pack_start(editregbtnCANCEL, False, False, 5)
+        # fill in current_info if available.
         self.editregfields = {}
         for field in self.fields:
             # Determine which type of entry is appropriate, create it and fill it.
             # Entrybox
-            if self.fieldsdic[field]['type'] == 'entrybox':
+            if self.fieldsdic[field]['type'] in ('entrybox', 'durationbox'):
                 self.editregfields[field] = gtk.Entry(max=self.fieldsdic[field]['max'])
                 if current_info:
                     self.editregfields[field].set_text(current_info[field])
+                if self.fieldsdic[field]['type'] == 'durationbox':
+                    editregbtnOK.set_sensitive(False)
             # Spinbutton
             #elif self.fieldsdic[field]['type'] == 'spinbutton':
             #    self.editregfields[field] = gtk.SpinButton(gtk.Adjustment(value=self.fieldsdic[field]['lower'],
@@ -288,19 +299,27 @@ class RegistrationWin(gtk.Window):
             hboxes[field] = gtk.HBox(False, 15)
             hboxes[field].pack_start(gtk.Label(field+':'), False, False, 0) #Pack the label
             hboxes[field].pack_start(self.editregfields[field], False, False, 0) #Pack the button/entry/..
+            if self.fieldsdic[field]['type'] == 'durationbox':
+                label = gtk.Label('')
+                hboxes[field].pack_start(label, False, False, 0)
+                self.editregfields[field].connect("changed", self.validate_duration, editregbtnOK, label)
+            
             editregvbox.pack_start(hboxes[field], False, False, 0) #Pack this hbox into the big vbox.
-        #An hbox for the buttons
-        editreghbox = gtk.HBox(False, 8)
-        editregbtnOK = gtk.Button(stock=gtk.STOCK_OK)
-        editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter)
-        editregbtnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
-        editregbtnCANCEL.connect('clicked', lambda b: self.editreg_win.hide())
-        editreghbox.pack_start(editregbtnOK, False, False, 5)
-        editreghbox.pack_start(editregbtnCANCEL, False, False, 5)
         #Pack and show
         editregvbox.pack_start(editreghbox, False, False, 5)
         self.editreg_win.add(editregvbox)
         self.editreg_win.show_all()
+
+    def validate_duration(self, entry, btn, label):
+        '''Validate a new duration entered by the user'''
+        sduration = entry.get_text()
+        pattern = re.compile('^(([0-9]{1,2}:)?[0-9]{1,2}:)?[0-9]{1,2}$')
+        isOk = (pattern.match(sduration) != None)
+        if isOk:
+            label.set_text('')
+        else:
+            label.set_markup('<span color="red">hh::mm::ss</span>')
+        btn.set_sensitive(isOk)
 
     def validate_entry(self, jnk_unused, treeiter, preregiter):
         '''Handles a click on the 'ok' button of the entry edition window.
@@ -309,7 +328,7 @@ class RegistrationWin(gtk.Window):
         new_vals = {}
         for field in self.fields:
             #Entrybox
-            if self.fieldsdic[field]['type'] == 'entrybox':
+            if self.fieldsdic[field]['type'] in ['entrybox', 'durationbox']:
                 new_vals[field] = self.editregfields[field].get_text()
             #Spinbutton
             #elif self.fieldsdic[field]['type'] == 'spinbutton':
