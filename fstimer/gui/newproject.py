@@ -88,4 +88,4 @@ class NewProjectWin(gtk.Window):
         else:
             label.set_markup('')
             self.hide()
-            self.define_fields_cb(entry_text+'/')
+            self.define_fields_cb(entry_text)

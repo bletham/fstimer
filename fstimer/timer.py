@@ -71,12 +71,13 @@ class PyTimer(object):
         self.newprojectwin = fstimer.gui.newproject.NewProjectWin(self.define_fields,
                                                                   self.introwin)
 
-    def define_fields(self, jnk_unused):
+    def define_fields(self, path):
         '''Handled the definition of fields when creating a new project'''
         #this is really just fsTimer.fieldsdic.keys(), but is important because it defines the order in which fields show up on the registration screen
         self.fields = ['Last name', 'First name', 'ID', 'Age', 'Gender',
                        'Address', 'Email', 'Telephone', 'Contact for future races',
                        'How did you hear about race']
+        self.path = path
         self.fieldsdic = {}
         self.fieldsdic['Last name'] = {'type':'entrybox', 'max':30}
         self.fieldsdic['First name'] = {'type':'entrybox', 'max':30}
