@@ -18,7 +18,7 @@
 
 #The author/copyright holder can be contacted at bletham@gmail.com
 
-'''Main class of hte fsTimer package'''
+'''Main class of the fsTimer package'''
 
 import pygtk
 pygtk.require('2.0')
@@ -38,6 +38,10 @@ import fstimer.gui.compile
 import fstimer.gui.compileerrors
 import fstimer.gui.pretime
 import fstimer.gui.timing
+import fstimer.printcsv
+import fstimer.printcsvlaps
+import fstimer.printhtml
+import fstimer.printhtmllaps
 from collections import defaultdict
 
 class PyTimer(object):
@@ -309,479 +313,134 @@ class PyTimer(object):
         # create Timing window
         self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, strpzeros, self.rawtimes, self.timing, self.print_times)
 
+    def get_division(self, timingEntry):
+        '''Get the division for a given timing entry'''
+        try:
+            age = int(timingEntry['Age'])
+        except ValueError:
+            age = ''
+        # go through the divisions
+        for div in self.divisions:
+            # check all fields
+            for field in div[1]:
+                if field == 'Age':
+                    if not age or age < div[1]['Age'][0] or age > div[1]['Age'][1]:
+                        break
+                else:
+                    if timingEntry[field] != div[1][field]:
+                        break
+            else:
+                return div[0]
+        return None
+
+    def get_synch_times_and_ids(self):
+        '''returns a list of ids and a list of times that are
+           "synched", that is that have the same number of entries.
+           Missing entries are filled with empty strings'''
+        if self.timewin.offset >= 0:
+            adj_ids = ['' for i_unused in range(self.timewin.offset)]
+            adj_ids.extend(self.rawtimes['ids'])
+            adj_times = list(self.rawtimes['times'])
+        elif self.timewin.offset < 0:
+            adj_times = ['' for i_unused in range(-self.timewin.offset)]
+            adj_times.extend(self.rawtimes['times'])
+            adj_ids = list(self.rawtimes['ids'])
+        return adj_ids, adj_times
+
+    def get_sorted_results(self):
+        '''returns a sorted list of (id, result) items.
+           The content of result depends on the race type'''
+        adj_ids, adj_times = self.get_synch_times_and_ids()
+        raw_results = sorted(zip(adj_ids, adj_times), key=lambda entry: entry[1])
+        # single lap case
+        if self.numlaps == 1:
+            return raw_results
+        # multi laps
+        laptimesdic = defaultdict(list)
+        timePattern = r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)'
+        for (tag, time) in raw_results:
+            if tag and time and tag != self.junkid:
+                # convert txt time to dict
+                d1 = re.match(timePattern, time).groupdict(0)
+                # convert txt to ints
+                d2 = dict(((key, int(value)) for key, value in d1.items()))
+                # build timedelta
+                td = datetime.timedelta(**d2)
+                # store
+                laptimesdic[tag].append(td)
+        # Each value of laptimesdic is a list, sorted in order from
+        # fastest time (1st lap) to longest time (last lap).
+        # Go through and compute the lap times.
+        laptimesdic2 = defaultdict(list)
+        for tag in laptimesdic:
+            # First put the total race time
+            if len(laptimesdic[tag]) == self.numlaps:
+                laptimesdic2[tag] = [str(laptimesdic[tag][-1])]
+            else:
+                laptimesdic2[tag] = ['<>']
+            # And now the first lap
+            laptimesdic2[tag].append(str(laptimesdic[tag][0]))
+            # And now the subsequent laps
+            laptimesdic2[tag].extend([str(laptimesdic[tag][ii+1] - laptimesdic[tag][ii]) for ii in range(len(laptimesdic[tag])-1)])
+        return sorted(laptimesdic2.items(), key=lambda entry: entry[1][0])
+
     def print_times(self, jnk_unused, use_csv):
         '''print times to a file'''
+        # choose the right Printer Class
         if use_csv:
             if self.numlaps > 1:
-                self.print_times_csv_laps()
+                printer_class = fstimer.printcsvlaps.CSVPrinterLaps
             else:
-                self.print_times_csv()
+                printer_class = fstimer.printcsv.CSVPrinter
         else:
             if self.numlaps > 1:
-                self.print_times_html_laps()
+                printer_class = fstimer.printhtmllaps.HTMLPrinterLaps
             else:
-                self.print_times_html()
-
-    def print_times_html(self):
-        '''Prints the current time results to a nice html table.
-           the entire table is reformed every time,
-           so this may get slow for a large number of racers ?'''
-        # Figure out what the columns will be, other than id/age/gender
-        colnames = [field for div in self.divisions for field in div[1]]
-        colnames = set(colnames)
-        if 'Age' in colnames:
-            colnames.remove('Age')
-        if 'Gender' in colnames:
-            colnames.remove('Gender')
-        # We will only add these columns if they aren't too long (to overflow the page). We allow up to a total of 20 characters.
-        if sum([len(colname) for colname in colnames]) > 20:
-            colnames = []
-        # Now begin to construct strings
-        # The first string will be all of the head information for the html page, including the css styles.
-        htmlhead = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-        <html xmlns="http://www.w3.org/1999/xhtml">
-        <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <style type="text/css">
-        #tab
-        {
-              font-family: Sans-Serif;
-              font-size: 14px;
-              margin: 20px;
-              width: 650px;
-              text-align: left;
-        }
-        #tab th
-        {
-              font-size: 15px;
-              font-weight: bold;
-              padding: 10px 8px;
-              border-bottom: 2px solid gray;
-        }
-        #tab td
-        {
-              border-bottom: 1px solid #ccc;
-              padding: 6px 8px;
-        }
-        #footer{ margin-top: 20px; margin-left: 20px; font: 10px sans-serif;}
-        </style>
-        </head>
-        <body>\n"""
-        # the second string will be the beginning of a table.
-        tablehead = """<table id="tab">
-        <thead>
-        <tr>
-        <th scope="col">Place</th>
-        <th scope="col">Time</th>
-        <th scope="col">Name</th>
-        <th scope="col">Bib ID</th>
-        <th scope="col">Gender</th>
-        <th scope="col">Age</th>"""
-        # And now the extra column names
-        for colname in colnames:
-            tablehead += '<th scope="col">'+colname+'</th>'
-        # Now continue on
-        tablehead += """</tr></thead><tbody>\n"""
-        tablefoot = '</tbody></table>'
-        htmlfoot = '<div id="footer">Race timing with fsTimer - free, open source software for race timing. http://fstimer.org</div></body></html>'
-        # First we prepare the fullresults string.
-        fullresults = htmlhead+tablehead
-        # and each of the division results
-        divresults = ['<span style="font-size:22px">'+str(div[0])+'</span>\n'+tablehead for div in self.divisions]
-        allplace = 1
-        divplace = [1 for div in self.divisions]
-        # go through the data from fastest time to slowest
-        if self.timewin.offset >= 0:
-            adj_ids = ['' for i_unused in range(self.timewin.offset)]
-            adj_ids.extend(self.rawtimes['ids'])
-            adj_times = list(self.rawtimes['times'])
-        elif self.timewin.offset < 0:
-            adj_times = ['' for i_unused in range(-self.timewin.offset)]
-            adj_times.extend(self.rawtimes['times'])
-            adj_ids = list(self.rawtimes['ids'])
-        printed_ids = set([self.junkid]) #keep track of the ones we've already seen
-        for (tag, time) in sorted(zip(adj_ids, adj_times), key=lambda entry: entry[1]):
-            if tag and time and tag not in printed_ids:
-                printed_ids.add(tag)
-                age = self.timing[tag]['Age']
-                gen = self.timing[tag]['Gender']
-                # Our table entry will be the same for both full results and divisionals, except for the place.
-                tableentry = '</td><td>'+time+'</td><td>'+self.timing[tag]['First name']+' '+self.timing[tag]['Last name']+'</td><td>'+tag+'</td><td>'+gen+'</td><td>'+age+'</td>'
-                # And now add in the extra columns
-                for colname in colnames:
-                    tableentry += '<td>'+self.timing[tag][colname]+'</td>'
-                tableentry += '</tr>\n'
-                #And add to full results
-                fullresults += '<tr><td>'+str(allplace)+tableentry
-                allplace += 1
-                # and the appropriate divisional result
-                try:
-                    age = int(age)
-                except ValueError:
-                    age = ''
-                # Now we go through the divisions
-                for (divindx, div) in enumerate(self.divisions):
-                    # First check age.
-                    divcheck = True
-                    for field in div[1]:
-                        if field == 'Age':
-                            if not age:
-                                divcheck = False
-                            elif age < div[1]['Age'][0] or age > div[1]['Age'][1]:
-                                divcheck = False
-                        else:
-                            if self.timing[tag][field] != div[1][field]:
-                              divcheck = False
-                    #Now add this result to the div results, if it satisfied the requirements
-                    if divcheck:
-                        divresults[divindx] += '<tr><td>'+str(divplace[divindx])+tableentry
-                        divplace[divindx] += 1
-            # And write to file.
-            with open(os.sep.join([self.path, self.path+'_'+self.timewin.timestr+'_alltimes.html']), 'w') as fout:
-                fout.write(fullresults+tablefoot+htmlfoot)
-            with open(os.sep.join([self.path, self.path+'_'+self.timewin.timestr+'_divtimes.html']), 'w') as fout:
-                fout.write(htmlhead)
-                for (divindx, divstr) in enumerate(divresults):
-                    if divplace[divindx] > 1:
-                        fout.write(divstr+tablefoot)
-                fout.write(htmlfoot)
-        md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, "Results saved to html!")
+                printer_class = fstimer.printhtml.HTMLPrinter
+        # Figure out what the columns will be
+        other_fields = set([field for div in self.divisions for field in div[1]
+                            if field not in ['Age', 'Gender']])
+        fields = ['Place', 'Time']
+        if self.numlaps > 1:
+            fields.append('Lap Times')
+        fields.extend(['Name', 'Bib ID', 'Gender', 'Age'])
+        fields.extend(list(other_fields))
+        # instantiate the printer
+        printer = printer_class(fields, [div[0] for div in self.divisions])
+        # first build all results into strings
+        scratchresults = printer.scratch_table_header()
+        divresults = {div[0]:'\n'+printer.cat_table_header(div[0])
+                      for div in self.divisions}
+        for (tag, time) in self.get_sorted_results():
+            scratchresults += printer.scratch_entry(tag, time, self.timing[tag])
+            div = self.get_division(self.timing[tag])
+            if div:
+                divresults[div] += printer.cat_entry(tag, div, time, self.timing[tag])
+        scratchresults += printer.scratch_table_footer()
+        for div in divresults:
+            divresults[div] += printer.cat_table_footer(div)
+        # now save to files
+        scratch_file = os.sep.join([self.path,
+                                    '_'.join([self.path,
+                                              self.timewin.timestr,
+                                              'alltimes.' + printer.file_extension()])])
+        with open(scratch_file, 'w') as scratch_out:
+            scratch_out.write(printer.header())
+            scratch_out.write(scratchresults)
+            scratch_out.write(printer.footer())
+        div_file = os.sep.join([self.path,
+                                '_'.join([self.path,
+                                          self.timewin.timestr,
+                                          'divtimes.' + printer.file_extension()])])
+        with open(div_file, 'w') as div_out:
+            div_out.write(printer.header())
+            for div in self.divisions:
+                div_out.write(divresults[div[0]])
+            div_out.write(printer.footer())
+        # display user dialog that all was successful
+        md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT,
+                               gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
+                               "Results saved to csv!")
         md.run()
         md.destroy()
 
-    def print_times_csv(self):
-        '''Prints the current time results to a csv file.
-           the entire table is reformed every time,
-           so this may get slow for a large number of racers ?'''
-        # Figure out what the columns will be, other than id/age/gender
-        colnames = [field for div in self.divisions for field in div[1]]
-        colnames = set(colnames)
-        if 'Age' in colnames:
-            colnames.remove('Age')
-        if 'Gender' in colnames:
-            colnames.remove('Gender')
-        # Create the header string
-        tablehead = 'Place,Time,Name,Bib ID,Gender,Age'
-        for colname in colnames:
-            tablehead += ','+colname
-        tablehead += '\n'
-        # Keep track of the places
-        allplace = 1
-        divplace = [1 for div in self.divisions]
-        divresults = ['\n'+div[0]+'\n'+tablehead for div in self.divisions]
-        # go through the data from fastest time to slowest
-        if self.timewin.offset >= 0:
-            adj_ids = ['' for i in range(self.timewin.offset)]
-            adj_ids.extend(self.rawtimes['ids'])
-            adj_times = list(self.rawtimes['times'])
-        elif self.timewin.offset < 0:
-            adj_times = ['' for i in range(-self.timewin.offset)]
-            adj_times.extend(self.rawtimes['times'])
-            adj_ids = list(self.rawtimes['ids'])
-        printed_ids = set([self.junkid]) #keep track of the ones we've already seen
-        # We will write the alltimes csv online, while storing up the strings for the div results, so they can be properly headered
-        with open(os.sep.join([self.path, self.path+'_'+self.timewin.timestr+'_alltimes.csv']), 'w') as fout:
-            # Write out the header
-            fout.write(tablehead)
-            for (tag, time) in sorted(zip(adj_ids, self.rawtimes['times']), key=lambda entry: entry[1]):
-                if tag and time and tag not in printed_ids:
-                    printed_ids.add(tag)
-                    age = self.timing[tag]['Age']
-                    gen = self.timing[tag]['Gender']
-                    # Our table entry will be the same for both full results and divisionals, except for the place.
-                    tableentry = ','+time+','+self.timing[tag]['First name']+' '+self.timing[tag]['Last name']+','+tag+','+gen+','+age
-                    for colname in colnames:
-                        tableentry += ','+self.timing[tag][colname]
-                    tableentry += '\n'
-                    fout.write(str(allplace)+tableentry)
-                    allplace += 1
-                    # and the appropriate divisional result
-                    try:
-                        age = int(age)
-                    except ValueError:
-                        age = ''
-                    # Now we go through the divisions
-                    for (divindx, div) in enumerate(self.divisions):
-                        # First check age.
-                        divcheck = True
-                        for field in div[1]:
-                            if field == 'Age':
-                                if not age:
-                                    divcheck = False
-                                elif age < div[1]['Age'][0] or age > div[1]['Age'][1]:
-                                    divcheck = False
-                            else:
-                                if self.timing[tag][field] != div[1][field]:
-                                    divcheck = False
-                        # Now add this result to the div results, if it satisfied the requirements
-                        if divcheck:
-                            divresults[divindx] += str(divplace[divindx])+tableentry
-                            divplace[divindx] += 1
-        # Now write out the divisional results
-        with open(os.sep.join([self.path, self.path+'_'+self.timewin.timestr+'_divtimes.csv']), 'w') as fout:
-            for i, divresult in enumerate(divresults):
-                if divplace[i] > 1:
-                    fout.write(divresult)
-        md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, "Results saved to csv!")
-        md.run()
-        md.destroy()
-
-    def print_times_html_laps(self):
-        '''Prints the current time results to a nice html table for races with laps.
-           the entire table is reformed every time,
-           so this may get slow for a large number of racers ?'''
-        # Figure out what the columns will be, other than id/age/gender
-        colnames = [field for div in self.divisions for field in div[1]]
-        colnames = set(colnames)
-        if 'Age' in colnames:
-            colnames.remove('Age')
-        if 'Gender' in colnames:
-            colnames.remove('Gender')
-        # We will only add these columns if they aren't too long (to overflow the page). We allow up to a total of 20 characters.
-        if sum([len(colname) for colname in colnames]) > 15:
-            colnames = []
-        # Now begin to construct strings
-        # The first string will be all of the head information for the html page, including the css styles.
-        htmlhead = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-        <html xmlns="http://www.w3.org/1999/xhtml">
-        <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <style type="text/css">
-        #tab
-        {
-                font-family: Sans-Serif;
-                font-size: 14px;
-                margin: 20px;
-                width: 650px;
-                text-align: left;
-        }
-        #tab th
-        {
-                font-size: 15px;
-                font-weight: bold;
-                padding: 10px 8px;
-                border-bottom: 2px solid gray;
-        }
-        #tab td
-        {
-                border-bottom: 1px solid #ccc;
-                padding: 6px 8px;
-        }
-        #footer{ margin-top: 20px; margin-left: 20px; font: 10px sans-serif;}
-        </style>
-        </head>
-        <body>\n"""
-        # the second string will be the beginning of a table.
-        tablehead = """<table id="tab">
-        <thead>
-        <tr>
-        <th scope="col">Place</th>
-        <th scope="col">Time</th>
-        <th scope="col">Lap times</th>
-        <th scope="col">Name</th>
-        <th scope="col">Bib ID</th>
-        <th scope="col">Gender</th>
-        <th scope="col">Age</th>"""
-        # And now the extra column names
-        for colname in colnames:
-            tablehead += '<th scope="col">'+colname+'</th>'
-        # Now continue on
-        tablehead += """</tr></thead><tbody>\n"""
-        tablefoot = '</tbody></table>'
-        htmlfoot = '<div id="footer">Race timing with fsTimer - free, open source software for race timing. http://fstimer.org</div></body></html>'
-        # First we prepare the fullresults string.
-        fullresults = htmlhead+tablehead
-        # and each of the division results
-        divresults = ['<span style="font-size:22px">'+div[0]+'</span>\n'+tablehead for div in self.divisions]
-        allplace = 1
-        divplace = [1 for div in self.divisions]
-        # go through the data from fastest time to slowest
-        if self.timewin.offset >= 0:
-            adj_ids = ['' for i_unused in range(self.timewin.offset)]
-            adj_ids.extend(self.rawtimes['ids'])
-            adj_times = list(self.rawtimes['times'])
-        elif self.timewin.offset < 0:
-            adj_times = ['' for i_unused in range(-self.timewin.offset)]
-            adj_times.extend(self.rawtimes['times'])
-            adj_ids = list(self.rawtimes['ids'])
-        laptimesdic = defaultdict(list)
-        # We do a run through all of the times and group lap times
-        for (tag, time) in sorted(zip(adj_ids, adj_times), key=lambda entry: entry[1]):
-            if tag and time and tag != self.junkid:
-                d1 = re.match(r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)', time).groupdict(0) #convert txt time to dict
-                laptimesdic[tag].append(datetime.timedelta(**dict(((key, int(value)) for key, value in d1.items())))) #convert dict time to datetime, and store
-        # Each value of laptimesdic is a list, sorted in order from fastest time (1st lap) to longest time (last lap).
-        # Go through and compute the lap times.
-        laptimesdic2 = defaultdict(list)
-        for tag, times in laptimesdic.iteritems():
-            # First put the total race time
-            if len(laptimesdic[tag]) == self.numlaps:
-                laptimesdic2[tag] = [str(laptimesdic[tag][-1])]
-            else:
-                laptimesdic2[tag] = ['<>']
-            # And now the first lap
-            laptimesdic2[tag].append(str(laptimesdic[tag][0]))
-            # And now the subsequent laps
-            laptimesdic2[tag].extend([str(laptimesdic[tag][ii+1] - laptimesdic[tag][ii]) for ii in range(len(laptimesdic[tag])-1)])
-        # Now run through the data one more time and print the results.
-        for (tag, times) in sorted(laptimesdic2.items(), key=lambda entry: entry[1][0]):
-            age = self.timing[tag]['Age']
-            gen = self.timing[tag]['Gender']
-            # Our table entry will be the same for both full results and divisionals, except for the place.
-            # First the total time and first lap
-            tableentry = '</td><td>' + times[0] + '</td><td>1 - ' + times[1] + \
-              '</td><td>' + self.timing[tag]['First name'] + ' ' + \
-              self.timing[tag]['Last name'] + '</td><td>' + tag + '</td><td>' + \
-              gen + '</td><td>' + age + '</td>'
-            # And now add in the extra columns
-            for colname in colnames:
-                tableentry += '<td>'+self.timing[tag][colname]+'</td>'
-            tableentry += '</tr>\n'
-            # And now the lap times
-            for ii in range(2, len(times)):
-                tableentry += '<tr><td></td><td></td><td>'+str(ii)+' - '+times[ii]+'</td><td></td><td></td><td></td><td></td>'
-                #And now add in the extra columns
-                for colname in colnames:
-                    tableentry += '<td>'+self.timing[tag][colname]+'</td>'
-                tableentry += '</tr>\n'
-            if times[0] != '<>':
-                fullresults += '<tr><td>'+str(allplace)+tableentry
-            else:
-                fullresults += '<tr><td><>'+tableentry
-            allplace += 1
-            # and the appropriate divisional result
-            try:
-                age = int(age)
-            except ValueError:
-                age = ''
-            # Now we go through the divisions
-            for (divindx, div) in enumerate(self.divisions):
-                # First check age.
-                divcheck = True
-                for field in div[1]:
-                    if field == 'Age':
-                        if not age:
-                            divcheck = False
-                        elif age < div[1]['Age'][0] or age > div[1]['Age'][1]:
-                            divcheck = False
-                    else:
-                        if self.timing[tag][field] != div[1][field]:
-                            divcheck = False
-                # Now add this result to the div results, if it satisfied the requirements
-                if divcheck:
-                    if times[0] != '<>':
-                        divresults[divindx] += '<tr><td>'+str(divplace[divindx])+tableentry
-                    else:
-                        divresults[divindx] += '<tr><td><>'+tableentry
-                    divplace[divindx] += 1
-            # And write to file.
-            with open(os.sep.join([self.path, self.path+'_'+self.timewin.timestr+'_alltimes.html']), 'w') as fout:
-                fout.write(fullresults+tablefoot+htmlfoot)
-            with open(os.sep.join([self.path, self.path+'_'+self.timewin.timestr+'_divtimes.html']), 'w') as fout:
-                fout.write(htmlhead)
-                for (divindx, divstr) in enumerate(divresults):
-                    if divplace[divindx] > 1:
-                        fout.write(divstr+tablefoot)
-                fout.write(htmlfoot)
-
-    def print_times_csv_laps(self):
-        '''Prints the current time results to a csv file for races with laps.
-           the entire table is reformed every time,
-           so this may get slow for a large number of racers ?'''
-        # Figure out what the columns will be, other than id/age/gender
-        colnames = [field for div in self.divisions for field in div[1]]
-        colnames = set(colnames)
-        if 'Age' in colnames:
-            colnames.remove('Age')
-        if 'Gender' in colnames:
-            colnames.remove('Gender')
-        # Create the header string
-        tablehead = 'Place,Time,Lap times,Name,Bib ID,Gender,Age'
-        for colname in colnames:
-            tablehead += ','+colname
-        tablehead += '\n'
-        # Keep track of the places
-        allplace = 1
-        divplace = [1 for div in self.divisions]
-        divresults = ['\n'+div[0]+'\n'+tablehead for div in self.divisions]
-        # go through the data from fastest time to slowest
-        if self.timewin.offset >= 0:
-            adj_ids = ['' for i in range(self.timewin.offset)]
-            adj_ids.extend(self.rawtimes['ids'])
-            adj_times = list(self.rawtimes['times'])
-        elif self.timewin.offset < 0:
-            adj_times = ['' for i in range(-self.timewin.offset)]
-            adj_times.extend(self.rawtimes['times'])
-            adj_ids = list(self.rawtimes['ids'])
-        laptimesdic = defaultdict(list)
-        # We do a run through all of the times and group lap times
-        for (tag, time) in sorted(zip(adj_ids, adj_times), key=lambda entry: entry[1]):
-            if tag and time and tag != self.junkid:
-                d1 = re.match(r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)', time).groupdict(0) #convert txt time to dict
-                laptimesdic[tag].append(datetime.timedelta(**dict(((key, int(value)) for key, value in d1.items())))) #convert dict time to datetime, and store
-        # Each value of laptimesdic is a list, sorted in order from fastest time (1st lap) to longest time (last lap).
-        # Go through and compute the lap times.
-        laptimesdic2 = defaultdict(list)
-        for tag, times in laptimesdic.iteritems():
-            # First put the total race time
-            if len(laptimesdic[tag]) == self.numlaps:
-                laptimesdic2[tag] = [str(laptimesdic[tag][-1])]
-            else:
-                laptimesdic2[tag] = ['<>']
-            # And now the first lap
-            laptimesdic2[tag].append(str(laptimesdic[tag][0]))
-            # And now the subsequent laps
-            laptimesdic2[tag].extend([str(laptimesdic[tag][ii+1] - laptimesdic[tag][ii]) for ii in range(len(laptimesdic[tag])-1)])
-        # Now run through the data one more time and print the results.
-        with open(os.sep.join([self.path, self.path+'_'+self.timewin.timestr+'_alltimes.csv']), 'w') as fout:
-            fout.write(tablehead)
-            for (tag, times) in sorted(laptimesdic2.items(), key=lambda entry: entry[1][0]):
-                age = self.timing[tag]['Age']
-                gen = self.timing[tag]['Gender']
-                # Our table entry will be the same for both full results and divisionals, except for the place.
-                # First the total time and first lap
-                tableentry = ','+times[0]+',1 - '+times[1]+','+self.timing[tag]['First name']+' '+self.timing[tag]['Last name']+','+tag+','+gen+','+age
-                for colname in colnames:
-                    tableentry += ','+self.timing[tag][colname]
-                tableentry += '\n'
-                # And now the lap times
-                for ii in range(2, len(times)):
-                    tableentry += ',,'+str(ii)+' - '+times[ii]+',,,,'
-                    for colname in colnames:
-                        tableentry += ','
-                    tableentry += '\n'
-                if times[0] != '<>':
-                    fout.write(str(allplace)+tableentry)
-                else:
-                    fout.write('<>'+tableentry)
-                allplace += 1
-                # and the appropriate divisional result
-                try:
-                    age = int(age)
-                except ValueError:
-                    age = ''
-                # Now we go through the divisions
-                for (divindx, div) in enumerate(self.divisions):
-                    # First check age.
-                    divcheck = True
-                    for field in div[1]:
-                        if field == 'Age':
-                            if not age:
-                                divcheck = False
-                            elif age < div[1]['Age'][0] or age > div[1]['Age'][1]:
-                                divcheck = False
-                        else:
-                            if self.timing[tag][field] != div[1][field]:
-                                divcheck = False
-                    #Now add this result to the div results, if it satisfied the requirements
-                    if divcheck:
-                        if times[0] != '<>':
-                            divresults[divindx] += str(divplace[divindx])+tableentry
-                        else:
-                            divresults[divindx] += '<>'+tableentry
-                        divplace[divindx] += 1
-        #Now write out the divisional results
-        with open(os.sep.join([self.path, self.path+'_'+self.timewin.timestr+'_divtimes.csv']), 'w') as fout:
-            for i, divresult in enumerate(divresults):
-                if divplace[i] > 1:
-                    fout.write(divresult)

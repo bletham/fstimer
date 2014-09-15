@@ -417,7 +417,8 @@ class TimingWin(gtk.Window):
                         raise MergeError('Merge is only dealing with pure ids merged into pure times')
                     self.rawtimes['ids'] = newrawtimes['ids']
                 else:
-                    self.rawtimes = newrawtimes
+                    self.rawtimes['ids'] = newrawtimes['ids']
+                    self.rawtimes['times'] = newrawtimes['times']
                     self.timestr = saveresults['timestr']
                     self.t0 = saveresults['t0']
                     self.t0_label.set_markup('t0: '+str(self.t0))
