@@ -44,6 +44,16 @@ import fstimer.printhtml
 import fstimer.printhtmllaps
 from collections import defaultdict
 
+timePattern = r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)'
+def str2timedelta(time):
+    '''converts a time string to a timedelta'''
+    # convert txt time to dict
+    d1 = re.match(timePattern, time).groupdict(0)
+    # convert txt to ints
+    d2 = dict(((key, int(value)) for key, value in d1.items()))
+    # build timedelta
+    return datetime.timedelta(**d2)
+
 class PyTimer(object):
     '''main class of fsTimer'''
 
@@ -334,54 +344,51 @@ class PyTimer(object):
         return None
 
     def get_synch_times_and_ids(self):
-        '''returns a list of ids and a list of times that are
+        '''returns a list of ids and a list of timedeltas that are
            "synched", that is that have the same number of entries.
            Missing entries are filled with empty strings'''
         if self.timewin.offset >= 0:
             adj_ids = ['' for i_unused in range(self.timewin.offset)]
             adj_ids.extend(self.rawtimes['ids'])
-            adj_times = list(self.rawtimes['times'])
+            adj_times = [str2timedelta(t) for t in self.rawtimes['times']]
         elif self.timewin.offset < 0:
             adj_times = ['' for i_unused in range(-self.timewin.offset)]
-            adj_times.extend(self.rawtimes['times'])
+            adj_times.extend([str2timedelta(t) for t in self.rawtimes['times']])
             adj_ids = list(self.rawtimes['ids'])
         return adj_ids, adj_times
-
+    
     def get_sorted_results(self):
         '''returns a sorted list of (id, result) items.
            The content of result depends on the race type'''
-        adj_ids, adj_times = self.get_synch_times_and_ids()
-        raw_results = sorted(zip(adj_ids, adj_times), key=lambda entry: entry[1])
+        # get raw times
+        timeslist = zip(*self.get_synch_times_and_ids())
+        # Handicap correction
+        if self.projecttype == 'handicap':
+            timeslist = [(tag, time - datetime.timedelta(0, float(self.timing[tag]['Handicap']))) for tag, time in timeslist]
+        # sort by time
+        timeslist = sorted(timeslist, key=lambda entry: entry[1])
         # single lap case
         if self.numlaps == 1:
-            return raw_results
-        # multi laps
-        laptimesdic = defaultdict(list)
-        timePattern = r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)'
-        for (tag, time) in raw_results:
-            if tag and time and tag != self.junkid:
-                # convert txt time to dict
-                d1 = re.match(timePattern, time).groupdict(0)
-                # convert txt to ints
-                d2 = dict(((key, int(value)) for key, value in d1.items()))
-                # build timedelta
-                td = datetime.timedelta(**d2)
-                # store
-                laptimesdic[tag].append(td)
+            return timeslist
+        # multi laps - groups times by tag
         # Each value of laptimesdic is a list, sorted in order from
         # fastest time (1st lap) to longest time (last lap).
-        # Go through and compute the lap times.
+        laptimesdic = defaultdict(list)
+        for (tag, time) in timeslist:
+            if tag and time and tag != self.junkid:
+                laptimesdic[tag].append(time)
+        # compute the lap times.
         laptimesdic2 = defaultdict(list)
         for tag in laptimesdic:
             # First put the total race time
             if len(laptimesdic[tag]) == self.numlaps:
-                laptimesdic2[tag] = [str(laptimesdic[tag][-1])]
+                laptimesdic2[tag] = [laptimesdic[tag][-1]]
             else:
                 laptimesdic2[tag] = ['<>']
             # And now the first lap
-            laptimesdic2[tag].append(str(laptimesdic[tag][0]))
+            laptimesdic2[tag].append(laptimesdic[tag][0])
             # And now the subsequent laps
-            laptimesdic2[tag].extend([str(laptimesdic[tag][ii+1] - laptimesdic[tag][ii]) for ii in range(len(laptimesdic[tag])-1)])
+            laptimesdic2[tag].extend([laptimesdic[tag][ii+1] - laptimesdic[tag][ii] for ii in range(len(laptimesdic[tag])-1)])
         return sorted(laptimesdic2.items(), key=lambda entry: entry[1][0])
 
     def print_times(self, jnk_unused, use_csv):

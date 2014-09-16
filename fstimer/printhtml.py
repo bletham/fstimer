@@ -107,13 +107,13 @@ class HTMLPrinter(fstimer.printer.Printer):
            of a given runner for scratch or by category results
            @type bibid: string
            @param bibid: the bibid of the runner
-           @type timing_data: str|list
+           @type timing_data: timedelta|list
            @param timing_data: timing data for the runner. May be his/her time
                                or a list of times for multi lap races
            @type runner_data: dict
            @param runner_data: data concerning the runner. A dictionnary
                                of field name / field value'''
-        data = [timing_data,
+        data = [str(timing_data),
                 runner_data['First name'] + ' '+ runner_data['Last name'],
                 bibid,
                 runner_data['Gender'],
@@ -127,7 +127,7 @@ class HTMLPrinter(fstimer.printer.Printer):
            in the scratch results
            @type bibid: string
            @param bibid: the bibid of the runner
-           @type timing_data: str|list
+           @type timing_data: timedelta|list
            @param timing_data: timing data for the runner. May be his/her time
                                or a list of times for multi lap races
            @type runner_data: dict
@@ -144,7 +144,7 @@ class HTMLPrinter(fstimer.printer.Printer):
            @param bibid: the bibid of the runner
            @type category: string
            @param category: name of the category for this runner
-           @type timing_data: str|list
+           @type timing_data: timedelta|list
            @param timing_data: timing data for the runner. May be his/her time
                                or a list of times for multi lap races
            @type runner_data: dict

@@ -98,48 +98,28 @@ class ImportPreRegWin(gtk.Window):
                     textbuffer.create_tag("red", foreground="red")
                 except TypeError:
                     pass
-                printstr = 'Found csv fields: '
-                if csv_fields:
-                    for field in csv_fields:
-                        printstr += field + ', '
-                    printstr = printstr[:-2]
-                printstr += '\n'
+                printstr = 'Found csv fields: ' + ', '.join(csv_fields) + os.linesep
                 iter1 = textbuffer.get_end_iter()
                 textbuffer.insert(iter1, printstr)
                 iter1 = textbuffer.get_iter_at_line(1)
                 iter2 = textbuffer.get_iter_at_line_offset(1, 17)
                 textbuffer.apply_tag_by_name("blue", iter1, iter2)
-                printstr = 'Using csv fields: '
                 fields_use = [field for field in csv_fields if field in self.fields]
-                if fields_use:
-                    for field in fields_use:
-                        printstr += field + ', '
-                    printstr = printstr[:-2]
-                printstr += '\n'
+                printstr = 'Using csv fields: ' + ', '.join(fields_use) + os.linesep
                 iter1 = textbuffer.get_end_iter()
                 textbuffer.insert(iter1, printstr)
                 iter1 = textbuffer.get_iter_at_line(2)
                 iter2 = textbuffer.get_iter_at_line_offset(2, 17)
                 textbuffer.apply_tag_by_name("blue", iter1, iter2)
-                printstr = 'Ignoring csv fields: '
                 fields_ignore = [field for field in csv_fields if field not in self.fields]
-                if fields_ignore:
-                    for field in fields_ignore:
-                        printstr += field + ', '
-                    printstr = printstr[:-2]
-                printstr += '\n'
+                printstr = 'Ignoring csv fields: ' + ', '.join(fields_ignore) + os.linesep
                 iter1 = textbuffer.get_end_iter()
                 textbuffer.insert(iter1, printstr)
                 iter1 = textbuffer.get_iter_at_line(3)
                 iter2 = textbuffer.get_iter_at_line_offset(3, 20)
                 textbuffer.apply_tag_by_name("red", iter1, iter2)
-                printstr = 'Did not find: '
                 fields_notuse = [field for field in self.fields if field not in csv_fields]
-                if fields_notuse:
-                    for field in fields_notuse:
-                        printstr += field + ', '
-                    printstr = printstr[:-2]
-                printstr += '\n'
+                printstr = 'Did not find: ' + ', '.join(fields_notuse) + os.linesep
                 iter1 = textbuffer.get_end_iter()
                 textbuffer.insert(iter1, printstr)
                 iter1 = textbuffer.get_iter_at_line(4)

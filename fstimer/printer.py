@@ -73,7 +73,7 @@ class Printer(object):
            in the scratch results
            @type bibid: string
            @param bibid: the bibid of the runner
-           @type timing_data: str|list
+           @type timing_data: timedelta|list
            @param timing_data: timing data for the runner. May be his/her time
                                or a list of times for multi lap races
            @type runner_data: dict
@@ -88,7 +88,7 @@ class Printer(object):
            @param bibid: the bibid of the runner
            @type category: string
            @param category: name of the category for this runner
-           @type timing_data: str|list
+           @type timing_data: timedelta|list
            @param timing_data: timing data for the runner. May be his/her time
                                or a list of times for multi lap races
            @type runner_data: dict

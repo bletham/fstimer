@@ -38,15 +38,15 @@ class HTMLPrinterLaps(fstimer.printhtml.HTMLPrinter):
            of a given runner for scratch or by category results
            @type bibid: string
            @param bibid: the bibid of the runner
-           @type timing_data: str|list
+           @type timing_data: timedelta|list
            @param timing_data: timing data for the runner. May be his/her time
                                or a list of times for multi lap races
            @type runner_data: dict
            @param runner_data: data concerning the runner. A dictionnary
                                of field name / field value'''
         # first line, with total time and first lap
-        data = [timing_data[0],
-                '1 - ' + timing_data[1],
+        data = [str(timing_data[0]),
+                '1 - ' + str(timing_data[1]),
                 runner_data['First name'] + ' '+ runner_data['Last name'],
                 bibid,
                 runner_data['Gender'],
@@ -56,7 +56,7 @@ class HTMLPrinterLaps(fstimer.printhtml.HTMLPrinter):
         entry = '</td><td>'.join(data)+'</td></tr>\n'
         # others lines, with other lap times
         for i in range(2, len(timing_data)):
-            data = ['', '', str(i) + ' - ' + timing_data[i], '', '', '', '']
+            data = ['', '', str(i) + ' - ' + str(timing_data[i]), '', '', '', '']
             data.extend(['']*(len(self.fields)-7))
             entry += '<tr><td>' + '</td><td>'.join(data) + '</td></tr>\n'
         return entry
