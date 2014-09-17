@@ -46,6 +46,11 @@ class ImportPreRegWin(gtk.Window):
         btnFILE = gtk.Button(stock=gtk.STOCK_OPEN)
         ## Textbuffer
         textbuffer = gtk.TextBuffer()
+        try:
+            textbuffer.create_tag("blue", foreground="blue")
+            textbuffer.create_tag("red", foreground="red")
+        except TypeError:
+            pass
         textview = gtk.TextView(textbuffer)
         textview.set_editable(False)
         textview.set_cursor_visible(False)
@@ -87,46 +92,25 @@ class ImportPreRegWin(gtk.Window):
         if response == gtk.RESPONSE_OK:
             filename = chooser.get_filename()
             textbuffer.set_text('Loading '+os.path.basename(filename)+'...\n')
+            iter_end = textbuffer.get_end_iter()
             try:
                 fin = csv.DictReader(open(filename, 'r'))
                 csvreg = []
                 for row in fin:
                     csvreg.append(row)
                 csv_fields = csvreg[0].keys()
-                try:
-                    textbuffer.create_tag("blue", foreground="blue")
-                    textbuffer.create_tag("red", foreground="red")
-                except TypeError:
-                    pass
-                printstr = 'Found csv fields: ' + ', '.join(csv_fields) + os.linesep
-                iter1 = textbuffer.get_end_iter()
-                textbuffer.insert(iter1, printstr)
-                iter1 = textbuffer.get_iter_at_line(1)
-                iter2 = textbuffer.get_iter_at_line_offset(1, 17)
-                textbuffer.apply_tag_by_name("blue", iter1, iter2)
+                textbuffer.insert_with_tags_by_name(iter_end, 'Found csv fields: ', 'blue')
+                textbuffer.insert(iter_end, ', '.join(csv_fields) + os.linesep)
                 fields_use = [field for field in csv_fields if field in self.fields]
-                printstr = 'Using csv fields: ' + ', '.join(fields_use) + os.linesep
-                iter1 = textbuffer.get_end_iter()
-                textbuffer.insert(iter1, printstr)
-                iter1 = textbuffer.get_iter_at_line(2)
-                iter2 = textbuffer.get_iter_at_line_offset(2, 17)
-                textbuffer.apply_tag_by_name("blue", iter1, iter2)
+                textbuffer.insert_with_tags_by_name(iter_end, 'Using csv fields: ', 'blue')
+                textbuffer.insert(iter_end, ', '.join(fields_use) + os.linesep)
                 fields_ignore = [field for field in csv_fields if field not in self.fields]
-                printstr = 'Ignoring csv fields: ' + ', '.join(fields_ignore) + os.linesep
-                iter1 = textbuffer.get_end_iter()
-                textbuffer.insert(iter1, printstr)
-                iter1 = textbuffer.get_iter_at_line(3)
-                iter2 = textbuffer.get_iter_at_line_offset(3, 20)
-                textbuffer.apply_tag_by_name("red", iter1, iter2)
+                textbuffer.insert_with_tags_by_name(iter_end, 'Ignoring csv fields: ', 'red')
+                textbuffer.insert(iter_end, ', '.join(fields_ignore) + os.linesep)
                 fields_notuse = [field for field in self.fields if field not in csv_fields]
-                printstr = 'Did not find: ' + ', '.join(fields_notuse) + os.linesep
-                iter1 = textbuffer.get_end_iter()
-                textbuffer.insert(iter1, printstr)
-                iter1 = textbuffer.get_iter_at_line(4)
-                iter2 = textbuffer.get_iter_at_line_offset(4, 13)
-                textbuffer.apply_tag_by_name("red", iter1, iter2)
-                iter1 = textbuffer.get_end_iter()
-                textbuffer.insert(iter1, 'Importing registration data...\n')
+                textbuffer.insert_with_tags_by_name(iter_end, 'Did not find: ', 'red')
+                textbuffer.insert(iter_end, ', '.join(fields_notuse) + os.linesep)
+                textbuffer.insert(iter_end, 'Importing registration data...\n')
                 preregdata = []
                 breakloop = 0
                 row = 1
@@ -143,32 +127,17 @@ class ImportPreRegWin(gtk.Window):
                                     for opt in self.fieldsdic[field]['options']:
                                         optstr += '"' + opt + '", '
                                     optstr += 'and blank'
-                                    iter1 = textbuffer.get_end_iter()
-                                    textbuffer.insert(iter1, '''Error in csv row %d ! Found value "%s" in field "%s". Not a valid value!
+                                    textbuffer.insert_with_tags_by_name(iter_end,
+                                                                        '''Error in csv row %d ! Found value "%s" in field "%s". Not a valid value!
 Valid values (case sensitive) are: %s.
-Nothing was imported. Correct the error and try again.''' % (row+1, reg[field], field, optstr))
-                                    iter1 = textbuffer.get_iter_at_line(6)
-                                    iter2 = textbuffer.get_end_iter()
-                                    textbuffer.apply_tag_by_name("red", iter1, iter2)
+Nothing was imported. Correct the error and try again.''' % (row+1, reg[field], field, optstr), 'red')
                             tmpdict[field] = str(reg[field])
                         preregdata.append(tmpdict.copy())
                         row += 1
                 if breakloop == 0:
                     with open(os.sep.join([self.cwd, self.path, self.path+'_registration_prereg.json']), 'wb') as fout:
                         json.dump(preregdata, fout)
-                    iter1 = textbuffer.get_end_iter()
-                    textbuffer.insert(iter1, 'Success! Imported pre-registration saved to '+self.path+'_registration_prereg.json\nFinished!')
-                    iter1 = textbuffer.get_iter_at_line(6)
-                    iter2 = textbuffer.get_end_iter()
-                    textbuffer.apply_tag_by_name("blue", iter1, iter2)
+                    textbuffer.insert_with_tags_by_name(iter_end, 'Success! Imported pre-registration saved to '+self.path+'_registration_prereg.json\nFinished!', 'blue')
             except (IOError, IndexError):
-                iter1 = textbuffer.get_end_iter()
-                try:
-                    textbuffer.create_tag("red", foreground="red")
-                except TypeError:
-                    pass
-                textbuffer.insert(iter1, 'Error! Could not open file, or no data found in file. Nothing was imported, try again.')
-                iter1 = textbuffer.get_iter_at_line(1)
-                iter2 = textbuffer.get_end_iter()
-                textbuffer.apply_tag_by_name("red", iter1, iter2)
+                textbuffer.insert_with_tags_by_name(iter1, 'Error! Could not open file, or no data found in file. Nothing was imported, try again.', 'red')
         chooser.destroy()
