@@ -114,9 +114,10 @@ class ImportPreRegWin(gtk.Window):
         # vuild 2nd column (csv field to be used, as a combo box)
         combo_renderer = gtk.CellRendererCombo()
         liststore_csv_fields = gtk.ListStore(str)
+        liststore_csv_fields.append(['-- Leave empty --'])
         for field in csv_fields:
             liststore_csv_fields.append([field])
-        liststore_csv_fields.append(['Advanced expression'])
+        liststore_csv_fields.append(['-- Advanced expression --'])
         combo_renderer.set_property("model", liststore_csv_fields)
         combo_renderer.set_property("text-column", 0)
         combo_renderer.set_property("editable", True)
@@ -169,7 +170,7 @@ class ImportPreRegWin(gtk.Window):
     def combo_changed(self, widget, path, text):
         '''Handles a change in the combo boxes' selections'''
         self.fieldsmodel[path][1] = text
-        if text == 'Advanced expression':
+        if text == '-- Advanced expression --':
             if len(self.fieldsmodel[path][2]) == 0:
                 self.fieldsmodel[path][2] = '-- enter python expression --'
             self.fieldsmodel[path][3] = True
@@ -190,7 +191,9 @@ class ImportPreRegWin(gtk.Window):
             if csv_col == '-- select --':
                 textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), 'Nothing selected for field %s' % field, 'red')
                 return
-            elif csv_col == 'Advanced expression':
+            elif csv_col == '-- Leave empty --':
+                self.fields_mapping[field] = lambda reg, col=csv_col:''
+            elif csv_col == '-- Advanced expression --':
                 try:
                     code = compile(self.fieldsmodel[path][2], '', 'eval')
                 except SyntaxError, e:
@@ -268,7 +271,7 @@ class ImportPreRegWin(gtk.Window):
             tmpdict = {}
             for field in self.fields:
                 value = self.fields_mapping[field](reg)
-                if self.fieldsdic[field]['type'] == 'combobox':
+                if value and self.fieldsdic[field]['type'] == 'combobox':
                     if value not in self.fieldsdic[field]['options']:
                         optstr = '"' + '", "'.join(self.fieldsdic[field]['options']) + '", and blank'
                         raise ComboValueError('''Error in csv row %d !
