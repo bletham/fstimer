@@ -51,7 +51,7 @@ class CSVPrinterLaps(fstimer.printcsv.CSVPrinter):
                 runner_data['First name'] + ' '+ runner_data['Last name'],
                 bibid,
                 runner_data['Gender'],
-                runner_data['Age']]
+                str(runner_data['Age'])]
         for field in self.fields[7:]:
             data.append(runner_data[field])
         entry = ','.join(data) + os.linesep
