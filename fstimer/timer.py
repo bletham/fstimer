@@ -346,15 +346,10 @@ class PyTimer(object):
     def get_synch_times_and_ids(self):
         '''returns a list of ids and a list of timedeltas that are
            "synched", that is that have the same number of entries.
-           Missing entries are filled with empty strings'''
-        if self.timewin.offset >= 0:
-            adj_ids = ['' for i_unused in range(self.timewin.offset)]
-            adj_ids.extend(self.rawtimes['ids'])
-            adj_times = [str2timedelta(t) for t in self.rawtimes['times']]
-        elif self.timewin.offset < 0:
-            adj_times = ['' for i_unused in range(-self.timewin.offset)]
-            adj_times.extend([str2timedelta(t) for t in self.rawtimes['times']])
-            adj_ids = list(self.rawtimes['ids'])
+           Entries without a counterpart are dropped'''
+        l = min(len(self.rawtimes['ids']), len(self.rawtimes['times']))
+        adj_ids = self.rawtimes['ids'][:l]
+        adj_times = [str2timedelta(t) for t in self.rawtimes['times'][:l]]
         return adj_ids, adj_times
     
     def get_sorted_results(self):
