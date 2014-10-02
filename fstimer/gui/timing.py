@@ -29,10 +29,22 @@ import time
 import os
 import re
 import json
+import pango
 
 class MergeError(Exception):
     pass
 
+def time_format(t):
+    '''formats time for display in the timing window'''
+    milli = int((t - int(t)) * 1000)
+    hours, rem = divmod(int(t), 3600)
+    minutes, seconds = divmod(rem, 60)
+    days, hours = divmod(hours, 24)
+    s = '%02d:%02d:%02d.%03d' % (hours, minutes, seconds, milli)
+    if days > 0:
+        s = '%s day%s, ' % (days, 's' if days > 1 else '') + s
+    return s
+    
 class TimingWin(gtk.Window):
     '''Handling of the timing window'''
 
@@ -103,6 +115,11 @@ class TimingWin(gtk.Window):
         self.racerslabel = gtk.Label()
         self.racerslabel.set_markup(str(self.racers_in)+' racers checked in out of '+self.racers_total+' registered.')
         timevbox1.pack_start(self.racerslabel, False, False, 0)
+        # time display
+        self.clocklabel = gtk.Label()
+        self.clocklabel.modify_font(pango.FontDescription("sans 24"))
+        self.clocklabel.set_markup(time_format(0))
+        timevbox1.pack_start(self.clocklabel, False, False, 0)
         vbox1align = gtk.Alignment(0, 0, 1, 1)
         vbox1align.add(timevbox1)
         # buttons on the right side
@@ -152,11 +169,21 @@ class TimingWin(gtk.Window):
         adj = self.timesw.get_vadjustment()
         adj.set_value(0)
 
+    def update_clock(self):
+        '''Updates the clock'''
+        # compute time
+        t = time.time()-self.t0
+        # update label
+        self.clocklabel.set_markup(time_format(t))
+        # keep updating
+        return True
+        
     def set_t0(self, jnk_unused):
         '''Handles click on Start button
            Sets t0 to the current time'''
         self.t0 = time.time()
         self.t0_label.set_markup('t0: ' + str(self.t0))
+        gtk.timeout_add(60, self.update_clock)
 
     def edit_t0(self, jnk_unused):
         '''Handles click on Edit button for the t0 value.
