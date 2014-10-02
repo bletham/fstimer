@@ -443,15 +443,14 @@ class TimingWin(gtk.Window):
                     adj_ids = list(self.rawtimes['ids'])
                 for entry in zip(adj_ids, adj_times):
                     self.timemodel.append(list(entry))
-                chooser.destroy()
             except (IOError, ValueError, TypeError, MergeError), e:
-                chooser.destroy()
                 error_dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL,
                                                  gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
                                                  'ERROR: Failed to %s : %s.' % ('merge' if isMerge else 'result', e))
                 error_dialog.set_title('Oops...')
                 response = error_dialog.run()
                 error_dialog.destroy()
+        chooser.destroy()
 
     def save_times(self, jnk_unused):
         '''Handles click on the Save button
