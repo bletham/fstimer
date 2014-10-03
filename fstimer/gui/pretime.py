@@ -44,6 +44,7 @@ class PreTimeWin(gtk.Window):
         self.pretimefilelabel = gtk.Label('')
         self.pretimefilelabel.set_markup('<span color="blue">Select a timing dictionary.</span>')
         self.entry1 = gtk.Entry(max=6)
+        self.entry1.set_text('0')
         label2 = gtk.Label('Specify a "pass" ID, not assigned to any racer')
         self.timebtncombobox = gtk.combo_box_new_text()
         self.timebtnlist = [' ', '.', '/']
