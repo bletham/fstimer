@@ -39,7 +39,7 @@ class Printer(object):
         '''returns the file extension to be used for files
            containing data from this printer'''
         return ''
-        
+
     def header(self):
         '''Returns the header of the printout'''
         return ''

@@ -20,7 +20,6 @@
 import pygtk
 pygtk.require('2.0')
 import gtk
-import gobject
 import fstimer.gui
 import os, csv, json
 
@@ -87,7 +86,7 @@ class ImportPreRegWin(gtk.Window):
 
     def propose_advanced_import(self, csv_fields):
         '''Propose advanced import mechanism where project fields can be build
-           from the csv ones using python expressions'''        
+           from the csv ones using python expressions'''
         self.advancedwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.advancedwin.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
         self.advancedwin.set_transient_for(self)
@@ -167,7 +166,7 @@ class ImportPreRegWin(gtk.Window):
         self.advancedwin.add(vbox)
         self.advancedwin.show_all()
 
-    def combo_changed(self, widget, path, text):
+    def combo_changed(self, widget_unused, path, text):
         '''Handles a change in the combo boxes' selections'''
         self.fieldsmodel[path][1] = text
         if text == '-- Advanced expression --':
@@ -176,11 +175,11 @@ class ImportPreRegWin(gtk.Window):
             self.fieldsmodel[path][3] = True
         else:
             self.fieldsmodel[path][3] = False
-        
-    def text_changed(self, widget, path, text):
+
+    def text_changed(self, widget_unused, path, text):
         '''Handles a change in the advanced boxes'''
         self.fieldsmodel[path][2] = text
-        
+
     def advanced_import_ok(self, jnk_unused, textbuffer):
         '''Handles click on OK button in the advanced interface'''
         textbuffer.delete(textbuffer.get_start_iter(), textbuffer.get_end_iter())
@@ -192,26 +191,26 @@ class ImportPreRegWin(gtk.Window):
                 textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), 'Nothing selected for field %s' % field, 'red')
                 return
             elif csv_col == '-- Leave empty --':
-                self.fields_mapping[field] = lambda reg, col=csv_col:''
+                self.fields_mapping[field] = lambda reg, col=csv_col: ''
             elif csv_col == '-- Advanced expression --':
                 try:
                     code = compile(self.fieldsmodel[path][2], '', 'eval')
+                    self.fields_mapping[field] = lambda reg, code=code: eval(code)
                 except SyntaxError, e:
                     iter_end = textbuffer.get_end_iter()
                     textbuffer.insert_with_tags_by_name(iter_end, 'Invalid syntax for expression of field %s' % field, 'red')
                     textbuffer.insert_with_tags_by_name(iter_end, str(e), 'blue')
                     return
-                self.fields_mapping[field] = lambda reg, code=code:eval(code)
             else:
-                self.fields_mapping[field] = lambda reg, col=csv_col:reg[col]
+                self.fields_mapping[field] = lambda reg, col=csv_col: reg[col]
         try:
             self.import_data(textbuffer)
             self.advancedwin.hide()
         except ComboValueError, e:
-            textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), str(e), 'red')            
+            textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), str(e), 'red')
         except Exception, e:
-            textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), str(type(e)) + ' : ' + str(e), 'red')            
-        
+            textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), str(type(e)) + ' : ' + str(e), 'red')
+
     def build_fields_mapping(self, csv_fields, textbuffer):
         '''Maps cvs fields to project fields and creates a dictionnary
            of lambdas to apply to a csv entry to extract each field.
@@ -232,10 +231,10 @@ class ImportPreRegWin(gtk.Window):
             self.propose_advanced_import(csv_fields)
         else:
             self.fields_mapping = {}
-            for field in self.fields :
-                self.fields_mapping[field] = lambda entry, field=field:entry[field]
+            for field in self.fields:
+                self.fields_mapping[field] = lambda entry, field=field: entry[field]
             self.import_data(textbuffer)
-        
+
     def select_preregistration(self, jnk_unused, textbuffer):
         '''Handle selection of a pre-reg file using a filechooser'''
         chooser = gtk.FileChooserDialog(title='Select pre-registration csv', action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OK, gtk.RESPONSE_OK))
@@ -259,7 +258,8 @@ class ImportPreRegWin(gtk.Window):
                 textbuffer.insert(iter_end, ', '.join(csv_fields) + os.linesep)
                 self.build_fields_mapping(csv_fields, textbuffer)
             except (IOError, IndexError):
-                textbuffer.insert_with_tags_by_name(iter1, 'Error! Could not open file, or no data found in file. Nothing was imported, try again.', 'red')
+                iter_end = textbuffer.get_end_iter()
+                textbuffer.insert_with_tags_by_name(iter_end, 'Error! Could not open file, or no data found in file. Nothing was imported, try again.', 'red')
         chooser.destroy()
 
     def import_data(self, textbuffer):

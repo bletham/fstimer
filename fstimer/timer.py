@@ -351,7 +351,7 @@ class PyTimer(object):
         adj_ids = self.rawtimes['ids'][:l]
         adj_times = [str2timedelta(t) for t in self.rawtimes['times'][:l]]
         return adj_ids, adj_times
-    
+
     def get_sorted_results(self):
         '''returns a sorted list of (id, result) items.
            The content of result depends on the race type'''

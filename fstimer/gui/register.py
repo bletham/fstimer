@@ -303,7 +303,7 @@ class RegistrationWin(gtk.Window):
                 label = gtk.Label('')
                 hboxes[field].pack_start(label, False, False, 0)
                 self.editregfields[field].connect("changed", self.validate_duration, editregbtnOK, label)
-            
+
             editregvbox.pack_start(hboxes[field], False, False, 0) #Pack this hbox into the big vbox.
         #Pack and show
         editregvbox.pack_start(editreghbox, False, False, 5)

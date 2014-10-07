@@ -32,6 +32,7 @@ import json
 import pango
 
 class MergeError(Exception):
+    '''Exception used in case of merging error'''
     pass
 
 def time_format(t):
@@ -44,7 +45,7 @@ def time_format(t):
     if days > 0:
         s = '%s day%s, ' % (days, 's' if days > 1 else '') + s
     return s
-    
+
 class TimingWin(gtk.Window):
     '''Handling of the timing window'''
 
