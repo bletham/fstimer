@@ -321,7 +321,7 @@ class PyTimer(object):
         # We will store 'raw' data, lists of times and IDs.
         self.rawtimes = {'times':[], 'ids':[]}
         # create Timing window
-        self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, strpzeros, self.rawtimes, self.timing, self.print_times)
+        self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, strpzeros, self.rawtimes, self.timing, self.print_times, self.projecttype, self.numlaps)
 
     def get_division(self, timingEntry):
         '''Get the division for a given timing entry'''

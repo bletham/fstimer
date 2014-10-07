@@ -49,13 +49,14 @@ def time_format(t):
 class TimingWin(gtk.Window):
     '''Handling of the timing window'''
 
-    def __init__(self, path, parent, timebtn, strpzeros, rawtimes, timing, print_cb):
+    def __init__(self, path, parent, timebtn, strpzeros, rawtimes, timing, print_cb, projecttype, numlaps):
         '''Builds and display the compilation error window'''
         super(TimingWin, self).__init__(gtk.WINDOW_TOPLEVEL)
         self.path = path
         self.timebtn = timebtn
         self.strpzeros = strpzeros
         self.rawtimes = rawtimes
+        self.numlaps = numlaps
         self.wineditblocktime = None
         self.winedittime = None
         self.t0win = None
@@ -110,11 +111,13 @@ class TimingWin(gtk.Window):
         timevbox1.pack_start(timealgn, True, True, 0)
         timevbox1.pack_start(self.entrybox, False, False, 0)
         # we will keep track of how many racers are still out.
-        self.racers_reg = timing.keys()
-        self.racers_total = str(len(self.racers_reg))
-        self.racers_in = 0
+        self.racers_reg = []
+        for i_unused in range(self.numlaps):
+            self.racers_reg.append([k for k in timing.keys()])
+        self.racers_total = len(self.racers_reg)
+        self.racers_in = [0] * self.numlaps
         self.racerslabel = gtk.Label()
-        self.racerslabel.set_markup(str(self.racers_in)+' racers checked in out of '+self.racers_total+' registered.')
+        self.update_racers_label()
         timevbox1.pack_start(self.racerslabel, False, False, 0)
         # time display
         self.clocklabel = gtk.Label()
@@ -160,6 +163,14 @@ class TimingWin(gtk.Window):
         self.add(timehbox)
         self.show_all()
 
+    def update_racers_label(self):
+        '''update values in the racers_label'''
+        s = 'Registered users : %d - Racers out' % self.racers_total
+        if self.numlaps > 1:
+            s += ' (per lap)'
+        s += ' : ' + ' / '.join(str(n) for n in self.racers_in)
+        self.racerslabel.set_markup(s)
+
     def check_for_newtime(self, jnk_unused):
         '''Handles entering of a new time'''
         if self.entrybox.get_text() == self.timebtn:
@@ -178,7 +189,7 @@ class TimingWin(gtk.Window):
         self.clocklabel.set_markup(time_format(t))
         # keep updating
         return True
-        
+
     def set_t0(self, jnk_unused):
         '''Handles click on Start button
            Sets t0 to the current time'''
@@ -450,16 +461,13 @@ class TimingWin(gtk.Window):
                     self.timestr = saveresults['timestr']
                     self.t0 = saveresults['t0']
                     self.t0_label.set_markup('t0: '+str(self.t0))
-                self.offset = len(self.rawtimes['times']) - len(self.rawtimes['ids'])
-                # Compute how many racers have checked in
+                # Recompute how many racers have checked in
+                self.racers_in = [0] * self.numlaps
                 for ID in self.rawtimes['ids']:
-                    try:
-                        self.racers_reg.remove(ID)
-                        self.racers_in += 1
-                    except ValueError:
-                        pass
-                # And add them to the display.
-                self.racerslabel.set_markup(str(self.racers_in)+' racers checked in out of '+self.racers_total+' registered.')
+                    self.update_racers(ID)
+                self.offset = len(self.rawtimes['times']) - len(self.rawtimes['ids'])
+                # Update racers' label
+                self.update_racers_label()
                 self.timemodel.clear()
                 if self.offset >= 0:
                     adj_ids = ['' for i_unused in range(self.offset)]
@@ -513,6 +521,14 @@ class TimingWin(gtk.Window):
                 self.save_times(None)
             self.hide()
 
+    def update_racers(self, ID):
+        '''Updates racers_reg and racers_in after arrival of user ID'''
+        for i in range(self.numlaps):
+            if ID in self.racers_reg[i]:
+                self.racers_reg[i].remove(ID)
+                self.racers_in[i] += 1
+                break
+
     def record_time(self, jnk_unused):
         '''Handles a hit on enter in the entry box.
            An ID with times in the buffer gives the oldest (that is, fastest)
@@ -541,9 +557,8 @@ class TimingWin(gtk.Window):
             self.new_blank_time()
         # update the racer count.
         try:
-            self.racers_reg.remove(txt)
-            self.racers_in += 1
-            self.racerslabel.set_markup(str(self.racers_in)+' racers checked in out of '+self.racers_total+' registered.')
+            self.update_racers(txt)
+            self.update_racers_label()
         except ValueError:
             pass
         self.entrybox.set_text('')
