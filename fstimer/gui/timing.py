@@ -46,6 +46,10 @@ def time_format(t):
         s = '%s day%s, ' % (days, 's' if days > 1 else '') + s
     return s
 
+def time_parse(dt):
+    d = re.match(r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)', dt).groupdict(0)
+    return datetime.timedelta(**dict(((key, int(value)) for key, value in d.items())))
+
 class TimingWin(gtk.Window):
     '''Handling of the timing window'''
 
@@ -56,6 +60,7 @@ class TimingWin(gtk.Window):
         self.timebtn = timebtn
         self.strpzeros = strpzeros
         self.rawtimes = rawtimes
+        self.timing = timing
         self.numlaps = numlaps
         self.wineditblocktime = None
         self.winedittime = None
@@ -74,8 +79,15 @@ class TimingWin(gtk.Window):
         self.timeview = gtk.TreeView()
         column = gtk.TreeViewColumn('ID', gtk.CellRendererText(), text=0)
         self.timeview.append_column(column)
-        column = gtk.TreeViewColumn('Time', gtk.CellRendererText(), text=1)
+        renderer = gtk.CellRendererText()
+        column = gtk.TreeViewColumn('Time', renderer)
+        column.set_cell_data_func(renderer, self.print_time)        
         self.timeview.append_column(column)
+        if projecttype == 'handicap':
+            renderer = gtk.CellRendererText()
+            column = gtk.TreeViewColumn('Corrected Time', renderer)
+            column.set_cell_data_func(renderer, self.print_corrected_time)
+            self.timeview.append_column(column)
         self.timeview.set_model(self.timemodel)
         self.timeview.connect('size-allocate', self.scroll_times)
         treeselection = self.timeview.get_selection()
@@ -162,6 +174,17 @@ class TimingWin(gtk.Window):
         timehbox.pack_start(vspacer, False, False, 0)
         self.add(timehbox)
         self.show_all()
+
+    def print_time(self, column, renderer, model, iter):
+        '''computes a handicap corrected time from en entry in the timing model'''
+        renderer.set_property('text', model.get(iter, 1)[0])
+
+    def print_corrected_time(self, column, renderer, model, iter):
+        '''computes a handicap corrected time from en entry in the timing model'''
+        id, st = model.get(iter, 0, 1)
+        t = time_parse(st)
+        nt = t - datetime.timedelta(0, float(self.timing[id]['Handicap']))
+        renderer.set_property('text', str(nt))
 
     def update_racers_label(self):
         '''update values in the racers_label'''
@@ -313,14 +336,11 @@ class TimingWin(gtk.Window):
             row = path[0]
             # Now figure out the new time. First get the old time as a string
             old_time_str = self.timemodel.get_value(treeiter, 1)
-            # Now we convert it to timedelta
             try:
-                d = re.match(r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)', str(old_time_str)).groupdict(0)
-                old_time = datetime.timedelta(**dict(((key, int(value)) for key, value in d.items())))
-                # Now the time adjustment
-                adj_time_str = timestr #the input string
-                dadj = re.match(r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)', str(adj_time_str)).groupdict(0)
-                adj_time = datetime.timedelta(**dict(((key, int(value)) for key, value in dadj.items())))
+                # Now we convert it to timedelta
+                old_time = parse_time(old_time_str)
+                # time adjustment
+                adj_time = time_parse(timestr)
                 # Combine the timedeltas to get the new time
                 if operation == 'ADD':
                     new_time = str(old_time + adj_time)
