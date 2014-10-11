@@ -22,6 +22,7 @@ pygtk.require('2.0')
 import gtk
 import fstimer.gui
 import os, csv, json
+import datetime
 
 class ComboValueError(Exception):
     '''Exception launched when decoding reveals an invalid value for a combo field'''
@@ -97,7 +98,7 @@ class ImportPreRegWin(gtk.Window):
         self.advancedwin.set_size_request(600, 400)
         self.advancedwin.connect('delete_event', lambda b, jnk_unused: self.advancedwin.hide())
         # top label
-        toplabel = gtk.Label("Specify the mapping of csv fields to projectones.\n")
+        toplabel = gtk.Label("Specify the mapping of csv fields to project ones.\n")
         # Treeview with 3 columns : field, combobox and free text
         self.fieldview = gtk.TreeView()
         self.fieldview.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
@@ -151,12 +152,17 @@ class ImportPreRegWin(gtk.Window):
         hbox = gtk.HBox(False, 0)
         btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
         btnCANCEL.connect('clicked', lambda btn: self.advancedwin.hide())
-        alignCANCEL = gtk.Alignment(0, 0, 0, 0)
-        alignCANCEL.add(btnCANCEL)
+        btnHELP = gtk.Button(stock=gtk.STOCK_HELP)#label='Avanced mapping _Help')
+        btnHELP.connect('clicked', self.display_advanced_help)
+        alignHELP = gtk.Alignment(.5, 0, .3, 0)
+        alignHELP.add(btnHELP)
         btnOK = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
         btnOK.connect('clicked', self.advanced_import_ok, textbuffer)
-        hbox.pack_start(alignCANCEL, True, True, 0)
-        hbox.pack_start(btnOK, False, False, 0)
+        alignOK = gtk.Alignment(1, 0, 0, 0)
+        alignOK.add(btnOK)
+        hbox.pack_start(btnCANCEL, False, True, 0)
+        hbox.pack_start(alignHELP, True, True, 0)
+        hbox.pack_start(alignOK, False, False, 0)
         # populate
         vbox = gtk.VBox(False, 10)
         vbox.pack_start(toplabel, False, False, 0)
@@ -180,6 +186,26 @@ class ImportPreRegWin(gtk.Window):
         '''Handles a change in the advanced boxes'''
         self.fieldsmodel[path][2] = text
 
+    def display_advanced_help(self, jnk_unused):
+        '''Displays Advanced mapping help'''
+        help_dialog = gtk.MessageDialog(self, 0, gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
+                                        'How to map CSV column(s) to a given field')
+        help_dialog.format_secondary_markup('''For each field, 3 possibilities :
+    - a CSV column to be mapped to the field
+        <small>Note that columns with matching name are preselected</small>
+    - '-- Leave Empty --' to leave field empty
+    - '-- Advanced expression --' to use custom python expression
+
+Expressions can combine values from several CSV columns.
+Use the reg variable to refer to columns. It contains a dictionnary of column's name to column's value (as strings).
+
+Here are examples for an Age and a Name column:
+     %d - int(reg['Year of Birth'])
+     ' '.join([reg['First name'], reg['Last name']])''' % datetime.date.today().year)
+        help_dialog.set_title('Advanced mapping')
+        help_dialog.connect('response', lambda btn, resp: help_dialog.hide())
+        help_dialog.run()
+        
     def advanced_import_ok(self, jnk_unused, textbuffer):
         '''Handles click on OK button in the advanced interface'''
         textbuffer.delete(textbuffer.get_start_iter(), textbuffer.get_end_iter())
