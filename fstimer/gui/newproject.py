@@ -26,11 +26,9 @@ import fstimer.gui
 class NewProjectWin(gtk.Window):
     '''Handles the creation of a new project'''
 
-    def __init__(self, define_fields_cb, parent):
+    def __init__(self, set_projecttype_cb, parent):
         '''Creates new project window'''
         super(NewProjectWin, self).__init__(gtk.WINDOW_TOPLEVEL)
-        self.define_fields_cb = define_fields_cb
-        self.projectTypes = ['standard', 'handicap']
         self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
         self.set_transient_for(parent)
         self.set_modal(True)
@@ -44,17 +42,10 @@ class NewProjectWin(gtk.Window):
         # Now add the text.
         label_0 = gtk.Label('Enter a name for the new project.\nOnly letters, numbers, and underscore.')
         # And an error, if needed..
-        label_1 = gtk.Label()
-        label_1.set_line_wrap(True)
+        self.label_1 = gtk.Label()
+        self.label_1.set_line_wrap(True)
         # And the text entry
-        entry = gtk.Entry(max=32)
-        # Add a combox for selecting the type of race
-        hbox_0 = gtk.HBox(False, 0)
-        label_2 = gtk.Label('Race type')
-        combobox = gtk.combo_box_new_text()
-        for t in self.projectTypes:
-            combobox.append_text(t)
-        combobox.set_active(0)
+        self.entry = gtk.Entry(max=32)
         # And an hbox with 2 buttons
         hbox_1 = gtk.HBox(False, 0)
         btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
@@ -62,39 +53,36 @@ class NewProjectWin(gtk.Window):
         alignCANCEL = gtk.Alignment(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
         btnNEXT = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
-        btnNEXT.connect('clicked', self.nextClicked, entry, combobox, label_1)
+        btnNEXT.connect('clicked', self.nextClicked, set_projecttype_cb)
         alignNEXT = gtk.Alignment(1, 0, 1, 0)
         alignNEXT.add(btnNEXT)
         btnNEXT.set_sensitive(False)
         # And populate
-        entry.connect("changed", self.lock_btn_title, entry, btnNEXT)
-        hbox_0.pack_start(label_2, False, False, 0)
-        hbox_0.pack_start(combobox, True, False, 0)
+        self.entry.connect("changed", self.lock_btn_title, btnNEXT)
         hbox_1.pack_start(alignCANCEL, True, True, 0)
         hbox_1.pack_start(alignNEXT, False, False, 0)
         vbox.pack_start(label_0, False, False, 0)
-        vbox.pack_start(entry, False, False, 0)
-        vbox.pack_start(hbox_0, False, False, 0)
-        vbox.pack_start(label_1, False, False, 0)
+        vbox.pack_start(self.entry, False, False, 0)
+        vbox.pack_start(self.label_1, False, False, 0)
         vbox.pack_start(hbox_1, False, False, 0)
         self.show_all()
 
-    def lock_btn_title(self, jnk_unused, entry, btnNEXT):
+    def lock_btn_title(self, jnk_unused, btnNEXT):
         '''locks btnNEXT if the project name doesn't meet specifications'''
-        txt = entry.get_text()
+        txt = self.entry.get_text()
         btnNEXT.set_sensitive((len(txt) > 0) and \
                               (not re.search('[^a-zA-Z0-9_]+', txt)))
         return
 
-    def nextClicked(self, jnk_unused, entry, combo, label):
+    def nextClicked(self, jnk_unused, set_projecttype_cb):
         '''handles click on next by checking new project name
            and calling back fsTimer'''
-        entry_text = str(entry.get_text())
+        entry_text = str(self.entry.get_text())
         if os.path.exists(entry_text):
             # Add the error text.
-            label.set_markup('<span color="red">Error! File or directory named "'+entry_text+'" already exists. Try again.</span>')
-            label.show()
+            self.label_1.set_markup('<span color="red">Error! File or directory named "'+entry_text+'" already exists. Try again.</span>')
+            self.label_1.show()
         else:
-            label.set_markup('')
+            self.label_1.set_markup('')
             self.hide()
-            self.define_fields_cb(entry_text, self.projectTypes[combo.get_active()-1])
+            set_projecttype_cb(entry_text)

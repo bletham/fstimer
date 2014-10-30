@@ -18,8 +18,6 @@
 
 #The author/copyright holder can be contacted at bletham@gmail.com
 
-# pylint: disable=unused-argument
-
 '''Printing infrastructure for the fsTimer package'''
 
 class Printer(object):

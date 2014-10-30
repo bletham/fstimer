@@ -50,7 +50,7 @@ class IntroWin(gtk.Window):
         projectlist.extend([i for i in os.listdir('.') if os.path.isdir(i) and os.path.exists(i+'/'+i+'.reg')]) #List the folders in pwd that contain a .reg registration file
         projectlist.sort()
         for project in projectlist:
-          combobox.append_text(project)
+            combobox.append_text(project)
         combobox.set_active(0)
         #An hbox for the buttons.
         hbox = gtk.HBox(False, 0)

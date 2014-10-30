@@ -44,7 +44,9 @@ class DivisionsWin(gtk.Window):
         vbox = gtk.VBox(False, 10)
         self.add(vbox)
         # Now add the text.
-        label2_0 = gtk.Label("Specify the divisions for reporting divisional places.\nPress 'Forward' to continue with the default settings, or make edits below.")
+        label2_0 = gtk.Label("""Specify the divisions for reporting divisional places.\
+        \nPress 'Forward' to continue with the default settings, or make edits below.\
+        \n\nDivisions can be any combination of age range and combobox fields.""")
         # Make the liststore, with columns:
         # name | min age | max age | (... all other combobox fields...)
         # To do this we first count the number of combobox fields
@@ -131,10 +133,9 @@ class DivisionsWin(gtk.Window):
         hbox3.pack_start(alignCANCEL, True, True, 0)
         hbox3.pack_start(btnBACK, False, False, 2)
         hbox3.pack_start(btnNEXT, False, False, 0)
-        vbox.pack_start(label2_0, False, False, 0)
-        #vbox.pack_start(label2_1, False, False, 0)
-        #vbox.pack_start(hbox1, False, False, 0)
-        #vbox.pack_start(hbox2, False, False, 0)
+        alignText = gtk.Alignment(0, 0, 0, 0)
+        alignText.add(label2_0)
+        vbox.pack_start(alignText, False, False, 0)
         vbox.pack_start(hbox4, True, True, 0)
         vbox.pack_start(hbox3, False, False, 10)
         self.show_all()

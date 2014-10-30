@@ -26,7 +26,7 @@ import fstimer.gui
 class DefineFieldsWin(gtk.Window):
     '''Handles the definition of the fields in a project'''
 
-    def __init__(self, fields, fieldsdic, back_clicked_cb, next_clicked_cb, parent):
+    def __init__(self, fields, fieldsdic, projecttype, back_clicked_cb, next_clicked_cb, parent):
         '''Creates fields definition window'''
         super(DefineFieldsWin, self).__init__(gtk.WINDOW_TOPLEVEL)
         self.fields = fields
@@ -41,24 +41,16 @@ class DefineFieldsWin(gtk.Window):
         self.set_border_width(20)
         self.set_size_request(600, 400)
         self.connect('delete_event', lambda b, jnk_unused: self.hide())
+        #Specify the fields that are required and so will be locked.
+        if projecttype == 'handicap':
+            self.reqfields = ['Last name', 'First name', 'ID', 'Age', 'Gender', 'Handicap']
+        else:
+            self.reqfields = ['Last name', 'First name', 'ID', 'Age', 'Gender']
         ##Now create the vbox.
         vbox1 = gtk.VBox(False, 10)
         self.add(vbox1)
         ##Now add the text.
         label2_0 = gtk.Label("Specify the information to be collected during registration.\nPress 'Forward' to continue with the default settings, or make edits below.")
-        #label2_1 = gtk.Label('Information can be collected using an entrybox or using a combobox.\n ')
-        #label2_2 = gtk.Label('This is an example of an entrybox:')
-        #entry_demo = gtk.Entry(max=10)
-        #hbox1 = gtk.HBox(False, 0)
-        #hbox1.pack_start(label2_2, False, False, 0)
-        #hbox1.pack_start(entry_demo, False, False, 0)
-        #label2_3 = gtk.Label('This is an example of a combobox:')
-        #combo_demo = gtk.combo_box_new_text()
-        #for opt in ['', 'option1', 'option2', 'option3']:
-        #  combo_demo.append_text(opt)
-        #hbox2 = gtk.HBox(False, 0)
-        #hbox2.pack_start(label2_3, False, False, 0)
-        #hbox2.pack_start(combo_demo, False, False, 0)
         #Now we put in a liststore with the settings. We start with the default settings.
         #Make the liststore, with 3 columns (title, type, settings)
         self.regfieldsmodel = gtk.ListStore(str, str, str)
@@ -129,9 +121,6 @@ class DefineFieldsWin(gtk.Window):
         hbox3.pack_start(btnBACK, False, False, 2)
         hbox3.pack_start(btnNEXT, False, False, 0)
         vbox1.pack_start(label2_0, False, False, 0)
-        #vbox1.pack_start(label2_1, False, False, 0)
-        #vbox1.pack_start(hbox1, False, False, 0)
-        #vbox1.pack_start(hbox2, False, False, 0)
         vbox1.pack_start(hbox4, True, True, 0)
         vbox1.pack_start(hbox3, False, False, 10)
         self.show_all()
@@ -186,6 +175,7 @@ class DefineFieldsWin(gtk.Window):
         self.winnewentry.set_position(gtk.WIN_POS_CENTER)
         self.winnewentry.set_border_width(20)
         self.winnewentry.connect('delete_event', lambda b, jnk_unused: self.winnewentry.hide())
+        label0 = gtk.Label('An entrybox allows for any text to be entered.')
         label1 = gtk.Label('Field name:')
         nameentry = gtk.Entry(max=50)
         nameentry.set_text(name)
@@ -210,6 +200,7 @@ class DefineFieldsWin(gtk.Window):
         hbox3.pack_start(cancel_algn, True, True, 0)
         hbox3.pack_start(btnOK, False, False, 0)
         vbox = gtk.VBox(False, 10)
+        vbox.pack_start(label0, False, False, 0)
         vbox.pack_start(hbox1, False, False, 0)
         vbox.pack_start(hbox2, False, False, 0)
         vbox.pack_start(label3, False, False, 0)
@@ -223,7 +214,7 @@ class DefineFieldsWin(gtk.Window):
         model, treeiter1 = selection.get_selected()
         if treeiter1:
             name = model.get_value(treeiter1, 0)
-            if name in ['Last name', 'First name', 'ID', 'Age', 'Gender', 'Handicap']:
+            if name in self.reqfields:
                 #these are the hard-coded required fields
                 btnREMOVE.set_sensitive(False)
                 btnEDIT.set_sensitive(False)
@@ -242,6 +233,7 @@ class DefineFieldsWin(gtk.Window):
         self.winnewcombo.set_position(gtk.WIN_POS_CENTER)
         self.winnewcombo.set_border_width(20)
         self.winnewcombo.connect('delete_event', lambda b, jnk_unused: self.winnewcombo.hide())
+        label0 = gtk.Label('A combobox allows the value to be one of a few options.')
         label1 = gtk.Label('Field name:')
         nameentry = gtk.Entry(max=50)
         nameentry.set_text(name)
@@ -265,6 +257,7 @@ class DefineFieldsWin(gtk.Window):
         hbox3.pack_start(cancel_algn, True, True, 0)
         hbox3.pack_start(btnOK, False, False, 0)
         vbox = gtk.VBox(False, 10)
+        vbox.pack_start(label0,False,False,0)
         vbox.pack_start(hbox1, False, False, 0)
         vbox.pack_start(hbox2, False, False, 0)
         vbox.pack_start(label3, False, False, 0)

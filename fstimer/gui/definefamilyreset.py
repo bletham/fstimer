@@ -27,7 +27,7 @@ class FamilyResetWin(gtk.Window):
     '''Handling of the window dedicated to the definition of the field
        to reset when registering several members of a family'''
 
-    def __init__(self, fields, back_clicked_cb, next_clicked_cb, parent):
+    def __init__(self, fields, clear_for_fam, back_clicked_cb, next_clicked_cb, parent):
         '''Creates family reset window'''
         super(FamilyResetWin, self).__init__(gtk.WINDOW_TOPLEVEL)
         self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
@@ -46,7 +46,7 @@ class FamilyResetWin(gtk.Window):
         btnlist = []
         for field in fields:
             btnlist.append(gtk.CheckButton(field))
-            if field in ['First name', 'Gender', 'Age', 'ID', 'Handicap']:
+            if field in clear_for_fam:
                 btnlist[-1].set_active(True)
             else:
                 btnlist[-1].set_active(False)

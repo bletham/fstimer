@@ -51,7 +51,7 @@ class RootWin(gtk.Window):
         ### Frame
         rootframe = gtk.Frame(label='al')
         rootframe_label = gtk.Label('')
-        rootframe_label.set_markup('<b>fsTimer project ' + path + '</b>')
+        rootframe_label.set_markup('<b>fsTimer - ' + path + '</b>')
         rootframe.set_label_widget(rootframe_label)
         rootframe.set_border_width(20)
         #And now fill the frame with a table

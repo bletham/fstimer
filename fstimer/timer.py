@@ -26,6 +26,7 @@ import gtk
 import os, json, csv, re, datetime
 import fstimer.gui.intro
 import fstimer.gui.newproject
+import fstimer.gui.projecttype
 import fstimer.gui.definefields
 import fstimer.gui.definefamilyreset
 import fstimer.gui.definedivisions
@@ -68,6 +69,7 @@ class PyTimer(object):
         self.path = projectlist[combobox.get_active()]
         with open(os.sep.join([self.path, self.path+'.reg']), 'rb') as fin:
             regdata = json.load(fin)
+        #Assign all of the project settings
         self.fields = regdata['fields']
         self.fieldsdic = regdata['fieldsdic']
         self.clear_for_fam = regdata['clear_for_fam']
@@ -77,6 +79,11 @@ class PyTimer(object):
         except KeyError:
             # old project, with no type, type is thus standard one
             self.projecttype = 'standard'
+        try:
+            self.numlaps = regdata['numlaps']
+        except KeyError:
+            self.numlaps = 1
+        #Move on to the main window
         self.introwin.hide()
         self.rootwin = fstimer.gui.root.RootWin(self.path,
                                                 self.show_about,
@@ -87,47 +94,70 @@ class PyTimer(object):
 
     def create_project(self, jnk_unused):
         '''creates a new project'''
-        self.newprojectwin = fstimer.gui.newproject.NewProjectWin(self.define_fields,
+        self.project_types = ['standard', 'handicap'] #Options for project types
+        #First load in the default project settings
+        with open('fstimer/data/fstimer_default_project.reg', 'rb') as fin:
+            regdata = json.load(fin)
+        #Assign all of the project settings
+        self.fields = regdata['fields']
+        self.fieldsdic = regdata['fieldsdic']
+        self.clear_for_fam = regdata['clear_for_fam']
+        self.divisions = regdata['divisions']
+        self.projecttype = regdata['projecttype']
+        self.numlaps = regdata['numlaps']
+        #And load the new project window
+        self.newprojectwin = fstimer.gui.newproject.NewProjectWin(self.set_projecttype,
                                                                   self.introwin)
 
-    def define_fields(self, path, projecttype):
-        '''Handled the definition of fields when creating a new project'''
+    def set_projecttype(self, path):
+        '''Handles setting project type'''
         self.path = path
-        self.projecttype = projecttype
-        #this is really just fsTimer.fieldsdic.keys(), but is important because it defines the order in which fields show up on the registration screen
-        self.fields = ['Last name', 'First name', 'ID', 'Age', 'Gender']
+        self.projecttypewin = fstimer.gui.projecttype.ProjectTypeWin(self.project_types,
+                                                                     self.projecttype,
+                                                                     self.numlaps,
+                                                                     self.back_to_new_project,
+                                                                     self.define_fields,
+                                                                     self.introwin)
+
+    def define_fields(self, jnk_unused, rbs, check_button, numlapsbtn):
+        '''Handled the definition of fields when creating a new project'''
+        self.projecttypewin.hide()
+        #First take care of the race settings from the previous window
+        for b, btn in rbs.iteritems():
+            if btn.get_active():
+                self.projecttype = self.project_types[b]
+                break
+        if check_button.get_active():
+            self.numlaps = numlapsbtn.get_value_as_int()
+        else:
+            self.numlaps = 1
+        #We will use self.fields and self.fieldsdic as already loaded, but add/remove Handicap field according projecttype.
         if self.projecttype == 'handicap':
-            self.fields.append('Handicap')
-        self.fields.extend(['Address', 'Email', 'Telephone',
-                            'Contact for future races',
-                            'How did you hear about race'])
-        self.fieldsdic = {}
-        self.fieldsdic['Last name'] = {'type':'entrybox', 'max':30}
-        self.fieldsdic['First name'] = {'type':'entrybox', 'max':30}
-        self.fieldsdic['ID'] = {'type':'entrybox', 'max':6}
-        self.fieldsdic['Age'] = {'type':'entrybox', 'max':3}
-        self.fieldsdic['Gender'] = {'type':'combobox', 'options':['male', 'female']}
-        if self.projecttype == 'handicap':
-            self.fieldsdic['Handicap'] = {'type':'durationbox', 'max':20}
-        self.fieldsdic['Address'] = {'type':'entrybox', 'max':90}
-        self.fieldsdic['Email'] = {'type':'entrybox', 'max':40}
-        self.fieldsdic['Telephone'] = {'type':'entrybox', 'max':20}
-        self.fieldsdic['Contact for future races'] = {'type':'combobox', 'options':['yes', 'no']}
-        self.fieldsdic['How did you hear about race'] = {'type':'entrybox', 'max':40}
+            if 'Handicap' not in self.fields:
+                self.fields.append('Handicap')
+                self.fieldsdic['Handicap'] = {'type':'durationbox', 'max':20}
+                self.clear_for_fam.append('Handicap')
+        #And now generate the window.
         self.definefieldswin = fstimer.gui.definefields.DefineFieldsWin \
-          (self.fields, self.fieldsdic, self.back_to_new_project,
+          (self.fields, self.fieldsdic, self.projecttype, self.back_to_projecttype,
            self.define_family_reset, self.introwin)
+
+    def back_to_projecttype(self, jnk_unused):
+        '''Goes back to new project window'''
+        self.definefieldswin.hide()
+        self.projecttypewin.show_all()
 
     def back_to_new_project(self, jnk_unused):
         '''Goes back to new project window'''
-        self.definefieldswin.hide()
+        self.projecttypewin.hide()
         self.newprojectwin.show_all()
 
     def define_family_reset(self, jnk_unused):
         '''Goes to family reset window'''
         self.definefieldswin.hide()
         self.familyresetwin = fstimer.gui.definefamilyreset.FamilyResetWin \
-          (self.fields, self.back_to_define_fields, self.define_divisions, self.introwin)
+          (self.fields, self.clear_for_fam, self.back_to_define_fields,
+           self.define_divisions, self.introwin)
 
     def back_to_define_fields(self, jnk_unused):
         '''Goes back to define fields window from the family reset one'''
@@ -141,31 +171,20 @@ class PyTimer(object):
             if btn.get_active():
                 self.clear_for_fam.append(field)
         self.familyresetwin.hide()
-        #Here we specify the default divisions.
-        self.divisions = []
-        self.divisions.append(('Female, ages 10 and under', {'Gender':'female', 'Age':(0, 10)}))
-        self.divisions.append(('Male, ages 10 and under', {'Gender':'male', 'Age':(0, 10)}))
-        for i in range(13):
-            for gender in ['Female', 'Male']:
-                minage = 10+i*5
-                maxage = 10+i*5+4
-                divname = gender+', ages '+str(minage)+'-'+str(maxage)
-                self.divisions.append((divname, {'Gender':gender.lower(), 'Age':(minage, maxage)}))
-        self.divisions.append(('Female, ages 80 and up', {'Gender':'female', 'Age':(80, 120)}))
-        self.divisions.append(('Male, ages 80 and up', {'Gender':'male', 'Age':(80, 120)}))
         self.divisionswin = fstimer.gui.definedivisions.DivisionsWin \
-          (self.fields, self.fieldsdic, self.divisions, self.back_to_define_fields2, self.store_new_project, self.introwin)
+          (self.fields, self.fieldsdic, self.divisions, self.back_to_family_reset, self.store_new_project, self.introwin)
 
-    def back_to_define_fields2(self, jnk_unused):
-        '''Goes back to define fields window, from the division edition one'''
+    def back_to_family_reset(self, jnk_unused):
+        '''Goes back to family reset window, from the division edition one'''
         self.divisionswin.hide()
-        self.definefieldswin.show_all()
+        self.familyresetwin.show_all()
 
     def store_new_project(self, jnk_unused):
-        '''Stores a new project to file and goes back to root window'''
+        '''Stores a new project to file and goes to root window'''
         os.system('mkdir '+self.path)
         regdata = {}
         regdata['projecttype'] = self.projecttype
+        regdata['numlaps'] = self.numlaps
         regdata['fields'] = self.fields
         regdata['fieldsdic'] = self.fieldsdic
         regdata['clear_for_fam'] = self.clear_for_fam
@@ -177,7 +196,7 @@ class PyTimer(object):
         md.destroy()
         self.divisionswin.hide()
         self.introwin.hide()
-        self.rootwin = fstimer.gui.root.RootWin('fsTimer - '+self.path,
+        self.rootwin = fstimer.gui.root.RootWin(self.path,
                                                 self.show_about,
                                                 self.import_prereg,
                                                 self.handle_preregistration,
@@ -199,7 +218,7 @@ class PyTimer(object):
     def set_registration_file(self, filename):
         '''set a preregistration file'''
         with open(filename, 'rb') as fin:
-          self.prereg = json.load(fin)
+            self.prereg = json.load(fin)
 
     def handle_registration(self, jnk_unused, regid_btn):
         '''handles registration'''
