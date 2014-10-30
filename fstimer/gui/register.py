@@ -21,7 +21,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import fstimer.gui
-import re
+import time
 
 class RegistrationWin(gtk.Window):
     '''Handling of the window dedicated to registration'''
@@ -251,7 +251,6 @@ class RegistrationWin(gtk.Window):
         #An hbox for the buttons
         editreghbox = gtk.HBox(False, 8)
         editregbtnOK = gtk.Button(stock=gtk.STOCK_OK)
-        editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter)
         editregbtnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
         editregbtnCANCEL.connect('clicked', lambda b: self.editreg_win.hide())
         editreghbox.pack_start(editregbtnOK, False, False, 5)
@@ -265,8 +264,6 @@ class RegistrationWin(gtk.Window):
                 self.editregfields[field] = gtk.Entry(max=self.fieldsdic[field]['max'])
                 if current_info:
                     self.editregfields[field].set_text(current_info[field])
-                if self.projecttype == 'handicap' and field == 'Handicap':
-                    editregbtnOK.set_sensitive(False)
             # Combobox
             elif self.fieldsdic[field]['type'] == 'combobox':
                 self.editregfields[field] = gtk.combo_box_new_text()
@@ -290,31 +287,31 @@ class RegistrationWin(gtk.Window):
             hboxes[field].pack_start(gtk.Label(field+':'), False, False, 0) #Pack the label
             hboxes[field].pack_start(self.editregfields[field], False, False, 0) #Pack the button/entry/..
             if self.projecttype == 'handicap' and field == 'Handicap':
-                label = gtk.Label('')
+                label = gtk.Label('hh:mm:ss')
                 hboxes[field].pack_start(label, False, False, 0)
-                self.editregfields[field].connect("changed", self.validate_duration, editregbtnOK, label)
-
             editregvbox.pack_start(hboxes[field], False, False, 0) #Pack this hbox into the big vbox.
         #Pack and show
+        if self.projecttype == 'handicap':
+            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, label)
+        else:
+            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, None)
         editregvbox.pack_start(editreghbox, False, False, 5)
         self.editreg_win.add(editregvbox)
         self.editreg_win.show_all()
 
-    def validate_duration(self, entry, btn, label):
-        '''Validate a new duration entered by the user'''
-        sduration = entry.get_text()
-        pattern = re.compile('^(([0-9]{1,2}:)?[0-9]{1,2}:)?[0-9]{1,2}$')
-        isOk = (pattern.match(sduration) != None)
-        if isOk:
-            label.set_text('')
-        else:
-            label.set_markup('<span color="red">hh::mm::ss</span>')
-        btn.set_sensitive(isOk)
-
-    def validate_entry(self, jnk_unused, treeiter, preregiter):
+    def validate_entry(self, jnk_unused, treeiter, preregiter, label):
         '''Handles a click on the 'ok' button of the entry edition window.
            Reads out the input information, and writes the changes to the treemodel'''
-        # First we go through each field and grab the new value.
+        #First check if we have entered a handicap, and if so, make sure it is valid
+        if self.projecttype == 'handicap':
+            sduration = self.editregfields['Handicap'].get_text()
+            if sduration != '':
+                try:
+                    time.strptime(sduration,'%H:%M:%S')
+                except ValueError:
+                    label.set_markup('<span color="red">hh::mm::ss</span>')
+                    return
+        # If that was OK, we go through each field and grab the new value.
         new_vals = {}
         for field in self.fields:
             #Entrybox
