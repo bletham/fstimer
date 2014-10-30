@@ -37,11 +37,11 @@ class MergeError(Exception):
 
 def time_format(t):
     '''formats time for display in the timing window'''
-    milli = int((t - int(t)) * 1000)
+    milli = int((t - int(t)) * 10)
     hours, rem = divmod(int(t), 3600)
     minutes, seconds = divmod(rem, 60)
     days, hours = divmod(hours, 24)
-    s = '%02d:%02d:%02d.%03d' % (hours, minutes, seconds, milli)
+    s = '%02d:%02d:%02d.%01d' % (hours, minutes, seconds, milli)
     if days > 0:
         s = '%s day%s, ' % (days, 's' if days > 1 else '') + s
     return s
@@ -105,18 +105,19 @@ class TimingWin(gtk.Window):
         self.entrybox.connect('changed', self.check_for_newtime)
         # And we will save our file
         self.timestr = re.sub(' +', '_', time.ctime()).replace(':', '')
+        #we save with the current time in the filename so no chance of being overwritten accidentally
         # Now lets go on to boxes
         tophbox = gtk.HBox()
         # our default t0, and the stuff on top for setting/edit t0
         self.t0 = 0.
         btn_t0 = gtk.Button('Start!')
         btn_t0.connect('clicked', self.set_t0)
-        btn_editt0 = gtk.Button(stock=gtk.STOCK_EDIT)
-        btn_editt0.connect('clicked', self.edit_t0)
-        tophbox.pack_start(btn_t0, False, False, 8)
-        tophbox.pack_start(btn_editt0, False, False, 8)
-        self.t0_label = gtk.Label('t0: '+str(self.t0))
-        tophbox.pack_start(self.t0_label, True, True, 8)
+        # time display
+        self.clocklabel = gtk.Label()
+        self.clocklabel.modify_font(pango.FontDescription("sans 24"))
+        self.clocklabel.set_markup(time_format(0))
+        tophbox.pack_start(btn_t0, False, False, 10)
+        tophbox.pack_start(self.clocklabel, False, False, 10)
         timevbox1 = gtk.VBox(False, 8)
         timevbox1.pack_start(tophbox, False, False, 0)
         timevbox1.pack_start(timealgn, True, True, 0)
@@ -130,11 +131,6 @@ class TimingWin(gtk.Window):
         self.racerslabel = gtk.Label()
         self.update_racers_label()
         timevbox1.pack_start(self.racerslabel, False, False, 0)
-        # time display
-        self.clocklabel = gtk.Label()
-        self.clocklabel.modify_font(pango.FontDescription("sans 24"))
-        self.clocklabel.set_markup(time_format(0))
-        timevbox1.pack_start(self.clocklabel, False, False, 0)
         vbox1align = gtk.Alignment(0, 0, 1, 1)
         vbox1align.add(timevbox1)
         # buttons on the right side
@@ -216,7 +212,6 @@ class TimingWin(gtk.Window):
         '''Handles click on Start button
            Sets t0 to the current time'''
         self.t0 = time.time()
-        self.t0_label.set_markup('t0: ' + str(self.t0))
         gtk.timeout_add(60, self.update_clock)
 
     def edit_t0(self, jnk_unused):
@@ -227,7 +222,6 @@ class TimingWin(gtk.Window):
     def ok_editt0(self, t0):
         '''Handles click on OK after t0 edition'''
         self.t0 = t0
-        self.t0_label.set_markup('t0: '+str(self.t0))
         self.t0win.hide()
 
     def edit_time(self, jnk_unused):
