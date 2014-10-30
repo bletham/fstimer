@@ -26,7 +26,7 @@ import os
 class PreRegistrationWin(gtk.Window):
     '''Handling of the window handling preregistration setup'''
 
-    def __init__(self, cwd, path, set_registration_file_cb, ok_clicked_cb):
+    def __init__(self, cwd, path, set_registration_file_cb, handle_registration_cb):
         '''Builds and display the window handling preregistration
            set the computers registration ID, and optionally choose a pre-registration json'''
         super(PreRegistrationWin, self).__init__(gtk.WINDOW_TOPLEVEL)
@@ -59,7 +59,7 @@ class PreRegistrationWin(gtk.Window):
         ## buttons
         prereghbox = gtk.HBox(True, 0)
         preregbtnOK = gtk.Button(stock=gtk.STOCK_OK)
-        preregbtnOK.connect('clicked', ok_clicked_cb, regid_btn)
+        preregbtnOK.connect('clicked', self.preregister_ok_cb, regid_btn, handle_registration_cb)
         preregbtnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
         preregbtnCANCEL.connect('clicked', lambda b: self.hide())
         prereghbox.pack_start(preregbtnOK, False, False, 5)
@@ -92,3 +92,22 @@ class PreRegistrationWin(gtk.Window):
                 self.preregfilelabel.set_markup('<span color="red">ERROR! Failed to load '+os.path.basename(filename)+'.</span>')
         chooser.destroy()
         return
+
+    def preregister_ok_cb(self, jnk_unused, regid_btn, handle_registration_cb):
+        '''If OK is pushed on the pre-register window.'''
+        #First check if the file already exists
+        regid = regid_btn.get_value_as_int()
+        filename = os.sep.join([self.path, self.path+'_registration_'+str(regid)+'.json'])
+        if os.path.exists(filename):
+            #Raise a warning window
+            md = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT,
+                               gtk.MESSAGE_WARNING, gtk.BUTTONS_OK_CANCEL,
+                               "A file with this registration number already exists.\nIf you continue it will be overwritten!")
+            resp = md.run()
+            md.destroy()
+            #Check the result.
+            if resp == gtk.RESPONSE_CANCEL:
+                #Do nothing.
+                return
+        #Else, continue on.
+        handle_registration_cb(regid)

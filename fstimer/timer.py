@@ -62,7 +62,6 @@ class PyTimer(object):
         '''constructor method. Displays top level window'''
         self.introwin = fstimer.gui.intro.IntroWin(self.load_project,
                                                    self.create_project)
-        self.prereg = []
 
     def load_project(self, jnk_unused, combobox, projectlist):
         '''Loads the registration settings of a project, and go back to rootwin'''
@@ -220,10 +219,12 @@ class PyTimer(object):
         with open(filename, 'rb') as fin:
             self.prereg = json.load(fin)
 
-    def handle_registration(self, jnk_unused, regid_btn):
+    def handle_registration(self, regid):
         '''handles registration'''
-        self.regid = regid_btn.get_value_as_int()
         self.preregistrationwin.hide()
+        self.regid = regid
+        if not hasattr(self,'prereg'):
+            self.prereg = [] #No pre-registration was selected
         self.registrationwin = fstimer.gui.register.RegistrationWin(self.path, self.fields, self.fieldsdic, self.prereg, self.clear_for_fam, self.save_registration)
 
     def save_registration(self):
