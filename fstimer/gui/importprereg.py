@@ -167,7 +167,8 @@ class ImportPreRegWin(gtk.Window):
         self.advancedwin.add(vbox)
         self.advancedwin.show_all()
 
-    def advanced_import_cancel(self,widget_unused,textbuffer):
+    def advanced_import_cancel(self, widget_unused, textbuffer):
+        '''If cancel is pressed in the advanced import window'''
         self.advancedwin.hide()
         iter_end = textbuffer.get_end_iter()
         textbuffer.insert_with_tags_by_name(iter_end, 'Nothing done.', 'blue')
@@ -185,7 +186,7 @@ class ImportPreRegWin(gtk.Window):
     def text_changed(self, widget_unused, path, text):
         '''Handles a change in the advanced boxes'''
         self.fieldsmodel[path][2] = text
-        
+
     def advanced_import_ok(self, jnk_unused, textbuffer1, textbuffer2):
         '''Handles click on OK button in the advanced interface'''
         textbuffer2.delete(textbuffer2.get_start_iter(), textbuffer2.get_end_iter())
