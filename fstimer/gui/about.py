@@ -29,16 +29,18 @@ class AboutWin(gtk.AboutDialog):
         super(AboutWin, self).__init__()
         self.set_logo(gtk.gdk.pixbuf_new_from_file("fstimer/data/icon.png"))
         self.set_program_name('fsTimer')
-        self.set_version('0.4')
-        self.set_copyright('''Copyright 2012-14 Ben Letham
-This program comes with ABSOLUTELY NO WARRANTY; for details see license.
-This is free software, and you are welcome to redistribute it under certain conditions; see license for details''')
+        self.set_version('0.5')
+        self.set_copyright("""Copyright 2012-14 Ben Letham\
+        \nThis program comes with ABSOLUTELY NO WARRANTY; for details see license.\
+        \nThis is free software, and you are welcome to redistribute it under certain conditions; see license for details""")
         self.set_comments('free, open source software for race timing.')
         self.set_website('http://fstimer.org')
-        self.set_wrap_license(True)
+        self.set_wrap_license(False)
         with open('COPYING', 'r') as fin:
-          gpl = fin.read()
+            gpl = fin.read()
         self.set_license(gpl)
-        self.set_authors(['Ben Letham', 'Sebastien Ponce', 'Testing by Stewart Hamblin'])
+        self.set_authors(['Ben Letham',
+                          'Sebastien Ponce',
+                          'Testing by Stewart Hamblin'])
         self.run()
         self.destroy()
