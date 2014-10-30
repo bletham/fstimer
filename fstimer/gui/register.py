@@ -307,9 +307,9 @@ class RegistrationWin(gtk.Window):
             sduration = self.editregfields['Handicap'].get_text()
             if sduration != '':
                 try:
-                    time.strptime(sduration,'%H:%M:%S')
+                    time.strptime(sduration, '%H:%M:%S')
                 except ValueError:
-                    label.set_markup('<span color="red">hh::mm::ss</span>')
+                    label.set_markup('<span color="red">hh:mm:ss</span>')
                     return
         # If that was OK, we go through each field and grab the new value.
         new_vals = {}
