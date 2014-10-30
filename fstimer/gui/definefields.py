@@ -64,7 +64,7 @@ class DefineFieldsWin(gtk.Window):
         self.regfieldview.append_column(column)
         #Now we populate the model with the default fields
         for field in fields:
-            if fieldsdic[field]['type'] in ['entrybox', 'durationbox']:
+            if fieldsdic[field]['type'] == 'entrybox':
                 self.regfieldsmodel.append([field, 'entrybox', 'max characters: '+str(fieldsdic[field]['max'])])
             elif fieldsdic[field]['type'] == 'combobox':
                 optstr = ''

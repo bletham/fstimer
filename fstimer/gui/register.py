@@ -26,13 +26,14 @@ import re
 class RegistrationWin(gtk.Window):
     '''Handling of the window dedicated to registration'''
 
-    def __init__(self, path, fields, fieldsdic, prereg, clear_for_fam, save_registration_cb):
+    def __init__(self, path, fields, fieldsdic, prereg, clear_for_fam, projecttype, save_registration_cb):
         '''Builds and display the registration window'''
         super(RegistrationWin, self).__init__(gtk.WINDOW_TOPLEVEL)
         self.fields = fields
         self.fieldsdic = fieldsdic
         self.prereg = prereg
         self.clear_for_fam = clear_for_fam
+        self.projecttype = projecttype
         self.save_registration_cb = save_registration_cb
         self.editreg_win = None
         self.editregfields = None
@@ -260,23 +261,12 @@ class RegistrationWin(gtk.Window):
         for field in self.fields:
             # Determine which type of entry is appropriate, create it and fill it.
             # Entrybox
-            if self.fieldsdic[field]['type'] in ('entrybox', 'durationbox'):
+            if self.fieldsdic[field]['type'] == 'entrybox':
                 self.editregfields[field] = gtk.Entry(max=self.fieldsdic[field]['max'])
                 if current_info:
                     self.editregfields[field].set_text(current_info[field])
-                if self.fieldsdic[field]['type'] == 'durationbox':
+                if self.projecttype == 'handicap' and field == 'Handicap':
                     editregbtnOK.set_sensitive(False)
-            # Spinbutton
-            #elif self.fieldsdic[field]['type'] == 'spinbutton':
-            #    self.editregfields[field] = gtk.SpinButton(gtk.Adjustment(value=self.fieldsdic[field]['lower'],
-            #                                                              lower = self.fieldsdic[field]['lower'],
-            #                                                              upper = self.fieldsdic[field]['upper'],
-            #                                                              step_incr=1), digits=0, climb_rate=0)
-            #    if current_info:
-            #        try:
-            #            self.editregfields[field].set_value(int(current_info[field]))
-            #        except ValueError:
-            #            pass #this catches if current_inf[field]='', and the int('') throws a ValueError.
             # Combobox
             elif self.fieldsdic[field]['type'] == 'combobox':
                 self.editregfields[field] = gtk.combo_box_new_text()
@@ -299,7 +289,7 @@ class RegistrationWin(gtk.Window):
             hboxes[field] = gtk.HBox(False, 15)
             hboxes[field].pack_start(gtk.Label(field+':'), False, False, 0) #Pack the label
             hboxes[field].pack_start(self.editregfields[field], False, False, 0) #Pack the button/entry/..
-            if self.fieldsdic[field]['type'] == 'durationbox':
+            if self.projecttype == 'handicap' and field == 'Handicap':
                 label = gtk.Label('')
                 hboxes[field].pack_start(label, False, False, 0)
                 self.editregfields[field].connect("changed", self.validate_duration, editregbtnOK, label)
@@ -328,21 +318,8 @@ class RegistrationWin(gtk.Window):
         new_vals = {}
         for field in self.fields:
             #Entrybox
-            if self.fieldsdic[field]['type'] in ['entrybox', 'durationbox']:
+            if self.fieldsdic[field]['type'] == 'entrybox':
                 new_vals[field] = self.editregfields[field].get_text()
-            #Spinbutton
-            #elif self.fieldsdic[field]['type'] == 'spinbutton':
-            #    #If it is zero, we will leave it blank.
-            #    idfill = self.editregfields[field].get_value_as_int()
-            #    if idfill == 0:
-            #        idfill = ''
-            #    else:
-            #        if field == 'ID':
-            #            #We pad ID to self.idlen digits
-            #            idfill = str(idfill).zfill(self.idlen)
-            #        else:
-            #            idfill = str(idfill)
-            #    new_vals[field] = idfill
             #Combobox
             elif self.fieldsdic[field]['type'] == 'combobox':
                 indx = self.editregfields[field].get_active()
@@ -350,14 +327,6 @@ class RegistrationWin(gtk.Window):
                     new_vals[field] = ''
                 else:
                     new_vals[field] = self.fieldsdic[field]['options'][indx-1]
-        # This code will open a dialog box to warn if an ID was not assigned.
-        #if not new_vals['ID']:
-        #    checkid_dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_INFO, gtk.BUTTONS_YES_NO, 'You did not assign an ID.\nAre you sure you want this?')
-        #    checkid_dialog.set_title('Woah!')
-        #    response = checkid_dialog.run()
-        #    checkid_dialog.destroy()
-        #    if response == gtk.RESPONSE_NO:
-        #        return
         # Now we replace or append in the treemodel and in prereg
         if treeiter:
             for (colid, field) in enumerate(self.fields):
