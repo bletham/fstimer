@@ -187,10 +187,10 @@ class TimingWin(gtk.Window):
 
     def update_racers_label(self):
         '''update values in the racers_label'''
-        s = 'Registered users : %d - Racers out' % self.racers_total
-        if self.numlaps > 1:
+        s = '%d registrants. Checked in' % self.racers_total
+        if self.numlaps >1:
             s += ' (per lap)'
-        s += ' : ' + ' / '.join(str(n) for n in self.racers_in)
+        s += ': ' + ' | '.join(str(n) for n in self.racers_in)
         self.racerslabel.set_markup(s)
 
     def check_for_newtime(self, jnk_unused):
