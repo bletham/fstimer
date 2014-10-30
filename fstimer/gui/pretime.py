@@ -56,10 +56,6 @@ class PreTimeWin(gtk.Window):
         hbox3 = gtk.HBox(False, 10)
         hbox3.pack_start(self.timebtncombobox, False, False, 8)
         hbox3.pack_start(label3, False, False, 8)
-        self.check_button = gtk.CheckButton(label='Strip leading zeros from IDs? (Probably leave this unchecked)')
-        self.check_button2 = gtk.CheckButton(label='Multiple laps? Specify number if more than one:')
-        numlapsadj = gtk.Adjustment(value=2, lower=2, upper=10, step_incr=1)
-        self.numlapsbtn = gtk.SpinButton(numlapsadj, digits=0, climb_rate=0)
         btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
         btnCANCEL.connect('clicked', lambda b: self.hide())
         pretimebtnOK = gtk.Button(stock=gtk.STOCK_OK)
@@ -75,15 +71,10 @@ class PreTimeWin(gtk.Window):
         hbox2 = gtk.HBox(False, 10)
         hbox2.pack_start(self.entry1, False, False, 8)
         hbox2.pack_start(label2, False, False, 8)
-        hbox4 = gtk.HBox(False, 10)
-        hbox4.pack_start(self.check_button2, False, False, 8)
-        hbox4.pack_start(self.numlapsbtn, False, False, 8)
         vbox = gtk.VBox(False, 10)
         vbox.pack_start(hbox, False, False, 8)
         vbox.pack_start(hbox2, False, False, 8)
         vbox.pack_start(hbox3, False, False, 8)
-        vbox.pack_start(self.check_button, False, False, 8)
-        vbox.pack_start(hbox4, False, False, 8)
         vbox.pack_start(btmalign, False, False, 8)
         self.add(vbox)
         self.show_all()
@@ -113,11 +104,6 @@ class PreTimeWin(gtk.Window):
 
     def okclicked(self, jnk_unused):
         '''Handles click on ok button'''
-        junkid = self.entry1.get_text()
+        passid = self.entry1.get_text()
         timebtn = self.timebtnlist[self.timebtncombobox.get_active()]
-        strpzeros = self.check_button.get_active()
-        if self.check_button2.get_active():
-            numlaps = self.numlapsbtn.get_value_as_int()
-        else:
-            numlaps = 1
-        self.okclicked_cb(junkid, timebtn, strpzeros, numlaps)
+        self.okclicked_cb(passid, timebtn)

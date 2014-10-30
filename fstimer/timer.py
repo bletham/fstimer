@@ -287,7 +287,7 @@ class PyTimer(object):
             if reg['ID']:
                 # have we already added this ID to the timing dictionary?
                 if reg['ID'] in self.timedict.keys():
-                    # If not, then we need to first add to the list the reg that was already stored in timedict.
+                    # If so, then we need to first add to the list the reg that was already stored in timedict.
                     if reg['ID'] not in self.errors.keys():
                         self.errors[reg['ID']] = [self.timedict[reg['ID']]]
                     self.errors[reg['ID']].append(reg)
@@ -330,18 +330,15 @@ class PyTimer(object):
         self.timing = defaultdict(lambda: defaultdict(str))
         self.pretimewin = fstimer.gui.pretime.PreTimeWin(self.path, self.timing, self.gen_timewin)
 
-    def gen_timewin(self, junkid, timebtn, strpzeros, numlaps):
+    def gen_timewin(self, passid, timebtn):
         '''The actual timing'''
-        self.junkid = junkid
-        timebtn = timebtn
-        strpzeros = strpzeros
-        self.numlaps = numlaps
+        self.passid = passid
         # we're done with pretiming
         self.pretimewin.hide()
         # We will store 'raw' data, lists of times and IDs.
-        self.rawtimes = {'times':[], 'ids':[]}
+        self.rawdata = {'times':[], 'ids':[]}
         # create Timing window
-        self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, strpzeros, self.rawtimes, self.timing, self.print_times, self.projecttype, self.numlaps)
+        self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, self.rawdata, self.timing, self.print_times, self.projecttype, self.numlaps)
 
     def get_division(self, timingEntry):
         '''Get the division for a given timing entry'''
@@ -367,9 +364,9 @@ class PyTimer(object):
         '''returns a list of ids and a list of timedeltas that are
            "synched", that is that have the same number of entries.
            Entries without a counterpart are dropped'''
-        l = min(len(self.rawtimes['ids']), len(self.rawtimes['times']))
-        adj_ids = self.rawtimes['ids'][:l]
-        adj_times = [str2timedelta(t) for t in self.rawtimes['times'][:l]]
+        l = min(len(self.rawdata['ids']), len(self.rawdata['times']))
+        adj_ids = self.rawdata['ids'][:l]
+        adj_times = [str2timedelta(t) for t in self.rawdata['times'][:l]]
         return adj_ids, adj_times
 
     def get_sorted_results(self):
@@ -390,7 +387,7 @@ class PyTimer(object):
         # fastest time (1st lap) to longest time (last lap).
         laptimesdic = defaultdict(list)
         for (tag, time) in timeslist:
-            if tag and time and tag != self.junkid:
+            if tag and time and tag != self.passid:
                 laptimesdic[tag].append(time)
         # compute the lap times.
         laptimesdic2 = defaultdict(list)

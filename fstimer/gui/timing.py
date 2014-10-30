@@ -53,12 +53,11 @@ def time_parse(dt):
 class TimingWin(gtk.Window):
     '''Handling of the timing window'''
 
-    def __init__(self, path, parent, timebtn, strpzeros, rawtimes, timing, print_cb, projecttype, numlaps):
+    def __init__(self, path, parent, timebtn, rawtimes, timing, print_cb, projecttype, numlaps):
         '''Builds and display the compilation error window'''
         super(TimingWin, self).__init__(gtk.WINDOW_TOPLEVEL)
         self.path = path
         self.timebtn = timebtn
-        self.strpzeros = strpzeros
         self.rawtimes = rawtimes
         self.timing = timing
         self.numlaps = numlaps
@@ -559,8 +558,6 @@ class TimingWin(gtk.Window):
         txt = self.entrybox.get_text()
         timemarks = txt.count(self.timebtn)
         txt = txt.replace(self.timebtn, '')
-        if self.strpzeros:
-            txt = txt.lstrip('0')
         # it is actually a result. (or a pass, which we treat as a result)
         # prepend to raw
         self.rawtimes['ids'].insert(0, txt)
