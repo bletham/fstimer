@@ -85,20 +85,20 @@ class ImportPreRegWin(gtk.Window):
         self.add(vbox)
         self.show_all()
 
-    def propose_advanced_import(self, csv_fields):
+    def propose_advanced_import(self, csv_fields, textbuffer1):
         '''Propose advanced import mechanism where project fields can be build
            from the csv ones using python expressions'''
         self.advancedwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.advancedwin.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
         self.advancedwin.set_transient_for(self)
         self.advancedwin.set_modal(True)
-        self.advancedwin.set_title('fsTimer - Advanced import')
+        self.advancedwin.set_title('fsTimer - CSV import')
         self.advancedwin.set_position(gtk.WIN_POS_CENTER)
         self.advancedwin.set_border_width(20)
         self.advancedwin.set_size_request(600, 400)
         self.advancedwin.connect('delete_event', lambda b, jnk_unused: self.advancedwin.hide())
         # top label
-        toplabel = gtk.Label("Specify the mapping of csv fields to project ones.\n")
+        toplabel = gtk.Label("For each field, specify the corresponding CSV column.\n")
         # Treeview with 3 columns : field, combobox and free text
         self.fieldview = gtk.TreeView()
         self.fieldview.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
@@ -122,7 +122,7 @@ class ImportPreRegWin(gtk.Window):
         combo_renderer.set_property("text-column", 0)
         combo_renderer.set_property("editable", True)
         combo_renderer.set_property("has-entry", False)
-        column = gtk.TreeViewColumn('CSV Column', combo_renderer, text=1)
+        column = gtk.TreeViewColumn('CSV column', combo_renderer, text=1)
         self.fieldview.append_column(column)
         # build the 3rd column (Advanced mapping)
         advanced_renderer = gtk.CellRendererText()
@@ -139,30 +139,25 @@ class ImportPreRegWin(gtk.Window):
         fieldalgn = gtk.Alignment(0, 0, 1, 1)
         fieldalgn.add(fieldsw)
         # a text buffer for errors
-        textbuffer = gtk.TextBuffer()
+        textbuffer2 = gtk.TextBuffer()
         try:
-            textbuffer.create_tag("red", foreground="red")
-            textbuffer.create_tag("blue", foreground="blue")
+            textbuffer2.create_tag("red", foreground="red")
+            textbuffer2.create_tag("blue", foreground="blue")
         except TypeError:
             pass
-        textview = gtk.TextView(textbuffer)
+        textview = gtk.TextView(textbuffer2)
         textview.set_editable(False)
         textview.set_cursor_visible(False)
         # hbox for the buttons
         hbox = gtk.HBox(False, 0)
         btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
-        btnCANCEL.connect('clicked', lambda btn: self.advancedwin.hide())
-        btnHELP = gtk.Button(stock=gtk.STOCK_HELP)#label='Avanced mapping _Help')
-        btnHELP.connect('clicked', self.display_advanced_help)
-        alignHELP = gtk.Alignment(.5, 0, .3, 0)
-        alignHELP.add(btnHELP)
-        btnOK = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
-        btnOK.connect('clicked', self.advanced_import_ok, textbuffer)
+        btnCANCEL.connect('clicked', self.advanced_import_cancel, textbuffer1)
+        btnOK = gtk.Button(stock=gtk.STOCK_OK)
+        btnOK.connect('clicked', self.advanced_import_ok, textbuffer1, textbuffer2)
         alignOK = gtk.Alignment(1, 0, 0, 0)
         alignOK.add(btnOK)
         hbox.pack_start(btnCANCEL, False, True, 0)
-        hbox.pack_start(alignHELP, True, True, 0)
-        hbox.pack_start(alignOK, False, False, 0)
+        hbox.pack_start(alignOK, True, True, 0)
         # populate
         vbox = gtk.VBox(False, 10)
         vbox.pack_start(toplabel, False, False, 0)
@@ -171,6 +166,11 @@ class ImportPreRegWin(gtk.Window):
         vbox.pack_start(hbox, False, False, 10)
         self.advancedwin.add(vbox)
         self.advancedwin.show_all()
+
+    def advanced_import_cancel(self,widget_unused,textbuffer):
+        self.advancedwin.hide()
+        iter_end = textbuffer.get_end_iter()
+        textbuffer.insert_with_tags_by_name(iter_end, 'Nothing done.', 'blue')
 
     def combo_changed(self, widget_unused, path, text):
         '''Handles a change in the combo boxes' selections'''
@@ -185,57 +185,32 @@ class ImportPreRegWin(gtk.Window):
     def text_changed(self, widget_unused, path, text):
         '''Handles a change in the advanced boxes'''
         self.fieldsmodel[path][2] = text
-
-    def display_advanced_help(self, jnk_unused):
-        '''Displays Advanced mapping help'''
-        help_dialog = gtk.MessageDialog(self, 0, gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-                                        'How to map CSV column(s) to a given field')
-        help_dialog.format_secondary_markup('''For each field, 3 possibilities :
-    - a CSV column to be mapped to the field
-        <small>Note that columns with matching name are preselected</small>
-    - '-- Leave Empty --' to leave field empty
-    - '-- Advanced expression --' to use custom python expression
-
-Expressions can combine values from several CSV columns.
-Use the reg variable to refer to columns. It contains a dictionnary of column's name to column's value (as strings).
-
-Here are examples for an Age and a Name column:
-     %d - int(reg['Year of Birth'])
-     ' '.join([reg['First name'], reg['Last name']])''' % datetime.date.today().year)
-        help_dialog.set_title('Advanced mapping')
-        help_dialog.connect('response', lambda btn, resp: help_dialog.hide())
-        help_dialog.run()
         
-    def advanced_import_ok(self, jnk_unused, textbuffer):
+    def advanced_import_ok(self, jnk_unused, textbuffer1, textbuffer2):
         '''Handles click on OK button in the advanced interface'''
-        textbuffer.delete(textbuffer.get_start_iter(), textbuffer.get_end_iter())
+        textbuffer2.delete(textbuffer2.get_start_iter(), textbuffer2.get_end_iter())
         self.fields_mapping = {}
         for path in range(len(self.fieldsmodel)):
             field = self.fieldsmodel[path][0]
             csv_col = self.fieldsmodel[path][1]
             if csv_col == '-- select --':
-                textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), 'Nothing selected for field %s' % field, 'red')
+                textbuffer2.insert_with_tags_by_name(textbuffer2.get_end_iter(), 'Nothing selected for field %s' % field, 'red')
                 return
-            elif csv_col == '-- Leave empty --':
+            elif csv_col == '-- Leave empty --' or csv_col == None:
                 self.fields_mapping[field] = lambda reg, col=csv_col: ''
             elif csv_col == '-- Advanced expression --':
                 try:
                     code = compile(self.fieldsmodel[path][2], '', 'eval')
                     self.fields_mapping[field] = lambda reg, code=code: eval(code)
                 except SyntaxError, e:
-                    iter_end = textbuffer.get_end_iter()
-                    textbuffer.insert_with_tags_by_name(iter_end, 'Invalid syntax for expression of field %s' % field, 'red')
-                    textbuffer.insert_with_tags_by_name(iter_end, str(e), 'blue')
+                    iter_end = textbuffer2.get_end_iter()
+                    textbuffer2.insert_with_tags_by_name(iter_end, 'Invalid syntax for expression of field %s: ' % field, 'red')
+                    textbuffer2.insert_with_tags_by_name(textbuffer2.get_end_iter(), str(e), 'blue')
                     return
             else:
                 self.fields_mapping[field] = lambda reg, col=csv_col: reg[col]
-        try:
-            self.import_data(textbuffer)
-            self.advancedwin.hide()
-        except ComboValueError, e:
-            textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), str(e), 'red')
-        except Exception, e:
-            textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), str(type(e)) + ' : ' + str(e), 'red')
+        self.advancedwin.hide()
+        self.import_data(textbuffer1)
 
     def build_fields_mapping(self, csv_fields, textbuffer):
         '''Maps cvs fields to project fields and creates a dictionnary
@@ -250,16 +225,9 @@ Here are examples for an Age and a Name column:
         textbuffer.insert_with_tags_by_name(iter_end, 'Ignoring csv fields: ', 'red')
         textbuffer.insert(iter_end, ', '.join(fields_ignore) + os.linesep)
         fields_notuse = [field for field in self.fields if field not in csv_fields]
-        if fields_notuse:
-            textbuffer.insert_with_tags_by_name(iter_end, 'Did not find: ', 'red')
-            textbuffer.insert(iter_end, ', '.join(fields_notuse) + os.linesep)
-            textbuffer.insert_with_tags_by_name(iter_end, 'Launching advanced interface', 'blue')
-            self.propose_advanced_import(csv_fields)
-        else:
-            self.fields_mapping = {}
-            for field in self.fields:
-                self.fields_mapping[field] = lambda entry, field=field: entry[field]
-            self.import_data(textbuffer)
+        textbuffer.insert_with_tags_by_name(iter_end, 'Did not find in csv: ', 'red')
+        textbuffer.insert(iter_end, ', '.join(fields_notuse) + os.linesep)
+        self.propose_advanced_import(csv_fields, textbuffer)
 
     def select_preregistration(self, jnk_unused, textbuffer):
         '''Handle selection of a pre-reg file using a filechooser'''
@@ -272,6 +240,7 @@ Here are examples for an Age and a Name column:
         response = chooser.run()
         if response == gtk.RESPONSE_OK:
             filename = chooser.get_filename()
+            textbuffer.delete(textbuffer.get_start_iter(), textbuffer.get_end_iter())
             textbuffer.set_text('Loading '+os.path.basename(filename)+'...\n')
             try:
                 fin = csv.DictReader(open(filename, 'r'))
@@ -300,10 +269,12 @@ Here are examples for an Age and a Name column:
                 if value and self.fieldsdic[field]['type'] == 'combobox':
                     if value not in self.fieldsdic[field]['options']:
                         optstr = '"' + '", "'.join(self.fieldsdic[field]['options']) + '", and blank'
-                        raise ComboValueError('''Error in csv row %d !
+                        errstr = """Error in csv row %d!
 Found value "%s" in field "%s". Not a valid value!
 Valid values (case sensitive) are: %s.
-Correct the error and try again.''' % (row+1, value, field, optstr))
+Correct the error and try again.""" % (row+1, value, field, optstr)
+                        textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), errstr, 'red')
+                        return
                 tmpdict[field] = value
             preregdata.append(tmpdict.copy())
             row += 1
