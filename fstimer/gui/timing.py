@@ -512,6 +512,7 @@ class TimingWin(gtk.Window):
                     self.rawtimes['times'] = newrawtimes['times']
                     self.timestr = saveresults['timestr']
                     self.t0 = saveresults['t0']
+                    gtk.timeout_add(100, self.update_clock) #start the stopwatch
                 # Recompute how many racers have checked in
                 self.racers_in = [0] * self.numlaps
                 for ID in self.rawtimes['ids']:
