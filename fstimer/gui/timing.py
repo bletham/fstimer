@@ -206,9 +206,13 @@ class TimingWin(gtk.Window):
         bibid, st = model.get(itr, 0, 1)
         if st and self.timing[bibid]['Handicap']:
             t = time_parse(st)
-            th = time_parse(self.timing[bibid]['Handicap'])
-            nt = t - th
-            renderer.set_property('text', str(nt))
+            try:
+                th = time_parse(self.timing[bibid]['Handicap'])
+                nt = t - th
+                renderer.set_property('text', str(nt))
+            except AttributeError:
+                #Handicap is present but is not formatted correctly.
+                renderer.set_property('text', '')
         else:
             renderer.set_property('text', '')
 
