@@ -307,7 +307,8 @@ class RegistrationWin(gtk.Window):
             sduration = self.editregfields['Handicap'].get_text()
             if sduration != '':
                 try:
-                    re.match(r'((?P<days>\d+) days, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)', sduration).groupdict(0)
+                    timePattern = r'((?P<days>-?\d+) day(s)?, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)'
+                    re.match(timePattern, sduration).groupdict(0)
                 except AttributeError:
                     label.set_markup('<span color="red">hh:mm:ss</span>')
                     return

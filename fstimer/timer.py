@@ -48,7 +48,7 @@ from collections import defaultdict
 
 def str2timedelta(time):
     '''converts a time string to a timedelta'''
-    timePattern = r'((?P<days>\d+) days, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)' #hours is optional
+    timePattern = r'((?P<days>-?\d+) day(s)?, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)' #hours is optional
     # convert txt time to dict
     d1 = re.match(timePattern, time).groupdict(0)
     # convert txt to ints
