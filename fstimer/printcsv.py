@@ -43,7 +43,7 @@ class CSVPrinter(fstimer.printer.Printer):
 
     def scratch_table_header(self):
         '''Returns the header of the printout for scratch results'''
-        return ','.join(self.fields) + os.linesep
+        return ','.join(self.fields) + '\n'
 
     def cat_table_header(self, category):
         '''Returns the header of the printout for results by category.

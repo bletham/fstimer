@@ -54,10 +54,10 @@ class CSVPrinterLaps(fstimer.printcsv.CSVPrinter):
                 str(runner_data['Age'])]
         for field in self.fields[7:]:
             data.append(runner_data[field])
-        entry = ','.join(data) + os.linesep
+        entry = ','.join(data) + '\n'
         # others lines, with other lap times
         for i in range(2, len(timing_data)):
             data = ['', '', str(i) + ' - ' + str(timing_data[i]), '', '', '', '']
             data.extend(['']*(len(self.fields)-7))
-            entry += ','.join(data) + os.linesep
+            entry += ','.join(data) + '\n'
         return entry

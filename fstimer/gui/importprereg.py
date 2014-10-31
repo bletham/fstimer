@@ -221,13 +221,13 @@ class ImportPreRegWin(gtk.Window):
         iter_end = textbuffer.get_end_iter()
         fields_use = [field for field in csv_fields if field in self.fields]
         textbuffer.insert_with_tags_by_name(iter_end, 'Using csv fields: ', 'blue')
-        textbuffer.insert(iter_end, ', '.join(fields_use) + os.linesep)
+        textbuffer.insert(iter_end, ', '.join(fields_use) + '\n')
         fields_ignore = [field for field in csv_fields if field not in self.fields]
         textbuffer.insert_with_tags_by_name(iter_end, 'Ignoring csv fields: ', 'red')
-        textbuffer.insert(iter_end, ', '.join(fields_ignore) + os.linesep)
+        textbuffer.insert(iter_end, ', '.join(fields_ignore) + '\n')
         fields_notuse = [field for field in self.fields if field not in csv_fields]
         textbuffer.insert_with_tags_by_name(iter_end, 'Did not find in csv: ', 'red')
-        textbuffer.insert(iter_end, ', '.join(fields_notuse) + os.linesep)
+        textbuffer.insert(iter_end, ', '.join(fields_notuse) + '\n')
         self.propose_advanced_import(csv_fields, textbuffer)
 
     def select_preregistration(self, jnk_unused, textbuffer):
@@ -237,7 +237,7 @@ class ImportPreRegWin(gtk.Window):
         ffilter.set_name('csv files')
         ffilter.add_pattern('*.csv')
         chooser.add_filter(ffilter)
-        chooser.set_current_folder(os.sep.join([self.cwd, self.path, '']))
+        chooser.set_current_folder(os.path.join([self.cwd, self.path, '']))
         response = chooser.run()
         if response == gtk.RESPONSE_OK:
             filename = chooser.get_filename()
@@ -251,7 +251,7 @@ class ImportPreRegWin(gtk.Window):
                 csv_fields = self.csvreg[0].keys()
                 iter_end = textbuffer.get_end_iter()
                 textbuffer.insert_with_tags_by_name(iter_end, 'Found csv fields: ', 'blue')
-                textbuffer.insert(iter_end, ', '.join(csv_fields) + os.linesep)
+                textbuffer.insert(iter_end, ', '.join(csv_fields) + '\n')
                 self.build_fields_mapping(csv_fields, textbuffer)
             except (IOError, IndexError):
                 iter_end = textbuffer.get_end_iter()
@@ -279,6 +279,6 @@ Correct the error and try again.""" % (row+1, value, field, optstr)
                 tmpdict[field] = value
             preregdata.append(tmpdict.copy())
             row += 1
-        with open(os.sep.join([self.cwd, self.path, self.path+'_registration_prereg.json']), 'wb') as fout:
+        with open(os.path.join([self.cwd, self.path, self.path+'_registration_prereg.json']), 'wb') as fout:
             json.dump(preregdata, fout)
         textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), 'Success! Imported pre-registration saved to '+self.path+'_registration_prereg.json\nFinished!', 'blue')

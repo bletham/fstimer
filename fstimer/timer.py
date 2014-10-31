@@ -340,6 +340,66 @@ class PyTimer(object):
         # create Timing window
         self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, self.rawdata, self.timing, self.print_times, self.projecttype, self.numlaps)
 
+    def print_times(self, jnk_unused, use_csv):
+        '''print times to a file'''
+        # choose the right Printer Class
+        if use_csv:
+            if self.numlaps > 1:
+                printer_class = fstimer.printcsvlaps.CSVPrinterLaps
+            else:
+                printer_class = fstimer.printcsv.CSVPrinter
+        else:
+            if self.numlaps > 1:
+                printer_class = fstimer.printhtmllaps.HTMLPrinterLaps
+            else:
+                printer_class = fstimer.printhtml.HTMLPrinter
+        # Figure out what the columns will be
+        other_fields = set([field for div in self.divisions for field in div[1]
+                            if field not in ['Age', 'Gender']])
+        fields = ['Place', 'Time']
+        if self.numlaps > 1:
+            fields.append('Lap Times')
+        fields.extend(['Name', 'Bib ID', 'Gender', 'Age'])
+        fields.extend(list(other_fields))
+        # instantiate the printer
+        printer = printer_class(fields, [div[0] for div in self.divisions])
+        # first build all results into strings
+        scratchresults = printer.scratch_table_header()
+        divresults = {div[0]:'\n'+printer.cat_table_header(div[0])
+                      for div in self.divisions}
+        for (tag, time) in self.get_sorted_results():
+            scratchresults += printer.scratch_entry(tag, time, self.timing[tag])
+            div = self.get_division(self.timing[tag])
+            if div:
+                divresults[div] += printer.cat_entry(tag, div, time, self.timing[tag])
+        scratchresults += printer.scratch_table_footer()
+        for div in divresults:
+            divresults[div] += printer.cat_table_footer(div)
+        # now save to files
+        scratch_file = os.sep.join([self.path,
+                                    '_'.join([self.path,
+                                              self.timewin.timestr,
+                                              'alltimes.' + printer.file_extension()])])
+        with open(scratch_file, 'w') as scratch_out:
+            scratch_out.write(printer.header())
+            scratch_out.write(scratchresults)
+            scratch_out.write(printer.footer())
+        div_file = os.sep.join([self.path,
+                                '_'.join([self.path,
+                                          self.timewin.timestr,
+                                          'divtimes.' + printer.file_extension()])])
+        with open(div_file, 'w') as div_out:
+            div_out.write(printer.header())
+            for div in self.divisions:
+                div_out.write(divresults[div[0]])
+            div_out.write(printer.footer())
+        # display user dialog that all was successful
+        md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT,
+                               gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
+                               "Results saved to csv!")
+        md.run()
+        md.destroy()
+
     def get_division(self, timingEntry):
         '''Get the division for a given timing entry'''
         try:
@@ -402,64 +462,3 @@ class PyTimer(object):
             # And now the subsequent laps
             laptimesdic2[tag].extend([laptimesdic[tag][ii+1] - laptimesdic[tag][ii] for ii in range(len(laptimesdic[tag])-1)])
         return sorted(laptimesdic2.items(), key=lambda entry: entry[1][0])
-
-    def print_times(self, jnk_unused, use_csv):
-        '''print times to a file'''
-        # choose the right Printer Class
-        if use_csv:
-            if self.numlaps > 1:
-                printer_class = fstimer.printcsvlaps.CSVPrinterLaps
-            else:
-                printer_class = fstimer.printcsv.CSVPrinter
-        else:
-            if self.numlaps > 1:
-                printer_class = fstimer.printhtmllaps.HTMLPrinterLaps
-            else:
-                printer_class = fstimer.printhtml.HTMLPrinter
-        # Figure out what the columns will be
-        other_fields = set([field for div in self.divisions for field in div[1]
-                            if field not in ['Age', 'Gender']])
-        fields = ['Place', 'Time']
-        if self.numlaps > 1:
-            fields.append('Lap Times')
-        fields.extend(['Name', 'Bib ID', 'Gender', 'Age'])
-        fields.extend(list(other_fields))
-        # instantiate the printer
-        printer = printer_class(fields, [div[0] for div in self.divisions])
-        # first build all results into strings
-        scratchresults = printer.scratch_table_header()
-        divresults = {div[0]:'\n'+printer.cat_table_header(div[0])
-                      for div in self.divisions}
-        for (tag, time) in self.get_sorted_results():
-            scratchresults += printer.scratch_entry(tag, time, self.timing[tag])
-            div = self.get_division(self.timing[tag])
-            if div:
-                divresults[div] += printer.cat_entry(tag, div, time, self.timing[tag])
-        scratchresults += printer.scratch_table_footer()
-        for div in divresults:
-            divresults[div] += printer.cat_table_footer(div)
-        # now save to files
-        scratch_file = os.sep.join([self.path,
-                                    '_'.join([self.path,
-                                              self.timewin.timestr,
-                                              'alltimes.' + printer.file_extension()])])
-        with open(scratch_file, 'w') as scratch_out:
-            scratch_out.write(printer.header())
-            scratch_out.write(scratchresults)
-            scratch_out.write(printer.footer())
-        div_file = os.sep.join([self.path,
-                                '_'.join([self.path,
-                                          self.timewin.timestr,
-                                          'divtimes.' + printer.file_extension()])])
-        with open(div_file, 'w') as div_out:
-            div_out.write(printer.header())
-            for div in self.divisions:
-                div_out.write(divresults[div[0]])
-            div_out.write(printer.footer())
-        # display user dialog that all was successful
-        md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT,
-                               gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-                               "Results saved to csv!")
-        md.run()
-        md.destroy()
-
