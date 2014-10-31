@@ -47,7 +47,7 @@ def time_format(t):
     return s
 
 def time_parse(dt):
-    d = re.match(r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)', dt).groupdict(0)
+    d = re.match(r'((?P<days>\d+) days, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)', dt).groupdict(0)
     return datetime.timedelta(**dict(((key, int(value)) for key, value in d.items())))
 
 class TimingWin(gtk.Window):
@@ -114,7 +114,7 @@ class TimingWin(gtk.Window):
         btn_t0.connect('clicked', self.set_t0)
         # time display
         self.clocklabel = gtk.Label()
-        self.clocklabel.modify_font(pango.FontDescription("sans 24"))
+        self.clocklabel.modify_font(pango.FontDescription("sans 20"))
         self.clocklabel.set_markup(time_format(0))
         tophbox.pack_start(btn_t0, False, False, 10)
         tophbox.pack_start(self.clocklabel, False, False, 10)
@@ -177,9 +177,14 @@ class TimingWin(gtk.Window):
     def print_corrected_time(self, column, renderer, model, iter):
         '''computes a handicap corrected time from en entry in the timing model'''
         id, st = model.get(iter, 0, 1)
-        t = time_parse(st)
-        nt = t - datetime.timedelta(0, float(self.timing[id]['Handicap']))
-        renderer.set_property('text', str(nt))
+        if st:
+            if self.timing[id]['Handicap']:
+                t = time_parse(st)
+                th = time_parse(self.timing[id]['Handicap'])
+                nt = t - th
+                renderer.set_property('text', str(nt))
+            else:
+                renderer.set_property('text', '')
 
     def update_racers_label(self):
         '''update values in the racers_label'''
