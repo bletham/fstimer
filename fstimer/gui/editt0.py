@@ -35,6 +35,9 @@ class EditT0Win(gtk.Window):
         self.set_transient_for(parent)
         self.set_modal(True)
         self.connect('delete_event', lambda b, jnk: self.hide())
+        label = gtk.Label("""This is the starting time in seconds.\
+            \nAdd or subtract seconds from this number to adjust the start time by that many seconds.\
+            \nNote that this will NOT affect times that have already been marked, only future times.""")
         self.t0box = gtk.Entry()
         self.t0box.set_text(str(t0))
         hbox = gtk.HBox(False, 8)
@@ -42,11 +45,12 @@ class EditT0Win(gtk.Window):
         btnOK.connect('clicked', self.okclicked)
         btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
         btnCANCEL.connect('clicked', lambda jnk: self.hide())
-        hbox.pack_start(btnOK, False, False, 8)
-        hbox.pack_start(btnCANCEL, False, False, 8)
+        hbox.pack_start(btnOK, False, False, 0)
+        hbox.pack_start(btnCANCEL, False, False, 0)
         vbox = gtk.VBox(False, 8)
-        vbox.pack_start(self.t0box, False, False, 8)
-        vbox.pack_start(hbox, False, False, 8)
+        vbox.pack_start(label, False, False, 0)
+        vbox.pack_start(self.t0box, False, False, 0)
+        vbox.pack_start(hbox, False, False, 0)
         self.add(vbox)
         self.show_all()
 
