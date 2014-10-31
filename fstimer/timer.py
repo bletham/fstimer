@@ -441,17 +441,20 @@ class PyTimer(object):
         if self.projecttype == 'handicap':
             new_timeslist = []
             for tag,time in timeslist:
-                try:
-                    new_timeslist.append((tag, str(str2timedelta(time) - str2timedelta(self.timing[tag]['Handicap']))))
-                except AttributeError:
-                    #Either time or handicap couldn't be converted to timedelta. This time will be <>'d out.
-                    new_timeslist.append((tag, '<>'))
+                if tag and time and tag != self.passid:
+                    try:
+                        new_timeslist.append((tag, str(str2timedelta(time) - str2timedelta(self.timing[tag]['Handicap']))))
+                    except AttributeError:
+                        #Either time or Handicap couldn't be converted to timedelta.
+                        #There is a time, so it is probably Handicap that was not formatted correctly (or is missing altogether).
+                        #We will put this entry at the bottom of the results so it is clear that it is there,
+                        #but the formatting needs to be corrected.
+                        new_timeslist.append((tag, '<>'))
+                #else: We just drop entries with blank tag, blank time, or the pass ID
             timeslist = list(new_timeslist) #replace
         else:
-            #Remove any blank times
-            for i,(tag,time) in enumerate(timeslist):
-                if not time:
-                    timeslist[i] = (tag,'<>')
+            #Drop times that are blank or have the passid
+            timeslist = [(tag,time) for tag,time in tagslist if tag and time and tag != self.passid]
         # sort by time
         timeslist = sorted(timeslist, key=lambda entry: entry[1])
         # single lap case
@@ -463,8 +466,7 @@ class PyTimer(object):
             # fastest time (1st lap) to longest time (last lap).
             laptimesdic = defaultdict(list)
             for (tag, time) in timeslist:
-                if tag and time and tag != self.passid:
-                    laptimesdic[tag].append(time)
+                laptimesdic[tag].append(time)
             # compute the lap times.
             laptimesdic2 = defaultdict(list)
             for tag in laptimesdic:
