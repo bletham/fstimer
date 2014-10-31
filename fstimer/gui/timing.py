@@ -167,7 +167,7 @@ class TimingWin(gtk.Window):
         edit_vbox.pack_start(btnDROPID, False, False, 0)
         edit_vbox.pack_start(btnDROPTIME, False, False, 0)
         edit_vbox.pack_start(btnEDIT, False, False, 0)
-        edit_align = gtk.Alignment(1,0,1,0)
+        edit_align = gtk.Alignment(1, 0, 1, 0)
         edit_align.add(edit_vbox)
         #Then the print and save buttons
         btnPRINT = gtk.Button(stock=gtk.STOCK_PRINT)
@@ -177,12 +177,12 @@ class TimingWin(gtk.Window):
         save_vbox = gtk.VBox(True, 8)
         save_vbox.pack_start(btnPRINT, False, False, 0)
         save_vbox.pack_start(btnSAVE, False, False, 0)
-        save_align = gtk.Alignment(1,1,1,0)
+        save_align = gtk.Alignment(1, 1, 1, 0)
         save_align.add(save_vbox)
         #And finally the finish button
         btnOK = gtk.Button('Done')
         btnOK.connect('clicked', self.done_timing)
-        done_align = gtk.Alignment(1,0.7,1,0)
+        done_align = gtk.Alignment(1, 0.7, 1, 0)
         done_align.add(btnOK)
         vsubbox = gtk.VBox(True, 0)
         vsubbox.pack_start(options_align, True, True, 0)
@@ -197,16 +197,16 @@ class TimingWin(gtk.Window):
         self.add(timehbox)
         self.show_all()
 
-    def print_time(self, column, renderer, model, iter):
+    def print_time(self, column, renderer, model, itr):
         '''computes a handicap corrected time from en entry in the timing model'''
-        renderer.set_property('text', model.get(iter, 1)[0])
+        renderer.set_property('text', model.get(itr, 1)[0])
 
-    def print_corrected_time(self, column, renderer, model, iter):
+    def print_corrected_time(self, column, renderer, model, itr):
         '''computes a handicap corrected time from en entry in the timing model'''
-        id, st = model.get(iter, 0, 1)
-        if st and self.timing[id]['Handicap']:
+        bibid, st = model.get(itr, 0, 1)
+        if st and self.timing[bibid]['Handicap']:
             t = time_parse(st)
-            th = time_parse(self.timing[id]['Handicap'])
+            th = time_parse(self.timing[bibid]['Handicap'])
             nt = t - th
             renderer.set_property('text', str(nt))
         else:
@@ -215,7 +215,7 @@ class TimingWin(gtk.Window):
     def update_racers_label(self):
         '''update values in the racers_label'''
         s = '%d registrants. Checked in' % self.racers_total
-        if self.numlaps >1:
+        if self.numlaps > 1:
             s += ' (per lap)'
         s += ': ' + ' | '.join(str(n) for n in self.racers_in)
         self.racerslabel.set_markup(s)
@@ -430,13 +430,13 @@ class TimingWin(gtk.Window):
                         rowcounter -= 1
                     # Now we tackle the last value - there are two possibilities.
                     if self.offset > 0:
-                      # There is a buffer of times, and this one should be cleared.
-                      treeiter = self.timemodel.get_iter((rowcounter,))
-                      self.timemodel.set_value(treeiter, 0, '')
+                        # There is a buffer of times, and this one should be cleared.
+                        treeiter = self.timemodel.get_iter((rowcounter,))
+                        self.timemodel.set_value(treeiter, 0, '')
                     else:
-                      # There is a blank row at the top which should be removed.
-                      treeiter = self.timemodel.get_iter((rowcounter,))
-                      self.timemodel.remove(treeiter)
+                        # There is a blank row at the top which should be removed.
+                        treeiter = self.timemodel.get_iter((rowcounter,))
+                        self.timemodel.remove(treeiter)
 
     def timing_rm_time(self, jnk_unused):
         '''Handles click on Drop time comment
