@@ -467,7 +467,6 @@ class TimingWin(gtk.Window):
                     self.rawtimes['times'] = newrawtimes['times']
                     self.timestr = saveresults['timestr']
                     self.t0 = saveresults['t0']
-                    self.t0_label.set_markup('t0: '+str(self.t0))
                 # Recompute how many racers have checked in
                 self.racers_in = [0] * self.numlaps
                 for ID in self.rawtimes['ids']:
