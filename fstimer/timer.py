@@ -427,7 +427,7 @@ class PyTimer(object):
            Entries without a counterpart are dropped'''
         l = min(len(self.rawtimes['ids']), len(self.rawtimes['times']))
         adj_ids = self.rawtimes['ids'][:l]
-        adj_times = [str2timedelta(t) for t in self.rawtimes['times'][:l]]
+        adj_times = self.rawtimes['times'][:l]
         return adj_ids, adj_times
 
     def get_sorted_results(self):
@@ -435,31 +435,45 @@ class PyTimer(object):
            The content of result depends on the race type'''
         # get raw times
         timeslist = zip(*self.get_sync_times_and_ids())
+        #Handle blank times, and handicap correction
         # Handicap correction
         if self.projecttype == 'handicap':
-            timeslist = [(tag, time - datetime.timedelta(0, float(self.timing[tag]['Handicap']))) for tag, time in timeslist]
+            new_timeslist = []
+            for tag,time in timeslist:
+                try:
+                    new_timeslist.append((tag, str(str2timedelta(time) - str2timedelta(self.timing[tag]['Handicap']))))
+                except AttributeError:
+                    #Either time or handicap couldn't be converted to timedelta. This time will be <>'d out.
+                    new_timeslist.append((tag, '<>'))
+            timeslist = list(new_timeslist) #replace
+        else:
+            #Remove any blank times
+            for i,(tag,time) in enumerate(timeslist):
+                if not time:
+                    timeslist[i] = (tag,'<>')
         # sort by time
         timeslist = sorted(timeslist, key=lambda entry: entry[1])
         # single lap case
         if self.numlaps == 1:
             return timeslist
-        # multi laps - groups times by tag
-        # Each value of laptimesdic is a list, sorted in order from
-        # fastest time (1st lap) to longest time (last lap).
-        laptimesdic = defaultdict(list)
-        for (tag, time) in timeslist:
-            if tag and time and tag != self.passid:
-                laptimesdic[tag].append(time)
-        # compute the lap times.
-        laptimesdic2 = defaultdict(list)
-        for tag in laptimesdic:
-            # First put the total race time
-            if len(laptimesdic[tag]) == self.numlaps:
-                laptimesdic2[tag] = [laptimesdic[tag][-1]]
-            else:
-                laptimesdic2[tag] = ['<>']
-            # And now the first lap
-            laptimesdic2[tag].append(laptimesdic[tag][0])
-            # And now the subsequent laps
-            laptimesdic2[tag].extend([laptimesdic[tag][ii+1] - laptimesdic[tag][ii] for ii in range(len(laptimesdic[tag])-1)])
-        return sorted(laptimesdic2.items(), key=lambda entry: entry[1][0])
+        else:
+            # multi laps - groups times by tag
+            # Each value of laptimesdic is a list, sorted in order from
+            # fastest time (1st lap) to longest time (last lap).
+            laptimesdic = defaultdict(list)
+            for (tag, time) in timeslist:
+                if tag and time and tag != self.passid:
+                    laptimesdic[tag].append(time)
+            # compute the lap times.
+            laptimesdic2 = defaultdict(list)
+            for tag in laptimesdic:
+                # First put the total race time
+                if len(laptimesdic[tag]) == self.numlaps:
+                    laptimesdic2[tag] = [laptimesdic[tag][-1]]
+                else:
+                    laptimesdic2[tag] = ['<>']
+                # And now the first lap
+                laptimesdic2[tag].append(laptimesdic[tag][0])
+                # And now the subsequent laps
+                laptimesdic2[tag].extend([laptimesdic[tag][ii+1] - laptimesdic[tag][ii] for ii in range(len(laptimesdic[tag])-1)])
+            return sorted(laptimesdic2.items(), key=lambda entry: entry[1][0])
