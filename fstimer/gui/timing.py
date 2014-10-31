@@ -80,7 +80,7 @@ class TimingWin(gtk.Window):
         self.timeview.append_column(column)
         renderer = gtk.CellRendererText()
         column = gtk.TreeViewColumn('Time', renderer)
-        column.set_cell_data_func(renderer, self.print_time)        
+        column.set_cell_data_func(renderer, self.print_time)
         self.timeview.append_column(column)
         if projecttype == 'handicap':
             renderer = gtk.CellRendererText()
@@ -148,7 +148,7 @@ class TimingWin(gtk.Window):
         menu_resume.connect_object("activate", self.resume_times, None, False) #False is for not merging
         menu_resume.show()
         options_menu.append(menu_resume)
-        menu_merge = gtk.MenuItem('Merge in saved IDs')
+        menu_merge = gtk.MenuItem('Merge in saved IDs or times')
         menu_merge.connect_object("activate", self.resume_times, None, True) #True is for merging
         menu_merge.show()
         options_menu.append(menu_merge)
@@ -507,14 +507,24 @@ class TimingWin(gtk.Window):
                     saveresults = json.load(fin)
                 newrawtimes = saveresults['rawtimes']
                 if isMerge:
-                    if self.rawtimes['ids'] or newrawtimes['times']:
-                        # we only accept merge of pure times with pure ids
-                        raise MergeError('Merge is only dealing with pure ids merged into pure times')
-                    self.rawtimes['ids'] = newrawtimes['ids']
+                    if self.rawtimes['ids'] and not self.rawtimes['times']:
+                        if newrawtimes['times'] and not newrawtimes['ids']:
+                            #Merge! We have IDs, merge in times.
+                            self.rawtimes['times'] = list(newrawtimes['times'])
+                        else:
+                            raise MergeError('Must be pure IDs merged into pure times, or vice versa')
+                    elif self.rawtimes['times'] and not self.rawtimes['ids']:
+                        if newrawtimes['ids'] and not newrawtimes['times']:
+                            #Merge! We have times, merge in IDS.
+                            self.rawtimes['ids'] = list(newrawtimes['ids'])
+                        else:
+                            raise MergeError('Must be pure IDs merged into pure times, or vice versa')
+                    else:
+                        raise MergeError('Must be pure IDs merged into pure times, or vice versa')
                 else:
                     self.rawtimes['ids'] = newrawtimes['ids']
                     self.rawtimes['times'] = newrawtimes['times']
-                    self.timestr = saveresults['timestr']
+                    #self.timestr = saveresults['timestr'] #We will _not_ overwrite when resuming.
                     self.t0 = saveresults['t0']
                     gtk.timeout_add(100, self.update_clock) #start the stopwatch
                 # Recompute how many racers have checked in
