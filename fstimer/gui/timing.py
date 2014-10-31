@@ -216,17 +216,7 @@ class TimingWin(gtk.Window):
         '''Handles click on Start button
            Sets t0 to the current time'''
         self.t0 = time.time()
-        gtk.timeout_add(100, self.update_clock)
-
-    def edit_t0(self, jnk_unused):
-        '''Handles click on Edit button for the t0 value.
-           Loads up a window and query the new t0'''
-        self.t0win = fstimer.gui.editt0.EditT0Win(self.path, self, self.t0, self.ok_editt0)
-
-    def ok_editt0(self, t0):
-        '''Handles click on OK after t0 edition'''
-        self.t0 = t0
-        self.t0win.hide()
+        gtk.timeout_add(100, self.update_clock) #update clock every 100ms
 
     def edit_time(self, jnk_unused):
         '''Handles click on Edit button for a time
@@ -313,7 +303,7 @@ class TimingWin(gtk.Window):
                     self.rawtimes['times'].pop(row+self.offset)
                 self.timemodel.remove(treeiter)
             else:
-                # adjust the entry
+                # adjust the entry; no changes to the stack otherwise.
                 if self.offset > 0:
                     self.rawtimes['ids'][row-self.offset] = str(new_id)
                     self.rawtimes['times'][row] = str(new_time)
@@ -335,7 +325,7 @@ class TimingWin(gtk.Window):
             old_time_str = self.timemodel.get_value(treeiter, 1)
             try:
                 # Now we convert it to timedelta
-                old_time = parse_time(old_time_str)
+                old_time = time_parse(old_time_str)
                 # time adjustment
                 adj_time = time_parse(timestr)
                 # Combine the timedeltas to get the new time
