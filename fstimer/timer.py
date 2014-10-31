@@ -52,7 +52,7 @@ def str2timedelta(time):
     # convert txt time to dict
     d1 = re.match(timePattern, time).groupdict(0)
     # convert txt to ints
-    d2 = {key:int(val) for key,val in d1.iteritems()}
+    d2 = {key:int(val) for key, val in d1.iteritems()}
     # build timedelta
     return datetime.timedelta(**d2)
 
@@ -224,7 +224,7 @@ class PyTimer(object):
         '''handles registration'''
         self.preregistrationwin.hide()
         self.regid = regid
-        if not hasattr(self,'prereg'):
+        if not hasattr(self, 'prereg'):
             self.prereg = [] #No pre-registration was selected
         self.registrationwin = fstimer.gui.register.RegistrationWin(self.path, self.fields, self.fieldsdic, self.prereg, self.clear_for_fam, self.projecttype, self.save_registration)
 
@@ -440,7 +440,7 @@ class PyTimer(object):
         # Handicap correction
         if self.projecttype == 'handicap':
             new_timeslist = []
-            for tag,time in timeslist:
+            for tag, time in timeslist:
                 if tag and time and tag != self.passid:
                     try:
                         new_timeslist.append((tag, str(str2timedelta(time) - str2timedelta(self.timing[tag]['Handicap']))))
@@ -451,7 +451,7 @@ class PyTimer(object):
             timeslist = list(new_timeslist) #replace
         else:
             #Drop times that are blank or have the passid
-            timeslist = [(tag,time) for tag,time in tagslist if tag and time and tag != self.passid]
+            timeslist = [(tag, time) for tag, time in tagslist if tag and time and tag != self.passid]
         # sort by time
         timeslist = sorted(timeslist, key=lambda entry: entry[1])
         # single lap case
