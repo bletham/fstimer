@@ -45,13 +45,14 @@ import fstimer.printhtml
 import fstimer.printhtmllaps
 from collections import defaultdict
 
-timePattern = r'((?P<days>\d+) days, )?(?P<hours>\d+):'r'(?P<minutes>\d+):(?P<seconds>\d+)'
+
 def str2timedelta(time):
     '''converts a time string to a timedelta'''
+    timePattern = r'((?P<days>\d+) days, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)' #hours is optional
     # convert txt time to dict
     d1 = re.match(timePattern, time).groupdict(0)
     # convert txt to ints
-    d2 = dict(((key, int(value)) for key, value in d1.items()))
+    d2 = {key:int(val) for key,val in d1.iteritems()}
     # build timedelta
     return datetime.timedelta(**d2)
 
@@ -336,9 +337,9 @@ class PyTimer(object):
         # we're done with pretiming
         self.pretimewin.hide()
         # We will store 'raw' data, lists of times and IDs.
-        self.rawdata = {'times':[], 'ids':[]}
+        self.rawtimes = {'times':[], 'ids':[]}
         # create Timing window
-        self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, self.rawdata, self.timing, self.print_times, self.projecttype, self.numlaps)
+        self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, self.rawtimes, self.timing, self.print_times, self.projecttype, self.numlaps)
 
     def print_times(self, jnk_unused, use_csv):
         '''print times to a file'''
@@ -420,20 +421,20 @@ class PyTimer(object):
                 return div[0]
         return None
 
-    def get_synch_times_and_ids(self):
+    def get_sync_times_and_ids(self):
         '''returns a list of ids and a list of timedeltas that are
-           "synched", that is that have the same number of entries.
+           "synced", that is that have the same number of entries.
            Entries without a counterpart are dropped'''
-        l = min(len(self.rawdata['ids']), len(self.rawdata['times']))
-        adj_ids = self.rawdata['ids'][:l]
-        adj_times = [str2timedelta(t) for t in self.rawdata['times'][:l]]
+        l = min(len(self.rawtimes['ids']), len(self.rawtimes['times']))
+        adj_ids = self.rawtimes['ids'][:l]
+        adj_times = [str2timedelta(t) for t in self.rawtimes['times'][:l]]
         return adj_ids, adj_times
 
     def get_sorted_results(self):
         '''returns a sorted list of (id, result) items.
            The content of result depends on the race type'''
         # get raw times
-        timeslist = zip(*self.get_synch_times_and_ids())
+        timeslist = zip(*self.get_sync_times_and_ids())
         # Handicap correction
         if self.projecttype == 'handicap':
             timeslist = [(tag, time - datetime.timedelta(0, float(self.timing[tag]['Handicap']))) for tag, time in timeslist]
