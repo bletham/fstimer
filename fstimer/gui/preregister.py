@@ -81,7 +81,7 @@ class PreRegistrationWin(gtk.Window):
         ffilter.set_name('Registration files')
         ffilter.add_pattern('*_registration_*.json')
         chooser.add_filter(ffilter)
-        chooser.set_current_folder(os.sep.join([self.cwd, self.path]))
+        chooser.set_current_folder(os.path.join(self.cwd, self.path))
         response = chooser.run()
         if response == gtk.RESPONSE_OK:
             filename = chooser.get_filename()
@@ -97,7 +97,7 @@ class PreRegistrationWin(gtk.Window):
         '''If OK is pushed on the pre-register window.'''
         #First check if the file already exists
         regid = regid_btn.get_value_as_int()
-        filename = os.sep.join([self.path, self.path+'_registration_'+str(regid)+'.json'])
+        filename = os.path.join(self.path, self.path+'_registration_'+str(regid)+'.json')
         if os.path.exists(filename):
             #Raise a warning window
             md = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT,

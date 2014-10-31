@@ -66,7 +66,7 @@ class PyTimer(object):
     def load_project(self, jnk_unused, combobox, projectlist):
         '''Loads the registration settings of a project, and go back to rootwin'''
         self.path = projectlist[combobox.get_active()]
-        with open(os.sep.join([self.path, self.path+'.reg']), 'rb') as fin:
+        with open(os.path.join(self.path, self.path+'.reg'), 'rb') as fin:
             regdata = json.load(fin)
         #Assign all of the project settings
         self.fields = regdata['fields']
@@ -188,7 +188,7 @@ class PyTimer(object):
         regdata['fieldsdic'] = self.fieldsdic
         regdata['clear_for_fam'] = self.clear_for_fam
         regdata['divisions'] = self.divisions
-        with open(os.sep.join([self.path, self.path+'.reg']), 'wb') as fout:
+        with open(os.path.join(self.path, self.path+'.reg'), 'wb') as fout:
             json.dump(regdata, fout)
         md = gtk.MessageDialog(self.divisionswin, gtk.DIALOG_MODAL, gtk.MESSAGE_INFO, gtk.BUTTONS_OK, 'Project '+self.path+' successfully created!')
         md.run()
@@ -229,7 +229,7 @@ class PyTimer(object):
 
     def save_registration(self):
         '''saves registration'''
-        filename = os.sep.join([self.path, self.path+'_registration_'+str(self.regid)+'.json'])
+        filename = os.path.join(self.path, self.path+'_registration_'+str(self.regid)+'.json')
         with open(filename, 'wb') as fout:
             json.dump(self.prereg, fout)
         return filename
@@ -310,16 +310,16 @@ class PyTimer(object):
         else:
             self.compilewin.setLabel(1, '<span color="blue">Checking for errors... no errors found!</span>')
         #Now save things
-        with open(os.sep.join([self.path, self.path+'_registration_compiled.json']), 'wb') as fout:
+        with open(os.path.join(self.path, self.path+'_registration_compiled.json'), 'wb') as fout:
             json.dump(self.reg_nodups, fout)
-        with open(os.sep.join([self.path, self.path+'_timing_dict.json']), 'wb') as fout:
+        with open(os.path.join(self.path, self.path+'_timing_dict.json'), 'wb') as fout:
             json.dump(self.timedict, fout)
-        regfn = os.sep.join([self.path, self.path + '_registration_compiled.json'])
-        timefn = os.sep.join([self.path, self.path + '_timing_dict.json'])
+        regfn = os.path.join(self.path, self.path + '_registration_compiled.json')
+        timefn = os.path.join(self.path, self.path + '_timing_dict.json')
         self.compilewin.setLabel(2, '<span color="blue">Successfully wrote files:\n' + \
                                  regfn + '\n' + timefn + '</span>')
         #And write the compiled registration to csv
-        with open(os.sep.join([self.path, self.path+'_registration.csv']), 'wb') as fout:
+        with open(os.path.join(self.path, self.path+'_registration.csv'), 'wb') as fout:
             dict_writer = csv.DictWriter(fout, self.fields)
             dict_writer.writer.writerow(self.fields)
             dict_writer.writerows(self.reg_nodups)
@@ -376,18 +376,18 @@ class PyTimer(object):
         for div in divresults:
             divresults[div] += printer.cat_table_footer(div)
         # now save to files
-        scratch_file = os.sep.join([self.path,
+        scratch_file = os.path.join(self.path,
                                     '_'.join([self.path,
                                               self.timewin.timestr,
-                                              'alltimes.' + printer.file_extension()])])
+                                              'alltimes.' + printer.file_extension()]))
         with open(scratch_file, 'w') as scratch_out:
             scratch_out.write(printer.header())
             scratch_out.write(scratchresults)
             scratch_out.write(printer.footer())
-        div_file = os.sep.join([self.path,
+        div_file = os.path.join(self.path,
                                 '_'.join([self.path,
                                           self.timewin.timestr,
-                                          'divtimes.' + printer.file_extension()])])
+                                          'divtimes.' + printer.file_extension()]))
         with open(div_file, 'w') as div_out:
             div_out.write(printer.header())
             for div in self.divisions:

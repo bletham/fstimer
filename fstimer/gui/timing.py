@@ -490,7 +490,7 @@ class TimingWin(gtk.Window):
     def resume_times(self, jnk_unused, isMerge):
         '''Handles click on Resume button'''
         chooser = gtk.FileChooserDialog(title='Choose timing results to resume', action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OK, gtk.RESPONSE_OK))
-        chooser.set_current_folder(os.sep.join([os.getcwd(), self.path]))
+        chooser.set_current_folder(os.path.join(os.getcwd(), self.path))
         ffilter = gtk.FileFilter()
         ffilter.set_name('Timing results')
         ffilter.add_pattern('*_times.json')
@@ -547,7 +547,7 @@ class TimingWin(gtk.Window):
         saveresults['rawtimes'] = self.rawtimes
         saveresults['timestr'] = self.timestr
         saveresults['t0'] = self.t0
-        with open(os.sep.join([self.path, self.path+'_'+self.timestr+'_times.json']), 'wb') as fout:
+        with open(os.path.join(self.path, self.path+'_'+self.timestr+'_times.json'), 'wb') as fout:
             json.dump(saveresults, fout)
         md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, "Times saved!")
         md.run()

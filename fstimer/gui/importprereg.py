@@ -237,7 +237,7 @@ class ImportPreRegWin(gtk.Window):
         ffilter.set_name('csv files')
         ffilter.add_pattern('*.csv')
         chooser.add_filter(ffilter)
-        chooser.set_current_folder(os.path.join([self.cwd, self.path, '']))
+        chooser.set_current_folder(os.path.join(self.cwd, self.path, ''))
         response = chooser.run()
         if response == gtk.RESPONSE_OK:
             filename = chooser.get_filename()
@@ -279,6 +279,6 @@ Correct the error and try again.""" % (row+1, value, field, optstr)
                 tmpdict[field] = value
             preregdata.append(tmpdict.copy())
             row += 1
-        with open(os.path.join([self.cwd, self.path, self.path+'_registration_prereg.json']), 'wb') as fout:
+        with open(os.path.join(self.cwd, self.path, self.path+'_registration_prereg.json'), 'wb') as fout:
             json.dump(preregdata, fout)
         textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), 'Success! Imported pre-registration saved to '+self.path+'_registration_prereg.json\nFinished!', 'blue')

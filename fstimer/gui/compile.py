@@ -113,7 +113,7 @@ class CompilationWin(gtk.Window):
         ffilter.set_name('Registration files')
         ffilter.add_pattern('*registration_*.json')
         chooser.add_filter(ffilter)
-        chooser.set_current_folder(os.sep.join([os.getcwd(), self.path]))
+        chooser.set_current_folder(os.path.join(os.getcwd(), self.path))
         response = chooser.run()
         if response == gtk.RESPONSE_OK:
             filenames = chooser.get_filenames()
