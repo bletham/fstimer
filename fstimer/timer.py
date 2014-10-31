@@ -370,8 +370,8 @@ class PyTimer(object):
                       for div in self.divisions}
         for (tag, time) in self.get_sorted_results():
             scratchresults += printer.scratch_entry(tag, time, self.timing[tag])
-            div = self.get_division(self.timing[tag])
-            if div:
+            mydivs = self.get_division(self.timing[tag])
+            for div in mydivs:
                 divresults[div] += printer.cat_entry(tag, div, time, self.timing[tag])
         scratchresults += printer.scratch_table_footer()
         for div in divresults:
@@ -397,16 +397,17 @@ class PyTimer(object):
         # display user dialog that all was successful
         md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT,
                                gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-                               "Results saved to csv!")
+                               "Results saved to " + printer.file_extension() + "!")
         md.run()
         md.destroy()
 
     def get_division(self, timingEntry):
-        '''Get the division for a given timing entry'''
+        '''Get the divisions for a given timing entry'''
         try:
             age = int(timingEntry['Age'])
         except ValueError:
             age = ''
+        mydivs = []
         # go through the divisions
         for div in self.divisions:
             # check all fields
@@ -418,8 +419,8 @@ class PyTimer(object):
                     if timingEntry[field] != div[1][field]:
                         break
             else:
-                return div[0]
-        return None
+                mydivs.append(div[0])
+        return mydivs
 
     def get_sync_times_and_ids(self):
         '''returns a list of ids and a list of timedeltas that are
