@@ -177,14 +177,13 @@ class TimingWin(gtk.Window):
     def print_corrected_time(self, column, renderer, model, iter):
         '''computes a handicap corrected time from en entry in the timing model'''
         id, st = model.get(iter, 0, 1)
-        if st:
-            if self.timing[id]['Handicap']:
-                t = time_parse(st)
-                th = time_parse(self.timing[id]['Handicap'])
-                nt = t - th
-                renderer.set_property('text', str(nt))
-            else:
-                renderer.set_property('text', '')
+        if st and self.timing[id]['Handicap']:
+            t = time_parse(st)
+            th = time_parse(self.timing[id]['Handicap'])
+            nt = t - th
+            renderer.set_property('text', str(nt))
+        else:
+            renderer.set_property('text', '')
 
     def update_racers_label(self):
         '''update values in the racers_label'''
@@ -217,7 +216,7 @@ class TimingWin(gtk.Window):
         '''Handles click on Start button
            Sets t0 to the current time'''
         self.t0 = time.time()
-        gtk.timeout_add(60, self.update_clock)
+        gtk.timeout_add(100, self.update_clock)
 
     def edit_t0(self, jnk_unused):
         '''Handles click on Edit button for the t0 value.
@@ -251,7 +250,7 @@ class TimingWin(gtk.Window):
         return
 
     def editsingletimedone(self, treeiter, new_id, new_time):
-        '''Handled result of the edition of a given time'''
+        '''Handled result of the editing of a given time'''
         row = self.timemodel.get_path(treeiter)[0]
         if row < self.offset:
             if new_id:
@@ -326,7 +325,7 @@ class TimingWin(gtk.Window):
         self.winedittime.hide()
 
     def editblocktimedone(self, pathlist, operation, timestr):
-        '''Handled result of the edition of a block of times
+        '''Handled result of the editing of a block of times
            Goes through every time in pathlist and do the requested operation'''
         for path in pathlist:
             # Figure out which row this is, and which treeiter
