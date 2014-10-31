@@ -134,34 +134,61 @@ class TimingWin(gtk.Window):
         vbox1align = gtk.Alignment(0, 0, 1, 1)
         vbox1align.add(timevbox1)
         # buttons on the right side
+        #First an options button that will actually be a menu
+        options_menu = gtk.Menu()
+        menu_editt0 = gtk.MenuItem('Edit starting time')
+        menu_editt0.connect_object("activate", self.edit_t0, None)
+        menu_editt0.show()
+        options_menu.append(menu_editt0)
+        menu_savecsv = gtk.MenuItem('Save results to CSV')
+        menu_savecsv.connect_object("activate", print_cb, None, True) #True is to print csv
+        menu_savecsv.show()
+        options_menu.append(menu_savecsv)
+        menu_resume = gtk.MenuItem('Load saved timing session')
+        menu_resume.connect_object("activate", self.resume_times, None, False) #False is for not merging
+        menu_resume.show()
+        options_menu.append(menu_resume)
+        menu_merge = gtk.MenuItem('Merge in saved IDs')
+        menu_merge.connect_object("activate", self.resume_times, None, True) #True is for merging
+        menu_merge.show()
+        options_menu.append(menu_merge)
+        btnOPTIONS = gtk.Button('Options')
+        btnOPTIONS.connect_object("event", self.options_btn, options_menu)
+        options_align = gtk.Alignment(1, 0.1, 1, 0)
+        options_align.add(btnOPTIONS)
+        #Then the block of editing buttons
         btnDROPID = gtk.Button('Drop ID')
         btnDROPID.connect('clicked', self.timing_rm_ID)
         btnDROPTIME = gtk.Button('Drop time')
         btnDROPTIME.connect('clicked', self.timing_rm_time)
         btnEDIT = gtk.Button(stock=gtk.STOCK_EDIT)
         btnEDIT.connect('clicked', self.edit_time)
+        edit_vbox = gtk.VBox(True, 8)
+        edit_vbox.pack_start(btnDROPID, False, False, 0)
+        edit_vbox.pack_start(btnDROPTIME, False, False, 0)
+        edit_vbox.pack_start(btnEDIT, False, False, 0)
+        edit_align = gtk.Alignment(1,0,1,0)
+        edit_align.add(edit_vbox)
+        #Then the print and save buttons
         btnPRINT = gtk.Button(stock=gtk.STOCK_PRINT)
         btnPRINT.connect('clicked', print_cb, False)
         btnSAVE = gtk.Button(stock=gtk.STOCK_SAVE)
         btnSAVE.connect('clicked', self.save_times)
-        btnCSV = gtk.Button('Save CSV')
-        btnCSV.connect('clicked', print_cb, True)
-        btnRESUME = gtk.Button('Resume')
-        btnRESUME.connect('clicked', self.resume_times, False)
-        btnMERGE = gtk.Button('Merge')
-        btnMERGE.connect('clicked', self.resume_times, True)
+        save_vbox = gtk.VBox(True, 8)
+        save_vbox.pack_start(btnPRINT, False, False, 0)
+        save_vbox.pack_start(btnSAVE, False, False, 0)
+        save_align = gtk.Alignment(1,1,1,0)
+        save_align.add(save_vbox)
+        #And finally the finish button
         btnOK = gtk.Button('Done')
         btnOK.connect('clicked', self.done_timing)
-        vsubbox = gtk.VBox(False, 8)
-        vsubbox.pack_start(btnDROPID, False, False, 0)
-        vsubbox.pack_start(btnDROPTIME, False, False, 0)
-        vsubbox.pack_start(btnEDIT, False, False, 40)
-        vsubbox.pack_start(btnPRINT, False, False, 0)
-        vsubbox.pack_start(btnSAVE, False, False, 0)
-        vsubbox.pack_start(btnCSV, False, False, 0)
-        vsubbox.pack_start(btnRESUME, False, False, 0)
-        vsubbox.pack_start(btnMERGE, False, False, 0)
-        vsubbox.pack_start(btnOK, False, False, 0)
+        done_align = gtk.Alignment(1,0.7,1,0)
+        done_align.add(btnOK)
+        vsubbox = gtk.VBox(True, 0)
+        vsubbox.pack_start(options_align, True, True, 0)
+        vsubbox.pack_start(edit_align, True, True, 0)
+        vsubbox.pack_start(save_align, True, True, 0)
+        vsubbox.pack_start(done_align, True, True, 0)
         vspacer = gtk.Alignment(1, 1, 0, 0)
         vspacer.add(vsubbox)
         timehbox = gtk.HBox(False, 8)
@@ -217,6 +244,24 @@ class TimingWin(gtk.Window):
            Sets t0 to the current time'''
         self.t0 = time.time()
         gtk.timeout_add(100, self.update_clock) #update clock every 100ms
+
+    def edit_t0(self, jnk_unused):
+        '''Handles click on Edit button for the t0 value.
+           Loads up a window and query the new t0'''
+        self.t0win = fstimer.gui.editt0.EditT0Win(self.path, self, self.t0, self.ok_editt0)
+
+    def ok_editt0(self, t0):
+        '''Handles click on OK after t0 edition'''
+        self.t0 = t0
+        self.t0win.hide()
+
+    def options_btn(self, menu, event):
+        '''Handles opening the menu on click of the options button'''
+        if event.type == gtk.gdk.BUTTON_PRESS:
+            menu.popup(None, None, None, event.button, event.time)
+            return True
+        else:
+            return False
 
     def edit_time(self, jnk_unused):
         '''Handles click on Edit button for a time
