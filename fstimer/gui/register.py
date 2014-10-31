@@ -21,7 +21,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import fstimer.gui
-import time
+import re
 
 class RegistrationWin(gtk.Window):
     '''Handling of the window dedicated to registration'''
@@ -307,8 +307,8 @@ class RegistrationWin(gtk.Window):
             sduration = self.editregfields['Handicap'].get_text()
             if sduration != '':
                 try:
-                    time.strptime(sduration, '%H:%M:%S')
-                except ValueError:
+                    d = re.match(r'((?P<days>\d+) days, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)', dt).groupdict(0)
+                except AttributeError:
                     label.set_markup('<span color="red">hh:mm:ss</span>')
                     return
         # If that was OK, we go through each field and grab the new value.
