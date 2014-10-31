@@ -445,11 +445,8 @@ class PyTimer(object):
                     try:
                         new_timeslist.append((tag, str(str2timedelta(time) - str2timedelta(self.timing[tag]['Handicap']))))
                     except AttributeError:
-                        #Either time or Handicap couldn't be converted to timedelta.
-                        #There is a time, so it is probably Handicap that was not formatted correctly (or is missing altogether).
-                        #We will put this entry at the bottom of the results so it is clear that it is there,
-                        #but the formatting needs to be corrected.
-                        new_timeslist.append((tag, '<>'))
+                        #Either time or Handicap couldn't be converted to timedelta. It will be dropped.
+                        pass
                 #else: We just drop entries with blank tag, blank time, or the pass ID
             timeslist = list(new_timeslist) #replace
         else:
@@ -478,5 +475,5 @@ class PyTimer(object):
                 # And now the first lap
                 laptimesdic2[tag].append(laptimesdic[tag][0])
                 # And now the subsequent laps
-                laptimesdic2[tag].extend([laptimesdic[tag][ii+1] - laptimesdic[tag][ii] for ii in range(len(laptimesdic[tag])-1)])
+                laptimesdic2[tag].extend([str(str2timedelta(laptimesdic[tag][ii+1]) - str2timedelta(laptimesdic[tag][ii])) for ii in range(len(laptimesdic[tag])-1)])
             return sorted(laptimesdic2.items(), key=lambda entry: entry[1][0])
