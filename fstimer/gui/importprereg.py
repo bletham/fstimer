@@ -220,10 +220,10 @@ class ImportPreRegWin(gtk.Window):
            that the project column's value is equal to that csv column's value'''
         iter_end = textbuffer.get_end_iter()
         fields_use = [field for field in csv_fields if field in self.fields]
-        textbuffer.insert_with_tags_by_name(iter_end, 'Using csv fields: ', 'blue')
+        textbuffer.insert_with_tags_by_name(iter_end, 'Matched csv fields: ', 'blue')
         textbuffer.insert(iter_end, ', '.join(fields_use) + '\n')
         fields_ignore = [field for field in csv_fields if field not in self.fields]
-        textbuffer.insert_with_tags_by_name(iter_end, 'Ignoring csv fields: ', 'red')
+        textbuffer.insert_with_tags_by_name(iter_end, 'Did not match csv fields: ', 'red')
         textbuffer.insert(iter_end, ', '.join(fields_ignore) + '\n')
         fields_notuse = [field for field in self.fields if field not in csv_fields]
         textbuffer.insert_with_tags_by_name(iter_end, 'Did not find in csv: ', 'red')
