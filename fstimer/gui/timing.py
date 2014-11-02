@@ -125,8 +125,8 @@ class TimingWin(gtk.Window):
         # we will keep track of how many racers are still out.
         self.racers_reg = []
         for i_unused in range(self.numlaps):
-            self.racers_reg.append([k for k in timing.keys()])
-        self.racers_total = len(self.racers_reg)
+            self.racers_reg.append(set([k for k in timing.keys()]))
+        self.racers_total = len(self.racers_reg[0])
         self.racers_in = [0] * self.numlaps
         self.racerslabel = gtk.Label()
         self.update_racers_label()
