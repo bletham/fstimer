@@ -30,7 +30,7 @@ import os
 import re
 import json
 import pango
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 class MergeError(Exception):
     '''Exception used in case of merging error'''
@@ -48,6 +48,7 @@ def time_format(t):
     return s
 
 def time_parse(dt):
+    '''converts string time to datetime.timedelta'''
     d = re.match(r'((?P<days>\d+) days, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)', dt).groupdict(0)
     return datetime.timedelta(**dict(((key, int(value)) for key, value in d.items())))
 
@@ -372,6 +373,10 @@ class TimingWin(gtk.Window):
                     self.rawtimes['times'][row+self.offset] = str(new_time)
                 self.timemodel.set_value(treeiter, 0, str(new_id))
                 self.timemodel.set_value(treeiter, 1, str(new_time))
+        #reset lapcounter, if used..
+        if self.numlaps > 1:
+            self.lapcounter = defaultdict(int)
+            self.lapcounter.update(Counter(self.rawtimes['ids']))
         self.winedittime.hide()
 
     def editblocktimedone(self, pathlist, operation, timestr):
