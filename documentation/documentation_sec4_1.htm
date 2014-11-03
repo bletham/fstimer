@@ -42,13 +42,21 @@ The first step to creating a new project is to choose a project name. The name m
 
 If you want to use a name that is already taken by an existing file or folder, you will have to rename or delete that file or folder.<br><br>
 
+The next window allows you to choose the type of the race:<br><br>
+
+<img width="516" height="221" src="documentation_figs/fstimer_fig61.png"><br><br> <!--645x277-->
+
+A standard race is one where all racers have the same start time. In a handicap race, a "Handicap" time must be specified for all racers. Their final time is then calculated as the marked time minus the handicap. This allows racers to start at different times - a racer could start five minutes late, and by specifying a handicap of "0:05:00" for that racer, his time in the results would be corrected. Usually this is done for a race where all runners provide their handicap relative to a base time, and runners start at different times with the hope of all crossing the finish line around the same time.<br><br>
+
+For lap timing, times are marked each time a racer completes a lap. The results printout will then display the total time along with the time for each of the individual laps.<br><br>
+
 The next window allows you to specify the fields that will show up in the registration database.<br><br>
 
 <img width="482" height="341" src="documentation_figs/fstimer_fig19.png"><br><br> <!--602x426-->
 
 The "Up" and "Down" buttons allow you to change the order of the fields. This is the order in which they will appear in the registration database: The top entry in this window will be the furthest left column in the registration window, and the bottom entry in this window will be the furthest right column in the registration window. If you have many fields and some of them you want to be able to see without having to sideways scroll in the registration window, you should put them towards the top of this lsit.<br><br>
 
-The "Remove" button removes a field. Last name, First name, ID, Age, and Gender, however, are hard-coded fields due to their importance for creating divisional results. These fields cannot be removed. The "New.." buttons allow you to create a new entrybox or combobox. A combobox means in the registration database the entry will have to take one of a set collection of values. In the window for creating a new registration entry below, "Gender" is a combobox with options "male" and "female" (and blank). An entrybox is a box for freely entering text, like "Last name" and "First name" in the registration entry below.<br><br>
+The "Remove" button removes a field. Last name, First name, ID, Age, and Gender, however, are hard-coded fields due to their importance for creating divisional results. (If it is a "handicap" race, then the field "Handicap" is also required). These fields cannot be removed. The "New.." buttons allow you to create a new entrybox or combobox. A combobox means in the registration database the entry will have to take one of a set collection of values. In the window for creating a new registration entry below, "Gender" is a combobox with options "male" and "female" (and blank). An entrybox is a box for freely entering text, like "Last name" and "First name" in the registration entry below.<br><br>
 
 <img width="310" height="332" src="documentation_figs/fstimer_fig29.png"><br><br> <!--388x415-->
 
@@ -70,13 +78,15 @@ When you have finished specifying the registration fields, you move on to contro
 
 Finally you must specify the divisionals. Again, "Up" and "Down" change the order in which the divisions will appear in the divisional results.<br><br>
 
-<img width="642" height="500" src="documentation_figs/fstimer_fig21.png"><br><br> <!--602x426-->
+<img width="642" height="421" src="documentation_figs/fstimer_fig21.png"><br><br> <!--802x526-->
 
-"New" allows you to add a division. Divisions may be defined using a combination of age and any of the comboboxes that were defined as registration fields. For example, if "Grade" was specified as a combobox in when creating the registration fields, then you could define divisionals using "Grade." The name of the division that you specify will be used in the divisional results. Then, use the checkboxes to specify which fields you want to use to define the division. In the example below, only "Gender" is checked, so only gender will be used to define the division. Further, it is set to "Male," thus this division will cover all males.<br><br>
+"New" allows you to add a division. Divisions may be defined using a combination of age and any of the comboboxes that were defined as registration fields. For example, if "Grade" was specified as a combobox in when creating the registration fields, then you could define divisionals using "Grade." The name of the division that you specify will be used in the divisional results. Then, use the checkboxes to specify which fields you want to use to define the division. In the example below, "Gender" and "Grade" have been checked, so only those two fields will be used to define the division.<br><br>
 
-<img width="642" height="500" src="documentation_figs/fstimer_fig33.png"><br><br> <!--602x426-->
+<img width="642" height="421" src="documentation_figs/fstimer_fig33.png"><br><br> <!--802x526-->
 
-Note that it is OK to have overlapping divisions, if you want. "Edit" and "Remove" work exactly as you would expect.<br><br>
+Note that it is OK to have overlapping divisions, if you want. If a runner falls into multiple divisions (e.g., "boys" and "7th grade boys") then he/she will simply be listed in each of the divisional results.<br><br>
+
+"Edit" and "Remove" work exactly as you would expect.<br><br>
 
 Once the divisions are specified, a new subdirectory in the fstimer directory with the specified project name will be created (that is, if the project name was project_name, then the directory fstimer/project_name is created). Inside of this directory will be a file project_name.reg. This file stores all of the information that you just specified (registration fields, which fields to blank when adding a family member, and divisional divisions) in json format. If you want to use the same project settings across multiple computers (as you will when you want to do registration on multiple computers), then just copy the entire project_name directory into the fstimer directory on all computers.<br><br>
 
