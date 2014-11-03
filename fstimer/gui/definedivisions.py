@@ -38,7 +38,7 @@ class DivisionsWin(gtk.Window):
         self.set_title('fsTimer - New project')
         self.set_position(gtk.WIN_POS_CENTER)
         self.set_border_width(20)
-        self.set_size_request(800, 600)
+        self.set_size_request(800, 500)
         self.connect('delete_event', lambda b, jnk_unused: self.hide())
         # Now create the vbox.
         vbox = gtk.VBox(False, 10)
