@@ -451,7 +451,7 @@ class PyTimer(object):
             timeslist = list(new_timeslist) #replace
         else:
             #Drop times that are blank or have the passid
-            timeslist = [(tag, time) for tag, time in tagslist if tag and time and tag != self.passid]
+            timeslist = [(tag, time) for tag, time in timeslist if tag and time and tag != self.passid]
         # sort by time
         timeslist = sorted(timeslist, key=lambda entry: entry[1])
         # single lap case
