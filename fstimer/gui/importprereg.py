@@ -253,7 +253,7 @@ class ImportPreRegWin(gtk.Window):
                 textbuffer.insert_with_tags_by_name(iter_end, 'Found csv fields: ', 'blue')
                 textbuffer.insert(iter_end, ', '.join(csv_fields) + '\n')
                 self.build_fields_mapping(csv_fields, textbuffer)
-            except (IOError, IndexError):
+            except (IOError, IndexError, csv.Error):
                 iter_end = textbuffer.get_end_iter()
                 textbuffer.insert_with_tags_by_name(iter_end, 'Error! Could not open file, or no data found in file. Nothing was imported, try again.', 'red')
         chooser.destroy()
