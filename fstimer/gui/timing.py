@@ -79,9 +79,7 @@ class TimingWin(gtk.Window):
         self.timeview = gtk.TreeView()
         column = gtk.TreeViewColumn('ID', gtk.CellRendererText(), text=0)
         self.timeview.append_column(column)
-        renderer = gtk.CellRendererText()
-        column = gtk.TreeViewColumn('Time', renderer)
-        column.set_cell_data_func(renderer, self.print_time)
+        column = gtk.TreeViewColumn('Time', gtk.CellRendererText(), text=1)
         self.timeview.append_column(column)
         #An extra column if it is a handicap race
         if projecttype == 'handicap':
@@ -205,10 +203,6 @@ class TimingWin(gtk.Window):
         timehbox.pack_start(vspacer, False, False, 0)
         self.add(timehbox)
         self.show_all()
-
-    def print_time(self, column, renderer, model, itr):
-        '''computes a handicap corrected time from en entry in the timing model'''
-        renderer.set_property('text', model.get(itr, 1)[0])
 
     def print_corrected_time(self, column, renderer, model, itr):
         '''computes a handicap corrected time from en entry in the timing model'''
