@@ -30,6 +30,7 @@ import os
 import re
 import json
 import pango
+from collections import defaultdict
 
 class MergeError(Exception):
     '''Exception used in case of merging error'''
@@ -82,10 +83,17 @@ class TimingWin(gtk.Window):
         column = gtk.TreeViewColumn('Time', renderer)
         column.set_cell_data_func(renderer, self.print_time)
         self.timeview.append_column(column)
+        #An extra column if it is a handicap race
         if projecttype == 'handicap':
             renderer = gtk.CellRendererText()
             column = gtk.TreeViewColumn('Corrected Time', renderer)
             column.set_cell_data_func(renderer, self.print_corrected_time)
+            self.timeview.append_column(column)
+        #Another extra column if it is a lap race
+        if self.numlaps > 1:
+            renderer = gtk.CellRendererText()
+            column = gtk.TreeViewColumn('Completed laps', renderer)
+            column.set_cell_data_func(renderer, self.print_completed_laps)
             self.timeview.append_column(column)
         self.timeview.set_model(self.timemodel)
         self.timeview.connect('size-allocate', self.scroll_times)
@@ -128,6 +136,7 @@ class TimingWin(gtk.Window):
             self.racers_reg.append(set([k for k in timing.keys()]))
         self.racers_total = len(self.racers_reg[0])
         self.racers_in = [0] * self.numlaps
+        self.lapcounter = defaultdict(int)
         self.racerslabel = gtk.Label()
         self.update_racers_label()
         timevbox1.pack_start(self.racerslabel, False, False, 0)
@@ -213,6 +222,14 @@ class TimingWin(gtk.Window):
             except AttributeError:
                 #Handicap is present but is not formatted correctly.
                 renderer.set_property('text', '')
+        else:
+            renderer.set_property('text', '')
+
+    def print_completed_laps(self, column, renderer, model, itr):
+        '''computes number of laps completed by this (registered) racer'''
+        bibid, st = model.get(itr, 0, 1)
+        if bibid:
+            renderer.set_property('text', str(self.lapcounter[bibid]))
         else:
             renderer.set_property('text', '')
 
@@ -589,6 +606,7 @@ class TimingWin(gtk.Window):
 
     def update_racers(self, ID):
         '''Updates racers_reg and racers_in after arrival of user ID'''
+        self.lapcounter[ID] += 1
         for i in range(self.numlaps):
             if ID in self.racers_reg[i]:
                 self.racers_reg[i].remove(ID)
