@@ -426,9 +426,17 @@ class PyTimer(object):
         '''returns a list of ids and a list of timedeltas that are
            "synced", that is that have the same number of entries.
            Entries without a counterpart are dropped'''
-        l = min(len(self.rawtimes['ids']), len(self.rawtimes['times']))
-        adj_ids = self.rawtimes['ids'][:l]
-        adj_times = self.rawtimes['times'][:l]
+        #Note that the newest entries are at the _start_ of the rawtimes lists
+        offset = len(self.rawtimes['times']) - len(self.rawtimes['ids'])
+        if offset < 0:
+            adj_ids = self.rawtimes['ids'][-offset:]
+            adj_times = list(self.rawtimes['times'])
+        elif offset > 0:
+            adj_ids = list(self.rawtimes['ids'])
+            adj_times = self.rawtimes['times'][offset:]
+        else:
+            adj_ids = list(self.rawtimes['ids'])
+            adj_times = list(self.rawtimes['times'])
         return adj_ids, adj_times
 
     def get_sorted_results(self):
