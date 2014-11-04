@@ -22,18 +22,34 @@
 <div id="lower-box">
 <h3>Section 5 - Additional details for developers</h3><br>
 
-In this section we will put some comments about the source code that will make it easier for developers to modify and extend fsTimer; this section is still a work in progress.<br><br>
+The development version of fsTimer is on github at:<br><br>
 
-<b>Features for fsTimer 0.5</b><br><br>
+<a href="http://github.com/bletham/fstimer">http://github.com/bletham/fstimer</a>.<br><br>
 
-There are several items that are on the "to-do" list for fsTimer 0.5, which currently will be released sometime in Fall 2014. Let me know if there are any features that would be useful to you.
+Contributions of code are always welcome!<br><br>
+
+<b>Features for the future</b><br><br>
+
+The next version of fsTimer will be 0.6, and will probably be released around March 2015. There are several items that are on the "to-do" list for a future version, possibly 0.6.
 <ul>
-<li>I am considering introducing ties in places for racers that have the same time (to the second). Right now they are sorted in the order that their bib IDs were entered, which is essentially arbitrary for two people that crossed at the same time.
 <li>Figure out what's the deal with this Mac OS issue where the area around the "Edit" and "New" buttons is selected instead of clicking on the button. I don't have a Mac so it might take some more time.
-<li>Make it an option to do timing by entering ID only. In versions earlier than 0.4, entering an ID without a time in the stack would assign the current time to that ID. In v0.4, it was changed so that IDs form a stack themselves and times must be separately marked for every ID. It may be useful for timing with RFIDs to have a separate timing mode where times are marked always (and only) when an ID is entered.
-<li>Complete support of an RFID tag solution.
-<li>Larger font size in the timing entrybox, to be easier to see outdoors.
+<li>Make it possible to edit project settings, for instance, to change divisionals. This can currently be done only by manually editing the .reg file. In v0.5 the project creation windows were changed to load their defaults from a .reg file, so it will be an easy addition to use those same windows to edit an existing .reg file. We just need to handle what to do if we make edits to the list of fields, and then try to load an existing registration json that was built using the old fields list.
+<li>Add relay races as a race type. This would be like a lap race but racers would be on teams and (potentially) individuals would run each lap but we would want to rank by team time.
+<li>There is an outstanding issue in Windows when using a network drive. Apparently the python terminal in windows doesn't work if the file is stored on a network drive. It errors very ungracefully, so it'd be nice to somehow make this more graceful. This might not be possible and is a limitation I am perfectly happy to live with.
 </ul>
+
+<b>Changelog for fsTimer 0.5</b><br><br>
+fsTimer 0.5 was released on Nov. 6, 2014 and is the fourth major release. Version 0.5 came with major improvements, thanks in large part to the development efforts of Sebastien. The major changes since version 0.4 are:
+<ul>
+<li>A complete refactoring of the code to separate many of the data and gui elements and to cut down on duplicated code.
+<li>Addition of handicap races as a race type.
+<li>Pulled some race settings out of the timing settings window and moved them to a new window in project creation.
+<li>A substantially improved CSV import function that allows the user to choose which CSV column to match to which registration field, or even use a python function over the CSV columns.
+<li>A stopwatch on the timing window.
+<li>Addition of "Corrected time" and "Laps completed" columns to the timing window for handicap and lap races respectively.
+<li>A new feature whereby a list of IDs can be merged into a list of times, or vice-versa. This allows marking times and entering bib IDs to be done on two separate computers, and then merge the stacks when the race is complete.
+<li>Some buttons on the timing window were moved into an "Options" menu, since it was getting a little crowded.
+</ul><br><br>
 
 <b>Changelog for fsTimer 0.4</b><br><br>
 fsTimer 0.4 was released on Mar. 24, 2014 and is the third major release. Version 0.4 came with several large improvements. The major changes since version 0.3 are:
