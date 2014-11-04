@@ -46,7 +46,7 @@ Finally we reach the details about the Timing window. When loading the Timing wi
 
 Once these have been specified, the timing window loads.<br><br>
 
-<b><i>Entering and editing times</b></i><br><br>
+<b><i>Entering times</b></i><br><br>
 
 The first thing you will do in a race will be to press "Start!" at the exact moment that the race begins. This starts the clock ticking and all marked times will be recorded as time elapsed since this moment.<br><br>
 
@@ -77,6 +77,8 @@ Marked times can also always be filled with the pass ID (we usually choose 0) th
 <img width="362" height="381" src="documentation_figs/fstimer_fig48.png"><br><br> <!--452x476-->
 
 As a note, if you just hit Enter without anything entered into the entrybox, then it will do a usual ID entry where the ID is a blank string ''. Blank IDs are not included in the results printouts (they behave in the same way as the pass ID).<br><br>
+
+<b><i>Editing times</b></i><br><br>
 
 The "Edit" button on the right side of the window allows you to edit the ID and/or time of any of the marked times. For instance, suppose one of the pass IDs used in the above screenshot was a placeholder for a runner whose bib ID could not be obtained immediately (see <a href="documentation_sec3_1.htm">Section 3.1</a> for some situations where you might want to do this). We can later go back and replace the pass ID (the 0) with his true ID by pressing "Edit", and replacing "0" with his true ID:<br><br>
 
@@ -150,20 +152,14 @@ Pressing "Options" and selecting "Edit starting time" opens a dialog through whi
 
 <img width="503" height="114" src="documentation_figs/fstimer_fig62.png"><br><br> <!--629x142-->
 
+The long number in the entry box is the number of seconds since the start of the Unix epoch - but this isn't important. If you add or subtract seconds from that number, they will be correspondingly added or subtracted from the start time. For example, subtracting 300 from the number in the above screenshot yields 1415048032.83. If we were to replace the number currently there with 1415048032.83 then the start time will be pushed five minutes earlier.<br><br>
 
-
-
-
-
-Pressing the "Edit" button next to the "Start!" button will allow you to change the t0, to adjust the start time for the race. Exercise caution doing this, as the old time is not saved and this change cannot be (automatically) undone. It is very unlikely that you will ever need to modify the start time, but if you do, then simply add or subtract to the large t0 number the number of seconds that you wish to change the start time by. For the image above, if we wanted to move the start time to be 5 minutes earlier, then we would subtract 300 seconds from the t0 and change it to be 1395622297.15. It is important to note that fsTimer records all times relative to this t0 start time. If you change t0 mid-race, it will <i>not</i> adjust any times that have already been recorded.<br><br>
-
-
-
+If you change this time mid-race, it will <i>not</i> adjust any times that have already been recorded. Those times could be adjusted using the block edit functionality described above.<br><br>
 
 <b><i>Making corrections to results</b></i><br><br>
 
 We will now briefly discuss making corrections to the results, which can typically only be done after the race has finished.<br><br>
-As mentioned above, times and their associated bib IDs can be edited using the "Edit" button in the timing window. You can edit times so that they are no longer in order in the window, like 1 in the screenshot below, and this is not a problem; fsTimer will correctly sort them when generating the results printouts:<br><br>
+As mentioned above, times and their associated bib IDs can be edited using the "Edit" button in the timing window. You can edit times so that they are no longer in order in the window, like 100 in the screenshot below, and this is not a problem; fsTimer will correctly sort them when generating the results printouts:<br><br>
 
 <img width="362" height="381" src="documentation_figs/fstimer_fig52.png"><br><br> <!--452x476-->
 
