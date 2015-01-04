@@ -49,7 +49,8 @@ def time_format(t):
 
 def time_parse(dt):
     '''converts string time to datetime.timedelta'''
-    d = re.match(r'((?P<days>\d+) days, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)', dt).groupdict(0)
+    d = re.match(r'((?P<days>\d+) days, )?((?P<hours>\d+):)?(?P<minutes>\d+):(?P<seconds>\d+)(\.(?P<milliseconds>\d+))?', dt).groupdict(0)
+    d['milliseconds'] = int(d['milliseconds'])*100
     return datetime.timedelta(**dict(((key, int(value)) for key, value in d.items())))
 
 class TimingWin(gtk.Window):
@@ -213,7 +214,7 @@ class TimingWin(gtk.Window):
             try:
                 th = time_parse(self.timing[bibid]['Handicap'])
                 nt = t - th
-                renderer.set_property('text', str(nt))
+                renderer.set_property('text', str(nt)[:-5])
             except AttributeError:
                 #Handicap is present but is not formatted correctly.
                 renderer.set_property('text', '')
@@ -395,12 +396,12 @@ class TimingWin(gtk.Window):
                 adj_time = time_parse(timestr)
                 # Combine the timedeltas to get the new time
                 if operation == 'ADD':
-                    new_time = str(old_time + adj_time)
+                    new_time = str(old_time + adj_time)[:-5]
                 elif operation == 'SUBTRACT':
                     if old_time > adj_time:
-                        new_time = str(old_time - adj_time)
+                        new_time = str(old_time - adj_time)[:-5]
                     else:
-                        new_time = '0:00:00' #We don't allow negative times.
+                        new_time = '0:00:00.0' #We don't allow negative times.
                 # Save them, and write out to the timemodel
                 self.rawtimes['times'][row] = str(new_time)
                 self.timemodel.set_value(treeiter, 1, str(new_time))
@@ -646,7 +647,7 @@ class TimingWin(gtk.Window):
 
     def new_blank_time(self):
         '''Record a new time'''
-        t = str(datetime.timedelta(seconds=int(time.time()-self.t0)))
+        t = str(datetime.timedelta(milliseconds=int(1000*(time.time()-self.t0))))[:-5]
         self.rawtimes['times'].insert(0, t) #we prepend to rawtimes, just as we prepend to timemodel
         if self.offset >= 0:
             # No IDs in the buffer, so just prepend it to the liststore.

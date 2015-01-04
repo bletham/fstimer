@@ -46,16 +46,6 @@ import fstimer.printhtmllaps
 from collections import defaultdict
 
 
-def str2timedelta(time):
-    '''converts a time string to a timedelta'''
-    timePattern = r'((?P<days>-?\d+) day(s)?, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)' #hours is optional
-    # convert txt time to dict
-    d1 = re.match(timePattern, time).groupdict(0)
-    # convert txt to ints
-    d2 = {key:int(val) for key, val in d1.iteritems()}
-    # build timedelta
-    return datetime.timedelta(**d2)
-
 class PyTimer(object):
     '''main class of fsTimer'''
 
@@ -451,7 +441,7 @@ class PyTimer(object):
             for tag, time in timeslist:
                 if tag and time and tag != self.passid:
                     try:
-                        new_timeslist.append((tag, str(str2timedelta(time) - str2timedelta(self.timing[tag]['Handicap']))))
+                        new_timeslist.append((tag, str(fstimer.gui.timing.time_parse(time) - fstimer.gui.timing.time_parse(self.timing[tag]['Handicap']))[:-5]))
                     except AttributeError:
                         #Either time or Handicap couldn't be converted to timedelta. It will be dropped.
                         pass
@@ -483,5 +473,5 @@ class PyTimer(object):
                 # And now the first lap
                 laptimesdic2[tag].append(laptimesdic[tag][0])
                 # And now the subsequent laps
-                laptimesdic2[tag].extend([str(str2timedelta(laptimesdic[tag][ii+1]) - str2timedelta(laptimesdic[tag][ii])) for ii in range(len(laptimesdic[tag])-1)])
+                laptimesdic2[tag].extend([str(fstimer.gui.timing.time_parse(laptimesdic[tag][ii+1]) - fstimer.gui.timing.time_parse(laptimesdic[tag][ii]))[:-5] for ii in range(len(laptimesdic[tag])-1)])
             return sorted(laptimesdic2.items(), key=lambda entry: entry[1][0])
