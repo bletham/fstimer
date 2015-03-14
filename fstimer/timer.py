@@ -181,8 +181,8 @@ class PyTimer(object):
         regdata['fieldsdic'] = self.fieldsdic
         regdata['clear_for_fam'] = self.clear_for_fam
         regdata['divisions'] = self.divisions
-        with open(os.path.join(self.path, self.path+'.reg'), 'w') as fout:
-            json.dump(regdata, fout, ensure_ascii=False)
+        with open(os.path.join(self.path, self.path+'.reg'), 'w', encoding='utf-8') as fout:
+            json.dump(regdata, fout)
         md = MsgDialog(self.divisionswin, 'information', 'OK', 'Created!', 'Project '+self.path+' successfully created!')
         md.run()
         md.destroy()
@@ -223,8 +223,8 @@ class PyTimer(object):
     def save_registration(self):
         '''saves registration'''
         filename = os.path.join(self.path, self.path+'_registration_'+str(self.regid)+'.json')
-        with open(filename, 'w') as fout:
-            json.dump(self.prereg, fout, ensure_ascii=False)
+        with open(filename, 'w', encoding='utf-8') as fout:
+            json.dump(self.prereg, fout)
         return filename
 
     def compreg_window(self, jnk_unused):
@@ -303,10 +303,10 @@ class PyTimer(object):
         else:
             self.compilewin.setLabel(1, '<span color="blue">Checking for errors... no errors found!</span>')
         #Now save things
-        with open(os.path.join(self.path, self.path+'_registration_compiled.json'), 'w') as fout:
-            json.dump(self.reg_nodups, fout, ensure_ascii=False)
-        with open(os.path.join(self.path, self.path+'_timing_dict.json'), 'w') as fout:
-            json.dump(self.timedict, fout, ensure_ascii=False)
+        with open(os.path.join(self.path, self.path+'_registration_compiled.json'), 'w', encoding='utf-8') as fout:
+            json.dump(self.reg_nodups, fout)
+        with open(os.path.join(self.path, self.path+'_timing_dict.json', encoding='utf-8'), 'w') as fout:
+            json.dump(self.timedict, fout)
         regfn = os.path.join(self.path, self.path + '_registration_compiled.json')
         timefn = os.path.join(self.path, self.path + '_timing_dict.json')
         self.compilewin.setLabel(2, '<span color="blue">Successfully wrote files:\n' + \
