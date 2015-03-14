@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #fsTimer - free, open source software for race timing.
 #Copyright 2012-14 Ben Letham
@@ -20,9 +20,9 @@
 
 '''Main class of the fsTimer package'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import os, json, csv, re, datetime
 import fstimer.gui.intro
 import fstimer.gui.newproject
@@ -43,7 +43,9 @@ import fstimer.printcsv
 import fstimer.printcsvlaps
 import fstimer.printhtml
 import fstimer.printhtmllaps
+from fstimer.gui.timing import time_diff
 from collections import defaultdict
+from fstimer.gui.util_classes import MsgDialog
 
 
 class PyTimer(object):
@@ -57,7 +59,7 @@ class PyTimer(object):
     def load_project(self, jnk_unused, combobox, projectlist):
         '''Loads the registration settings of a project, and go back to rootwin'''
         self.path = projectlist[combobox.get_active()]
-        with open(os.path.join(self.path, self.path+'.reg'), 'rb') as fin:
+        with open(os.path.join(self.path, self.path+'.reg'), 'r', encoding='utf-8') as fin:
             regdata = json.load(fin)
         #Assign all of the project settings
         self.fields = regdata['fields']
@@ -86,7 +88,7 @@ class PyTimer(object):
         '''creates a new project'''
         self.project_types = ['standard', 'handicap'] #Options for project types
         #First load in the default project settings
-        with open('fstimer/data/fstimer_default_project.reg', 'rb') as fin:
+        with open('fstimer/data/fstimer_default_project.reg', 'r', encoding='utf-8') as fin:
             regdata = json.load(fin)
         #Assign all of the project settings
         self.fields = regdata['fields']
@@ -113,7 +115,7 @@ class PyTimer(object):
         '''Handled the definition of fields when creating a new project'''
         self.projecttypewin.hide()
         #First take care of the race settings from the previous window
-        for b, btn in rbs.iteritems():
+        for b, btn in rbs.items():
             if btn.get_active():
                 self.projecttype = self.project_types[b]
                 break
@@ -179,9 +181,9 @@ class PyTimer(object):
         regdata['fieldsdic'] = self.fieldsdic
         regdata['clear_for_fam'] = self.clear_for_fam
         regdata['divisions'] = self.divisions
-        with open(os.path.join(self.path, self.path+'.reg'), 'wb') as fout:
-            json.dump(regdata, fout)
-        md = gtk.MessageDialog(self.divisionswin, gtk.DIALOG_MODAL, gtk.MESSAGE_INFO, gtk.BUTTONS_OK, 'Project '+self.path+' successfully created!')
+        with open(os.path.join(self.path, self.path+'.reg'), 'w') as fout:
+            json.dump(regdata, fout, ensure_ascii=False)
+        md = MsgDialog(self.divisionswin, 'information', 'OK', 'Created!', 'Project '+self.path+' successfully created!')
         md.run()
         md.destroy()
         self.divisionswin.hide()
@@ -207,7 +209,7 @@ class PyTimer(object):
 
     def set_registration_file(self, filename):
         '''set a preregistration file'''
-        with open(filename, 'rb') as fin:
+        with open(filename, 'r', encoding='utf-8') as fin:
             self.prereg = json.load(fin)
 
     def handle_registration(self, regid):
@@ -221,8 +223,8 @@ class PyTimer(object):
     def save_registration(self):
         '''saves registration'''
         filename = os.path.join(self.path, self.path+'_registration_'+str(self.regid)+'.json')
-        with open(filename, 'wb') as fout:
-            json.dump(self.prereg, fout)
+        with open(filename, 'w') as fout:
+            json.dump(self.prereg, fout, ensure_ascii=False)
         return filename
 
     def compreg_window(self, jnk_unused):
@@ -244,7 +246,7 @@ class PyTimer(object):
         # each registration is a list of dictionaries
         self.regmerge = []
         for fname in regfilelist:
-            with open(fname, 'rb') as fin:
+            with open(fname, 'r', encoding='utf-8') as fin:
                 reglist = json.load(fin)
             self.regmerge.extend(reglist)
         # Now remove trivial dups
@@ -301,16 +303,16 @@ class PyTimer(object):
         else:
             self.compilewin.setLabel(1, '<span color="blue">Checking for errors... no errors found!</span>')
         #Now save things
-        with open(os.path.join(self.path, self.path+'_registration_compiled.json'), 'wb') as fout:
-            json.dump(self.reg_nodups, fout)
-        with open(os.path.join(self.path, self.path+'_timing_dict.json'), 'wb') as fout:
-            json.dump(self.timedict, fout)
+        with open(os.path.join(self.path, self.path+'_registration_compiled.json'), 'w') as fout:
+            json.dump(self.reg_nodups, fout, ensure_ascii=False)
+        with open(os.path.join(self.path, self.path+'_timing_dict.json'), 'w') as fout:
+            json.dump(self.timedict, fout, ensure_ascii=False)
         regfn = os.path.join(self.path, self.path + '_registration_compiled.json')
         timefn = os.path.join(self.path, self.path + '_timing_dict.json')
         self.compilewin.setLabel(2, '<span color="blue">Successfully wrote files:\n' + \
                                  regfn + '\n' + timefn + '</span>')
         #And write the compiled registration to csv
-        with open(os.path.join(self.path, self.path+'_registration.csv'), 'wb') as fout:
+        with open(os.path.join(self.path, self.path+'_registration.csv'), 'w') as fout:
             dict_writer = csv.DictWriter(fout, self.fields)
             dict_writer.writer.writerow(self.fields)
             dict_writer.writerows(self.reg_nodups)
@@ -385,9 +387,7 @@ class PyTimer(object):
                 div_out.write(divresults[div[0]])
             div_out.write(printer.footer())
         # display user dialog that all was successful
-        md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT,
-                               gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-                               "Results saved to " + printer.file_extension() + "!")
+        md = MsgDialog(self.timewin, 'information', 'OK', 'Saved!', "Results saved to " + printer.file_extension() + "!")
         md.run()
         md.destroy()
 
@@ -441,7 +441,7 @@ class PyTimer(object):
             for tag, time in timeslist:
                 if tag and time and tag != self.passid:
                     try:
-                        new_timeslist.append((tag, str(fstimer.gui.timing.time_parse(time) - fstimer.gui.timing.time_parse(self.timing[tag]['Handicap']))[:-5]))
+                        new_timeslist.append((tag, time_diff(time,self.timing[tag]['Handicap'])))
                     except AttributeError:
                         #Either time or Handicap couldn't be converted to timedelta. It will be dropped.
                         pass
@@ -473,5 +473,5 @@ class PyTimer(object):
                 # And now the first lap
                 laptimesdic2[tag].append(laptimesdic[tag][0])
                 # And now the subsequent laps
-                laptimesdic2[tag].extend([str(fstimer.gui.timing.time_parse(laptimesdic[tag][ii+1]) - fstimer.gui.timing.time_parse(laptimesdic[tag][ii]))[:-5] for ii in range(len(laptimesdic[tag])-1)])
+                laptimesdic2[tag].extend([time_diff(laptimesdic[tag][ii+1],laptimesdic[tag][ii]) for ii in range(len(laptimesdic[tag])-1)])
             return sorted(laptimesdic2.items(), key=lambda entry: entry[1][0])

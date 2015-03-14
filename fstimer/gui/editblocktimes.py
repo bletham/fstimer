@@ -17,47 +17,47 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handling of the window used for editing a block of times'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import fstimer.gui
 
-class EditBlockTimesWin(gtk.Window):
+class EditBlockTimesWin(Gtk.Window):
     '''Handling of the window used for editing a block of times'''
 
     def __init__(self, parent, okclicked_cb):
         '''Builds and display the window for editing block of times'''
-        super(EditBlockTimesWin, self).__init__(gtk.WINDOW_TOPLEVEL)
+        super(EditBlockTimesWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.okclicked_cb = okclicked_cb
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_transient_for(parent)
         self.set_modal(True)
         self.set_title('fsTimer - Edit times')
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(20)
         self.connect('delete_event', lambda b, jnk: self.hide())
-        label0 = gtk.Label('')
+        label0 = Gtk.Label(label='')
         label0.set_markup('<span color="red">WARNING: Changes to times cannot be automatically undone</span>\nIf you change the times and forget the old values, they will be gone forever.')
-        label1 = gtk.Label('Time (h:mm:ss) to be added or subtracted from all selected times:')
-        self.radiobutton = gtk.RadioButton(None, "ADD")
+        label1 = Gtk.Label(label='Time (h:mm:ss) to be added or subtracted from all selected times:')
+        self.radiobutton = Gtk.RadioButton(None, "ADD")
         self.radiobutton.set_active(True)
-        radiobutton2 = gtk.RadioButton(self.radiobutton, "SUBTRACT")
-        self.entrytime = gtk.Entry(max=7)
+        radiobutton2 = Gtk.RadioButton(self.radiobutton, "SUBTRACT")
+        self.entrytime = Gtk.Entry(max=7)
         self.entrytime.set_text('0:00:00')
-        hbox1 = gtk.HBox(False, 10)
+        hbox1 = Gtk.HBox(False, 10)
         hbox1.pack_start(self.radiobutton, False, False, 0)
         hbox1.pack_start(radiobutton2, False, False, 0)
         hbox1.pack_start(self.entrytime, False, False, 0)
-        btnOK = gtk.Button(stock=gtk.STOCK_OK)
+        btnOK = Gtk.Button(stock=Gtk.STOCK_OK)
         btnOK.connect('clicked', self.okclicked)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
         btnCANCEL.connect('clicked', lambda b: self.hide())
-        cancel_algn = gtk.Alignment(0, 0, 0, 0)
+        cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
         cancel_algn.add(btnCANCEL)
-        hbox2 = gtk.HBox(False, 10)
+        hbox2 = Gtk.HBox(False, 10)
         hbox2.pack_start(cancel_algn, True, True, 0)
         hbox2.pack_start(btnOK, False, False, 0)
-        vbox = gtk.VBox(False, 10)
+        vbox = Gtk.VBox(False, 10)
         vbox.pack_start(label0, False, False, 10)
         vbox.pack_start(label1, False, False, 10)
         vbox.pack_start(hbox1, False, False, 0)

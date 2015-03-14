@@ -17,44 +17,45 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handling of the new project windows'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import os, re
 import fstimer.gui
 
-class NewProjectWin(gtk.Window):
+class NewProjectWin(Gtk.Window):
     '''Handles the creation of a new project'''
 
     def __init__(self, set_projecttype_cb, parent):
         '''Creates new project window'''
-        super(NewProjectWin, self).__init__(gtk.WINDOW_TOPLEVEL)
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        super(NewProjectWin, self).__init__(Gtk.WindowType.TOPLEVEL)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_transient_for(parent)
         self.set_modal(True)
         self.set_title('fsTimer - New project')
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(20)
         self.connect('delete_event', lambda b, jnk_unused: self.hide())
         # Now create the vbox.
-        vbox = gtk.VBox(False, 10)
+        vbox = Gtk.VBox(False, 10)
         self.add(vbox)
         # Now add the text.
-        label_0 = gtk.Label('Enter a name for the new project.\nOnly letters, numbers, and underscore.')
+        label_0 = Gtk.Label('Enter a name for the new project.\nOnly letters, numbers, and underscore.')
         # And an error, if needed..
-        self.label_1 = gtk.Label()
+        self.label_1 = Gtk.Label()
         self.label_1.set_line_wrap(True)
         # And the text entry
-        self.entry = gtk.Entry(max=32)
+        self.entry = Gtk.Entry()
+        self.entry.set_max_length(32)
         # And an hbox with 2 buttons
-        hbox_1 = gtk.HBox(False, 0)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        hbox_1 = Gtk.HBox(False, 0)
+        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
         btnCANCEL.connect('clicked', lambda btn: self.hide())
-        alignCANCEL = gtk.Alignment(0, 0, 0, 0)
+        alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnNEXT = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
+        btnNEXT = Gtk.Button(stock=Gtk.STOCK_GO_FORWARD)
         btnNEXT.connect('clicked', self.nextClicked, set_projecttype_cb)
-        alignNEXT = gtk.Alignment(1, 0, 1, 0)
+        alignNEXT = Gtk.Alignment.new(1, 0, 1, 0)
         alignNEXT.add(btnNEXT)
         btnNEXT.set_sensitive(False)
         # And populate

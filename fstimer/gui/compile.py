@@ -17,36 +17,36 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handling of the window dedicated to compilation of registrations from multiple computers'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import fstimer.gui
 import os
 
-class CompilationWin(gtk.Window):
+class CompilationWin(Gtk.Window):
     '''Handling of the window dedicated to compilation of registrations from multiple computers'''
 
     def __init__(self, path, merge_cb):
         '''Builds and display the compilation window'''
-        super(CompilationWin, self).__init__(gtk.WINDOW_TOPLEVEL)
+        super(CompilationWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.path = path
         self.merge_cb = merge_cb
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_icon_from_file('fstimer/data/icon.png')
         self.set_title('fsTimer - ' + path)
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.hide())
         self.set_border_width(10)
         self.set_size_request(600, 450)
         # We will use a liststore to hold the filenames of the
         # registrations to be merged, and put the liststore in a scrolledwindow
-        compregsw = gtk.ScrolledWindow()
-        compregsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        compregsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.reglist = gtk.ListStore(str)
-        self.comptreeview = gtk.TreeView()
-        rendererText = gtk.CellRendererText()
-        column = gtk.TreeViewColumn('Registration files', rendererText, text=0)
+        compregsw = Gtk.ScrolledWindow()
+        compregsw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        compregsw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.reglist = Gtk.ListStore(str)
+        self.comptreeview = Gtk.TreeView()
+        rendererText = Gtk.CellRendererText()
+        column = Gtk.TreeViewColumn('Registration files', rendererText, text=0)
         column.set_sort_column_id(0)
         self.comptreeview.append_column(column)
         self.comptreeview.set_model(self.reglist)
@@ -54,43 +54,43 @@ class CompilationWin(gtk.Window):
         # We have text below the window to explain what is happening during merging
         self.comblabel = []
         for i in range(3):
-            label = gtk.Label('')
+            label = Gtk.Label(label='')
             label.set_alignment(0, 0.5)
             self.comblabel.append(label)
         # Pack it all
-        regvbox1 = gtk.VBox(False, 8)
-        regvbox1.pack_start(gtk.Label('Select all of the registration files to merge'), False, False, 0)
+        regvbox1 = Gtk.VBox(False, 8)
+        regvbox1.pack_start(Gtk.Label('Select all of the registration files to merge', True, True, 0), False, False, 0)
         regvbox1.pack_start(compregsw, True, True, 0)
         for i in range(3):
             regvbox1.pack_start(self.comblabel[i], False, False, 0)
-        vbox1align = gtk.Alignment(0, 0, 1, 1)
+        vbox1align = Gtk.Alignment.new(0, 0, 1, 1)
         vbox1align.add(regvbox1)
         # The buttons in a table
-        regtable = gtk.Table(2, 1, False)
+        regtable = Gtk.Table(2, 1, False)
         regtable.set_row_spacings(5)
         regtable.set_col_spacings(5)
         regtable.set_border_width(5)
-        btnREMOVE = gtk.Button(stock=gtk.STOCK_REMOVE)
+        btnREMOVE = Gtk.Button(stock=Gtk.STOCK_REMOVE)
         btnREMOVE.connect('clicked', self.rm_clicked)
-        btnADD = gtk.Button(stock=gtk.STOCK_ADD)
+        btnADD = Gtk.Button(stock=Gtk.STOCK_ADD)
         btnADD.connect('clicked', self.add_clicked)
-        btnMERGE = gtk.Button('Merge')
+        btnMERGE = Gtk.Button('Merge')
         btnMERGE.connect('clicked', self.merge_clicked)
-        btnOK = gtk.Button('Done')
+        btnOK = Gtk.Button('Done')
         btnOK.connect('clicked', lambda jnk: self.hide())
-        vsubbox = gtk.VBox(False, 8)
+        vsubbox = Gtk.VBox(False, 8)
         vsubbox.pack_start(btnMERGE, False, False, 0)
         vsubbox.pack_start(btnOK, False, False, 0)
-        regvspacer = gtk.Alignment(1, 1, 0, 0)
+        regvspacer = Gtk.Alignment.new(1, 1, 0, 0)
         regvspacer.add(vsubbox)
         regtable.attach(regvspacer, 0, 1, 1, 2)
-        regvbox2 = gtk.VBox(False, 8)
+        regvbox2 = Gtk.VBox(False, 8)
         regvbox2.pack_start(btnREMOVE, False, False, 0)
         regvbox2.pack_start(btnADD, False, False, 0)
-        regvbalign = gtk.Alignment(1, 0, 0, 0)
+        regvbalign = Gtk.Alignment.new(1, 0, 0, 0)
         regvbalign.add(regvbox2)
         regtable.attach(regvbalign, 0, 1, 0, 1)
-        reghbox = gtk.HBox(False, 8)
+        reghbox = Gtk.HBox(False, 8)
         reghbox.pack_start(vbox1align, True, True, 0)
         reghbox.pack_start(regtable, False, False, 0)
         #Add and show
@@ -107,15 +107,15 @@ class CompilationWin(gtk.Window):
 
     def add_clicked(self, jnk_unused):
         '''Handling click on Add button, using a FileChooser'''
-        chooser = gtk.FileChooserDialog(title='Select registration files', action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_ADD, gtk.RESPONSE_OK))
+        chooser = Gtk.FileChooserDialog(title='Select registration files', action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_ADD, Gtk.ResponseType.OK))
         chooser.set_select_multiple(True)
-        ffilter = gtk.FileFilter()
+        ffilter = Gtk.FileFilter()
         ffilter.set_name('Registration files')
         ffilter.add_pattern('*registration_*.json')
         chooser.add_filter(ffilter)
         chooser.set_current_folder(os.path.join(os.getcwd(), self.path))
         response = chooser.run()
-        if response == gtk.RESPONSE_OK:
+        if response == Gtk.ResponseType.OK:
             filenames = chooser.get_filenames()
             for filenm in filenames:
                 self.reglist.append([filenm])

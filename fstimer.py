@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
+
 import fstimer.timer
-import gtk
+from gi.repository import Gtk
 
 if __name__ == '__main__':
     pytimer = fstimer.timer.PyTimer()
-    gtk.main()
+    Gtk.main()

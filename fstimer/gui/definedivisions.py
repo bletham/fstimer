@@ -17,56 +17,56 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handling of the window where divisions are defined'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import fstimer.gui
 
-class DivisionsWin(gtk.Window):
+class DivisionsWin(Gtk.Window):
     '''Handling of the window where divisions are defined'''
 
     def __init__(self, fields, fieldsdic, divisions, back_clicked_cb, next_clicked_cb, parent):
         '''Creates divisions window'''
-        super(DivisionsWin, self).__init__(gtk.WINDOW_TOPLEVEL)
+        super(DivisionsWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.divisions = divisions
         self.fields = fields
         self.fieldsdic = fieldsdic
         self.winnewdiv = None
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_transient_for(parent)
         self.set_modal(True)
         self.set_title('fsTimer - New project')
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(20)
         self.set_size_request(800, 500)
         self.connect('delete_event', lambda b, jnk_unused: self.hide())
         # Now create the vbox.
-        vbox = gtk.VBox(False, 10)
+        vbox = Gtk.VBox(False, 10)
         self.add(vbox)
         # Now add the text.
-        label2_0 = gtk.Label("""Specify the divisions for reporting divisional places.\
+        label2_0 = Gtk.Label("""Specify the divisions for reporting divisional places.\
         \nPress 'Forward' to continue with the default settings, or make edits below.\
         \n\nDivisions can be any combination of age range and combobox fields.""")
         # Make the liststore, with columns:
         # name | min age | max age | (... all other combobox fields...)
         # To do this we first count the number of combobox fields
         ncbfields = len([field for field in fields if fieldsdic[field]['type'] == 'combobox'])
-        self.divmodel = gtk.ListStore(*[str for i_unused in range(ncbfields+3)])
+        self.divmodel = Gtk.ListStore(*[str for i_unused in range(ncbfields+3)])
         #We will put the liststore in a treeview
-        self.divview = gtk.TreeView()
+        self.divview = Gtk.TreeView()
         #Add each of the columns
         Columns = {}
-        Columns[1] = gtk.TreeViewColumn('Division name', gtk.CellRendererText(), text=0)
+        Columns[1] = Gtk.TreeViewColumn('Division name', Gtk.CellRendererText(), text=0)
         self.divview.append_column(Columns[1])
-        Columns[2] = gtk.TreeViewColumn('Min age', gtk.CellRendererText(), text=1)
+        Columns[2] = Gtk.TreeViewColumn('Min age', Gtk.CellRendererText(), text=1)
         self.divview.append_column(Columns[2])
-        Columns[3] = gtk.TreeViewColumn('Max age', gtk.CellRendererText(), text=2)
+        Columns[3] = Gtk.TreeViewColumn('Max age', Gtk.CellRendererText(), text=2)
         self.divview.append_column(Columns[3])
         #And now the additional columns
         textcount = 3
         for field in fields:
             if fieldsdic[field]['type'] == 'combobox':
-                Columns[field] = gtk.TreeViewColumn(field, gtk.CellRendererText(), text=textcount)
+                Columns[field] = Gtk.TreeViewColumn(field, Gtk.CellRendererText(), text=textcount)
                 textcount += 1
                 self.divview.append_column(Columns[field])
         #Now we populate the model with the default fields
@@ -92,48 +92,48 @@ class DivisionsWin(gtk.Window):
         self.divview.set_model(self.divmodel)
         selection = self.divview.get_selection()
         #And put it in a scrolled window, in an alignment
-        divsw = gtk.ScrolledWindow()
-        divsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        divsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        divsw = Gtk.ScrolledWindow()
+        divsw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        divsw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         divsw.add(self.divview)
-        divalgn = gtk.Alignment(0, 0, 1, 1)
+        divalgn = Gtk.Alignment.new(0, 0, 1, 1)
         divalgn.add(divsw)
         #Now we put the buttons on the side.
-        vbox2 = gtk.VBox(False, 10)
-        btnUP = gtk.Button(stock=gtk.STOCK_GO_UP)
+        vbox2 = Gtk.VBox(False, 10)
+        btnUP = Gtk.Button(stock=Gtk.STOCK_GO_UP)
         btnUP.connect('clicked', self.div_up, selection)
         vbox2.pack_start(btnUP, False, False, 0)
-        btnDOWN = gtk.Button(stock=gtk.STOCK_GO_DOWN)
+        btnDOWN = Gtk.Button(stock=Gtk.STOCK_GO_DOWN)
         btnDOWN.connect('clicked', self.div_down, selection)
         vbox2.pack_start(btnDOWN, False, False, 0)
-        btnEDIT = gtk.Button(stock=gtk.STOCK_EDIT)
+        btnEDIT = Gtk.Button(stock=Gtk.STOCK_EDIT)
         btnEDIT.connect('clicked', self.div_edit, selection)
         vbox2.pack_start(btnEDIT, False, False, 0)
-        btnREMOVE = gtk.Button(stock=gtk.STOCK_REMOVE)
+        btnREMOVE = Gtk.Button(stock=Gtk.STOCK_REMOVE)
         btnREMOVE.connect('clicked', self.div_remove, selection)
         vbox2.pack_start(btnREMOVE, False, False, 0)
-        btnNEW = gtk.Button(stock=gtk.STOCK_NEW)
+        btnNEW = Gtk.Button(stock=Gtk.STOCK_NEW)
         btnNEW.connect('clicked', self.div_new, ('', {}), None)
         vbox2.pack_start(btnNEW, False, False, 0)
         #And an hbox for the fields and the buttons
-        hbox4 = gtk.HBox(False, 0)
+        hbox4 = Gtk.HBox(False, 0)
         hbox4.pack_start(divalgn, True, True, 10)
         hbox4.pack_start(vbox2, False, False, 0)
         ##And an hbox with 3 buttons
-        hbox3 = gtk.HBox(False, 0)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        hbox3 = Gtk.HBox(False, 0)
+        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
         btnCANCEL.connect('clicked', lambda btn: self.hide())
-        alignCANCEL = gtk.Alignment(0, 0, 0, 0)
+        alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnBACK = gtk.Button(stock=gtk.STOCK_GO_BACK)
+        btnBACK = Gtk.Button(stock=Gtk.STOCK_GO_BACK)
         btnBACK.connect('clicked', back_clicked_cb)
-        btnNEXT = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
+        btnNEXT = Gtk.Button(stock=Gtk.STOCK_GO_FORWARD)
         btnNEXT.connect('clicked', next_clicked_cb)
         ##And populate
         hbox3.pack_start(alignCANCEL, True, True, 0)
         hbox3.pack_start(btnBACK, False, False, 2)
         hbox3.pack_start(btnNEXT, False, False, 0)
-        alignText = gtk.Alignment(0, 0, 0, 0)
+        alignText = Gtk.Alignment.new(0, 0, 0, 0)
         alignText.add(label2_0)
         vbox.pack_start(alignText, False, False, 0)
         vbox.pack_start(hbox4, True, True, 0)
@@ -177,17 +177,17 @@ class DivisionsWin(gtk.Window):
 
     def div_new(self, jnk_unused, divtupl, treeiter):
         '''handles a click on NEW button'''
-        self.winnewdiv = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.winnewdiv.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.winnewdiv = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        self.winnewdiv.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.winnewdiv.set_transient_for(self)
         self.winnewdiv.set_modal(True)
         self.winnewdiv.set_title('fsTimer - New project')
-        self.winnewdiv.set_position(gtk.WIN_POS_CENTER)
+        self.winnewdiv.set_position(Gtk.WindowPosition.CENTER)
         self.winnewdiv.set_border_width(20)
         self.winnewdiv.connect('delete_event', lambda b, jnk_unused: self.winnewdiv.hide())
         #Prepare for packing.
-        vbox = gtk.VBox(False, 10)
-        windescr = gtk.Label('Use the checkboxes to select which fields to use to define this division,\nand then select the corresponding value to be used for this division.')
+        vbox = Gtk.VBox(False, 10)
+        windescr = Gtk.Label('Use the checkboxes to select which fields to use to define this division,\nand then select the corresponding value to be used for this division.')
         vbox.pack_start(windescr, False, False, 0)
         HBoxes = {}
         CheckButtons = {}
@@ -196,30 +196,33 @@ class DivisionsWin(gtk.Window):
         divnamein = divtupl[0]
         divdic = divtupl[1]
         #First name of the divisional.
-        divnamelbl = gtk.Label('Division name:')
-        divnameentry = gtk.Entry(max=80)
+        divnamelbl = Gtk.Label(label='Division name:')
+        divnameentry = Gtk.Entry()
+        divnameentry.set_max_length(80)
         divnameentry.set_width_chars(40)
         divnameentry.set_text(divnamein) #set to initial value
-        HBoxes[1] = gtk.HBox(False, 10) #an int as key so it will never collide with a user field
+        HBoxes[1] = Gtk.HBox(False, 10) #an int as key so it will never collide with a user field
         HBoxes[1].pack_start(divnamelbl, False, False, 0)
         HBoxes[1].pack_start(divnameentry, False, False, 0)
         vbox.pack_start(HBoxes[1], False, False, 0)
         #Then do Age
-        CheckButtons['Age'] = gtk.CheckButton(label='Age:')
+        CheckButtons['Age'] = Gtk.CheckButton(label='Age:')
         if 'Age' in divdic:
             #if minage, then also maxage - we always have both.
             CheckButtons['Age'].set_active(True)
-            minageadj = gtk.Adjustment(value=divdic['Age'][0], lower=0, upper=120, step_incr=1)
-            maxageadj = gtk.Adjustment(value=divdic['Age'][1], lower=0, upper=120, step_incr=1)
+            minageadj = Gtk.Adjustment(value=divdic['Age'][0], lower=0, upper=120, step_incr=1)
+            maxageadj = Gtk.Adjustment(value=divdic['Age'][1], lower=0, upper=120, step_incr=1)
         else:
-            minageadj = gtk.Adjustment(value=0, lower=0, upper=120, step_incr=1)
-            maxageadj = gtk.Adjustment(value=120, lower=0, upper=120, step_incr=1)
-        minagelbl = gtk.Label('Min age (inclusive):')
-        minagebtn = gtk.SpinButton(minageadj, digits=0, climb_rate=0)
-        maxagelbl = gtk.Label('Max age (inclusive):')
-        maxagebtn = gtk.SpinButton(maxageadj, digits=0, climb_rate=0)
+            minageadj = Gtk.Adjustment(value=0, lower=0, upper=120, step_incr=1)
+            maxageadj = Gtk.Adjustment(value=120, lower=0, upper=120, step_incr=1)
+        minagelbl = Gtk.Label(label='Min age (inclusive):')
+        minagebtn = Gtk.SpinButton(digits=0, climb_rate=0)
+        minagebtn.set_adjustment(minageadj)
+        maxagelbl = Gtk.Label(label='Max age (inclusive):')
+        maxagebtn = Gtk.SpinButton(digits=0, climb_rate=0)
+        maxagebtn.set_adjustment(maxageadj)
         #Make an hbox of it.
-        HBoxes['Age'] = gtk.HBox(False, 10)
+        HBoxes['Age'] = Gtk.HBox(False, 10)
         HBoxes['Age'].pack_start(CheckButtons['Age'], False, False, 0)
         HBoxes['Age'].pack_start(minagelbl, False, False, 0)
         HBoxes['Age'].pack_start(minagebtn, False, False, 0)
@@ -230,26 +233,26 @@ class DivisionsWin(gtk.Window):
         for field in self.fields:
             if self.fieldsdic[field]['type'] == 'combobox':
                 #Add it.
-                CheckButtons[field] = gtk.CheckButton(label=field+':')
-                ComboBoxes[field] = gtk.combo_box_new_text()
+                CheckButtons[field] = Gtk.CheckButton(label=field+':')
+                ComboBoxes[field] = Gtk.ComboBoxText()
                 for option in self.fieldsdic[field]['options']:
                     ComboBoxes[field].append_text(option)
                     if field in divdic and divdic[field]:
                         CheckButtons[field].set_active(True) #the box is checked
                         ComboBoxes[field].set_active(self.fieldsdic[field]['options'].index(divdic[field])) #set to initial value
                 #Put it in an HBox
-                HBoxes[field] = gtk.HBox(False, 10)
+                HBoxes[field] = Gtk.HBox(False, 10)
                 HBoxes[field].pack_start(CheckButtons[field], False, False, 0)
                 HBoxes[field].pack_start(ComboBoxes[field], False, False, 0)
                 vbox.pack_start(HBoxes[field], False, False, 0)
         #On to the bottom buttons
-        btnOK = gtk.Button(stock=gtk.STOCK_OK)
+        btnOK = Gtk.Button(stock=Gtk.STOCK_OK)
         btnOK.connect('clicked', self.winnewdivOK, treeiter, CheckButtons, ComboBoxes, minagebtn, maxagebtn, divnameentry)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
         btnCANCEL.connect('clicked', lambda b: self.winnewdiv.hide())
-        cancel_algn = gtk.Alignment(0, 0, 0, 0)
+        cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
         cancel_algn.add(btnCANCEL)
-        hbox3 = gtk.HBox(False, 10)
+        hbox3 = Gtk.HBox(False, 10)
         hbox3.pack_start(cancel_algn, True, True, 0)
         hbox3.pack_start(btnOK, False, False, 0)
         vbox.pack_start(hbox3, False, False, 0)
@@ -287,8 +290,8 @@ class DivisionsWin(gtk.Window):
             #And now update the divmodel
             self.divmodel.set_value(treeiter, 0, div[0])
             if 'Age' in div[1]:
-                self.divmodel.set_value(treeiter, 1, div[1]['Age'][0])
-                self.divmodel.set_value(treeiter, 2, div[1]['Age'][1])
+                self.divmodel.set_value(treeiter, 1, str(div[1]['Age'][0]))
+                self.divmodel.set_value(treeiter, 2, str(div[1]['Age'][1]))
             else:
                 self.divmodel.set_value(treeiter, 1, '')
                 self.divmodel.set_value(treeiter, 2, '')

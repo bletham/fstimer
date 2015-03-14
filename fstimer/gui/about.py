@@ -17,20 +17,20 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handles the about window of the application'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GdkPixbuf
 
-class AboutWin(gtk.AboutDialog):
+class AboutWin(Gtk.AboutDialog):
     '''Handles the about window of the application'''
 
     def __init__(self):
         '''Creates the about window'''
         super(AboutWin, self).__init__()
-        self.set_logo(gtk.gdk.pixbuf_new_from_file("fstimer/data/icon.png"))
+        self.set_logo(GdkPixbuf.Pixbuf.new_from_file("fstimer/data/icon.png"))
         self.set_program_name('fsTimer')
-        self.set_version('0.5')
-        self.set_copyright("""Copyright 2012-14 Ben Letham\
+        self.set_version('0.6')
+        self.set_copyright("""Copyright 2012-15 Ben Letham\
         \nThis program comes with ABSOLUTELY NO WARRANTY; for details see license.\
         \nThis is free software, and you are welcome to redistribute it under certain conditions; see license for details""")
         self.set_comments('free, open source software for race timing.')

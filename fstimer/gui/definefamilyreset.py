@@ -18,48 +18,48 @@
 '''Handling of the window dedicated to the definition of the field
    to reset when registering several members of a family'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import fstimer.gui
 
-class FamilyResetWin(gtk.Window):
+class FamilyResetWin(Gtk.Window):
     '''Handling of the window dedicated to the definition of the field
        to reset when registering several members of a family'''
 
     def __init__(self, fields, clear_for_fam, back_clicked_cb, next_clicked_cb, parent):
         '''Creates family reset window'''
-        super(FamilyResetWin, self).__init__(gtk.WINDOW_TOPLEVEL)
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        super(FamilyResetWin, self).__init__(Gtk.WindowType.TOPLEVEL)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_transient_for(parent)
         self.set_modal(True)
         self.set_title('fsTimer - New project')
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(20)
         self.connect('delete_event', lambda b, jnk: self.hide())
         # Now create the vbox.
-        vbox = gtk.VBox(False, 2)
+        vbox = Gtk.VBox(False, 2)
         self.add(vbox)
         # Now add the text.
-        label1_0 = gtk.Label("Choose the fields to clear when adding a new family member.\nPress 'Forward' to continue with the default settings, or make edits below.")
+        label1_0 = Gtk.Label("Choose the fields to clear when adding a new family member.\nPress 'Forward' to continue with the default settings, or make edits below.")
         vbox.pack_start(label1_0, False, False, 0)
         btnlist = []
         for field in fields:
-            btnlist.append(gtk.CheckButton(field))
+            btnlist.append(Gtk.CheckButton(field))
             if field in clear_for_fam:
                 btnlist[-1].set_active(True)
             else:
                 btnlist[-1].set_active(False)
-            vbox.pack_start(btnlist[-1])
+            vbox.pack_start(btnlist[-1], True, True, 0)
         # And an hbox with 2 buttons
-        hbox = gtk.HBox(False, 0)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        hbox = Gtk.HBox(False, 0)
+        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
         btnCANCEL.connect('clicked', lambda btn: self.hide())
-        alignCANCEL = gtk.Alignment(0, 0, 0, 0)
+        alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnBACK = gtk.Button(stock=gtk.STOCK_GO_BACK)
+        btnBACK = Gtk.Button(stock=Gtk.STOCK_GO_BACK)
         btnBACK.connect('clicked', back_clicked_cb)
-        btnNEXT = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
+        btnNEXT = Gtk.Button(stock=Gtk.STOCK_GO_FORWARD)
         btnNEXT.connect('clicked', next_clicked_cb, btnlist)
         ##And populate
         hbox.pack_start(alignCANCEL, True, True, 0)

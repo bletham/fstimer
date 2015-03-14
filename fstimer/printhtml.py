@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #fsTimer - free, open source software for race timing.
 #Copyright 2012-14 Ben Letham
