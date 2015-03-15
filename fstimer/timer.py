@@ -305,14 +305,14 @@ class PyTimer(object):
         #Now save things
         with open(os.path.join(self.path, self.path+'_registration_compiled.json'), 'w', encoding='utf-8') as fout:
             json.dump(self.reg_nodups, fout)
-        with open(os.path.join(self.path, self.path+'_timing_dict.json', encoding='utf-8'), 'w') as fout:
+        with open(os.path.join(self.path, self.path+'_timing_dict.json'), 'w', encoding='utf-8') as fout:
             json.dump(self.timedict, fout)
         regfn = os.path.join(self.path, self.path + '_registration_compiled.json')
         timefn = os.path.join(self.path, self.path + '_timing_dict.json')
         self.compilewin.setLabel(2, '<span color="blue">Successfully wrote files:\n' + \
                                  regfn + '\n' + timefn + '</span>')
         #And write the compiled registration to csv
-        with open(os.path.join(self.path, self.path+'_registration.csv'), 'w') as fout:
+        with open(os.path.join(self.path, self.path+'_registration.csv'), 'w', encoding='utf-8') as fout:
             dict_writer = csv.DictWriter(fout, self.fields)
             dict_writer.writer.writerow(self.fields)
             dict_writer.writerows(self.reg_nodups)
@@ -373,7 +373,7 @@ class PyTimer(object):
                                     '_'.join([self.path,
                                               self.timewin.timestr,
                                               'alltimes.' + printer.file_extension()]))
-        with open(scratch_file, 'w') as scratch_out:
+        with open(scratch_file, 'w', encoding='utf-8') as scratch_out:
             scratch_out.write(printer.header())
             scratch_out.write(scratchresults)
             scratch_out.write(printer.footer())
@@ -381,7 +381,7 @@ class PyTimer(object):
                                 '_'.join([self.path,
                                           self.timewin.timestr,
                                           'divtimes.' + printer.file_extension()]))
-        with open(div_file, 'w') as div_out:
+        with open(div_file, 'w', encoding='utf-8') as div_out:
             div_out.write(printer.header())
             for div in self.divisions:
                 div_out.write(divresults[div[0]])

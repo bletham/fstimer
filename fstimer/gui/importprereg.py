@@ -246,7 +246,7 @@ class ImportPreRegWin(Gtk.Window):
             textbuffer.delete(textbuffer.get_start_iter(), textbuffer.get_end_iter())
             textbuffer.set_text('Loading '+os.path.basename(filename)+'...\n')
             try:
-                fin = csv.DictReader(open(filename, 'r'))
+                fin = csv.DictReader(open(filename, 'r', encoding='utf-8'))
                 self.csvreg = []
                 for row in fin:
                     self.csvreg.append(row)
