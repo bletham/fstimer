@@ -21,7 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
-import webbrowser
+import webbrowser, os
 
 class RootWin(Gtk.Window):
     '''Handles the root window of the application'''
@@ -42,7 +42,7 @@ class RootWin(Gtk.Window):
         helpm = Gtk.MenuItem('Help')
         helpm.set_submenu(helpmenu)
         menuhelp = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_HELP, None)
-        menuhelp.connect('activate', lambda jnk: webbrowser.open('documentation/documentation_sec2.htm'))
+        menuhelp.connect('activate', lambda jnk: webbrowser.open(os.path.realpath('documentation/documentation_sec2.htm')))
         helpmenu.append(menuhelp)
         menuabout = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ABOUT, None)
         menuabout.connect('activate', show_about_cb)

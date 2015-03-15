@@ -33,8 +33,7 @@ class AboutWin(Gtk.AboutDialog):
         self.set_copyright("""Copyright 2012-15 Ben Letham\
         \nThis program comes with ABSOLUTELY NO WARRANTY; for details see license.\
         \nThis is free software, and you are welcome to redistribute it under certain conditions; see license for details""")
-        self.set_comments('free, open source software for race timing.')
-        self.set_website('http://fstimer.org')
+        self.set_comments('free, open source software for race timing.\nhttp://fstimer.org')
         self.set_wrap_license(False)
         with open('COPYING', 'r') as fin:
             gpl = fin.read()
