@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -27,16 +27,15 @@ from fstimer.gui.util_classes import MsgDialog
 class PreRegistrationWin(Gtk.Window):
     '''Handling of the window handling preregistration setup'''
 
-    def __init__(self, cwd, path, set_registration_file_cb, handle_registration_cb):
+    def __init__(self, path, set_registration_file_cb, handle_registration_cb):
         '''Builds and display the window handling preregistration
            set the computers registration ID, and optionally choose a pre-registration json'''
         super(PreRegistrationWin, self).__init__(Gtk.WindowType.TOPLEVEL)
-        self.cwd = cwd
         self.path = path
         self.set_registration_file_cb = set_registration_file_cb
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_icon_from_file('fstimer/data/icon.png')
-        self.set_title('fsTimer - ' + path)
+        self.set_title('fsTimer - ' + os.path.basename(path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.hide())
         self.set_border_width(10)
@@ -83,7 +82,7 @@ class PreRegistrationWin(Gtk.Window):
         ffilter.set_name('Registration files')
         ffilter.add_pattern('*_registration_*.json')
         chooser.add_filter(ffilter)
-        chooser.set_current_folder(os.path.join(self.cwd, self.path))
+        chooser.set_current_folder(self.path)
         response = chooser.run()
         if response == Gtk.ResponseType.OK:
             filename = chooser.get_filename()
@@ -99,7 +98,7 @@ class PreRegistrationWin(Gtk.Window):
         '''If OK is pushed on the pre-register window.'''
         #First check if the file already exists
         regid = regid_btn.get_value_as_int()
-        filename = os.path.join(self.path, self.path+'_registration_'+str(regid)+'.json')
+        filename = os.path.join(self.path, os.path.basename(self.path)+'_registration_'+str(regid)+'.json')
         if os.path.exists(filename):
             #Raise a warning window
             md = MsgDialog(self, 'warning', 'OK_CANCEL', 'Proceed?', "A file with this registration number already exists.\nIf you continue it will be overwritten!")

@@ -21,6 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
+import os
 
 class CompilationErrorsWin(Gtk.Window):
     '''Handling of the window dedicated to the display of registration's compilation's errors'''
@@ -39,7 +40,7 @@ class CompilationErrorsWin(Gtk.Window):
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_transient_for(parent)
         self.set_modal(True)
-        self.set_title('fsTimer - ' + path)
+        self.set_title('fsTimer - ' + os.path.basename(path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.hide())
         self.set_border_width(10)
@@ -94,7 +95,7 @@ class CompilationErrorsWin(Gtk.Window):
             self.corerrorswin.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
             self.corerrorswin.set_transient_for(self)
             self.corerrorswin.set_modal(True)
-            self.corerrorswin.set_title('fsTimer - ' + self.path)
+            self.corerrorswin.set_title('fsTimer - ' + os.path.basename(self.path))
             self.corerrorswin.set_position(Gtk.WindowPosition.CENTER)
             self.corerrorswin.connect('delete_event', lambda b, jnk: self.corerrorswin.hide())
             self.corerrorswin.set_border_width(10)

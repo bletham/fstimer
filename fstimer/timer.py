@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import os, json, csv, re, datetime
+from os.path import normpath, join, dirname, abspath, basename
 import fstimer.gui.intro
 import fstimer.gui.newproject
 import fstimer.gui.projecttype
@@ -58,8 +59,10 @@ class PyTimer(object):
 
     def load_project(self, jnk_unused, combobox, projectlist):
         '''Loads the registration settings of a project, and go back to rootwin'''
-        self.path = projectlist[combobox.get_active()]
-        with open(os.path.join(self.path, self.path+'.reg'), 'r', encoding='utf-8') as fin:
+        self.projectname = projectlist[combobox.get_active()]
+        self.path = normpath(join(dirname(dirname(abspath(__file__))),self.projectname))
+        #self.path is now _absolute_, it is not project name.
+        with open(os.path.join(self.path, self.projectname+'.reg'), 'r', encoding='utf-8') as fin:
             regdata = json.load(fin)
         #Assign all of the project settings
         self.fields = regdata['fields']
@@ -173,7 +176,7 @@ class PyTimer(object):
 
     def store_new_project(self, jnk_unused):
         '''Stores a new project to file and goes to root window'''
-        os.system('mkdir '+self.path)
+        os.system('mkdir '+ self.path)
         regdata = {}
         regdata['projecttype'] = self.projecttype
         regdata['numlaps'] = self.numlaps
@@ -181,9 +184,9 @@ class PyTimer(object):
         regdata['fieldsdic'] = self.fieldsdic
         regdata['clear_for_fam'] = self.clear_for_fam
         regdata['divisions'] = self.divisions
-        with open(os.path.join(self.path, self.path+'.reg'), 'w', encoding='utf-8') as fout:
+        with open(join(self.path, basename(self.path)+'.reg'), 'w', encoding='utf-8') as fout:
             json.dump(regdata, fout)
-        md = MsgDialog(self.divisionswin, 'information', 'OK', 'Created!', 'Project '+self.path+' successfully created!')
+        md = MsgDialog(self.divisionswin, 'information', 'OK', 'Created!', 'Project '+basename(self.path)+' successfully created!')
         md.run()
         md.destroy()
         self.divisionswin.hide()
@@ -201,11 +204,11 @@ class PyTimer(object):
 
     def import_prereg(self, jnk_unused):
         '''import pre-registration from a csv'''
-        self.importpreregwin = fstimer.gui.importprereg.ImportPreRegWin(os.getcwd(), self.path, self.fields, self.fieldsdic)
+        self.importpreregwin = fstimer.gui.importprereg.ImportPreRegWin(self.path, self.fields, self.fieldsdic)
 
     def handle_preregistration(self, jnk_unused):
         '''handles preregistration'''
-        self.preregistrationwin = fstimer.gui.preregister.PreRegistrationWin(os.getcwd(), self.path, self.set_registration_file, self.handle_registration)
+        self.preregistrationwin = fstimer.gui.preregister.PreRegistrationWin(self.path, self.set_registration_file, self.handle_registration)
 
     def set_registration_file(self, filename):
         '''set a preregistration file'''
@@ -222,7 +225,7 @@ class PyTimer(object):
 
     def save_registration(self):
         '''saves registration'''
-        filename = os.path.join(self.path, self.path+'_registration_'+str(self.regid)+'.json')
+        filename = os.path.join(self.path, basename(self.path)+'_registration_'+str(self.regid)+'.json')
         with open(filename, 'w', encoding='utf-8') as fout:
             json.dump(self.prereg, fout)
         return filename
@@ -303,16 +306,16 @@ class PyTimer(object):
         else:
             self.compilewin.setLabel(1, '<span color="blue">Checking for errors... no errors found!</span>')
         #Now save things
-        with open(os.path.join(self.path, self.path+'_registration_compiled.json'), 'w', encoding='utf-8') as fout:
+        with open(join(self.path, basename(self.path)+'_registration_compiled.json'), 'w', encoding='utf-8') as fout:
             json.dump(self.reg_nodups, fout)
-        with open(os.path.join(self.path, self.path+'_timing_dict.json'), 'w', encoding='utf-8') as fout:
+        with open(join(self.path, basename(self.path)+'_timing_dict.json'), 'w', encoding='utf-8') as fout:
             json.dump(self.timedict, fout)
-        regfn = os.path.join(self.path, self.path + '_registration_compiled.json')
-        timefn = os.path.join(self.path, self.path + '_timing_dict.json')
+        regfn = join(self.path, basename(self.path) + '_registration_compiled.json')
+        timefn = join(self.path, basename(self.path) + '_timing_dict.json')
         self.compilewin.setLabel(2, '<span color="blue">Successfully wrote files:\n' + \
                                  regfn + '\n' + timefn + '</span>')
         #And write the compiled registration to csv
-        with open(os.path.join(self.path, self.path+'_registration.csv'), 'w', encoding='utf-8') as fout:
+        with open(join(self.path, basename(self.path)+'_registration.csv'), 'w', encoding='utf-8') as fout:
             dict_writer = csv.DictWriter(fout, self.fields)
             dict_writer.writer.writerow(self.fields)
             dict_writer.writerows(self.reg_nodups)
@@ -369,16 +372,16 @@ class PyTimer(object):
         for div in divresults:
             divresults[div] += printer.cat_table_footer(div)
         # now save to files
-        scratch_file = os.path.join(self.path,
-                                    '_'.join([self.path,
+        scratch_file = join(self.path,
+                                    '_'.join([basename(self.path),
                                               self.timewin.timestr,
                                               'alltimes.' + printer.file_extension()]))
         with open(scratch_file, 'w', encoding='utf-8') as scratch_out:
             scratch_out.write(printer.header())
             scratch_out.write(scratchresults)
             scratch_out.write(printer.footer())
-        div_file = os.path.join(self.path,
-                                '_'.join([self.path,
+        div_file = join(self.path,
+                                '_'.join([basename(self.path),
                                           self.timewin.timestr,
                                           'divtimes.' + printer.file_extension()]))
         with open(div_file, 'w', encoding='utf-8') as div_out:

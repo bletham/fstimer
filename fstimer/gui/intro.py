@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import os
+from os.path import normpath, join, dirname, abspath
 import fstimer.gui
 
 class IntroWin(Gtk.Window):
@@ -30,7 +31,8 @@ class IntroWin(Gtk.Window):
         '''Builds and display the introduction window'''
         super(IntroWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
-        self.set_icon_from_file('fstimer/data/icon.png')
+        icon_fname = normpath(join(dirname(abspath(__file__)),'../data/icon.png'))
+        self.set_icon_from_file(icon_fname)
         self.set_title('fsTimer')
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(20)
@@ -40,14 +42,15 @@ class IntroWin(Gtk.Window):
         self.add(vbox)
         # Main logo
         logo = Gtk.Image()
-        logo.set_from_file('fstimer/data/fstimer_logo.png')
+        logo.set_from_file(normpath(join(dirname(abspath(__file__)),'../data/fstimer_logo.png')))
         # Welcome text
         label0 = Gtk.Label(label='')
         label = Gtk.Label('Select an existing project, or begin a new project.')
         # A combobox to select the project
         combobox = Gtk.ComboBoxText()
         projectlist = [' -- Select an existing project --']
-        projectlist.extend([i for i in os.listdir('.') if os.path.isdir(i) and os.path.exists(i+'/'+i+'.reg')]) #List the folders in pwd that contain a .reg registration file
+        rootdir = normpath(join(dirname(abspath(__file__)),'../../'))
+        projectlist.extend([i for i in os.listdir(rootdir) if os.path.isdir(join(rootdir,i)) and os.path.exists(join(rootdir,i+'/'+i+'.reg'))]) #List the folders in pwd that contain a .reg registration file
         projectlist.sort()
         for project in projectlist:
             combobox.append_text(project)

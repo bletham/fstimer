@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ class PreTimeWin(Gtk.Window):
         self.okclicked_cb = okclicked_cb
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_icon_from_file('fstimer/data/icon.png')
-        self.set_title('fsTimer - Project '+self.path)
+        self.set_title('fsTimer - Project '+os.path.basename(self.path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.hide())
         self.set_border_width(10)
@@ -84,7 +84,7 @@ class PreTimeWin(Gtk.Window):
         '''Handles click on Choose file button
            Converts the selected file into a defaultdict'''
         chooser = Gtk.FileChooserDialog(title='Choose timing dictionary', action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
-        chooser.set_current_folder(os.path.join(os.getcwd(), self.path))
+        chooser.set_current_folder(self.path)
         ffilter = Gtk.FileFilter()
         ffilter.set_name('Timing dictionaries')
         ffilter.add_pattern('*_timing_dict.json')

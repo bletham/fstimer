@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ class TimingWin(Gtk.Window):
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_transient_for(parent)
         self.set_modal(True)
-        self.set_title('fsTimer - ' + path)
+        self.set_title('fsTimer - ' + os.path.basename(path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.done_timing(b))
         self.set_border_width(10)
@@ -404,10 +404,10 @@ class TimingWin(Gtk.Window):
     def editblocktimedone(self, pathlist, operation, timestr):
         '''Handled result of the editing of a block of times
            Goes through every time in pathlist and do the requested operation'''
-        for path in pathlist:
+        for gtkpath in pathlist:
             # Figure out which row this is, and which treeiter
-            treeiter = self.timemodel.get_iter(path)
-            row = path[0]
+            treeiter = self.timemodel.get_iter(gtkpath)
+            row = gtkpath[0]
             # Now figure out the new time. First get the old time as a string
             old_time_str = self.timemodel.get_value(treeiter, 1)
             try:
@@ -419,7 +419,7 @@ class TimingWin(Gtk.Window):
                 self.rawtimes['times'][row] = str(new_time)
                 self.timemodel.set_value(treeiter, 1, str(new_time))
             except AttributeError:
-                # This will happen for instance if the path has a blank time
+                # This will happen for instance if the gtkpath has a blank time
                 pass
         self.wineditblocktime.hide()
 
@@ -514,7 +514,7 @@ class TimingWin(Gtk.Window):
     def resume_times(self, jnk_unused, isMerge):
         '''Handles click on Resume button'''
         chooser = Gtk.FileChooserDialog(title='Choose timing results to resume', action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
-        chooser.set_current_folder(os.path.join(os.getcwd(), self.path))
+        chooser.set_current_folder(self.path)
         ffilter = Gtk.FileFilter()
         ffilter.set_name('Timing results')
         ffilter.add_pattern('*_times.json')
@@ -578,7 +578,7 @@ class TimingWin(Gtk.Window):
         saveresults['rawtimes'] = self.rawtimes
         saveresults['timestr'] = self.timestr
         saveresults['t0'] = self.t0
-        with open(os.path.join(self.path, self.path+'_'+self.timestr+'_times.json'), 'w', encoding='utf-8') as fout:
+        with open(os.path.join(self.path, os.path.basename(self.path)+'_'+self.timestr+'_times.json'), 'w', encoding='utf-8') as fout:
             json.dump(saveresults, fout)
         md = MsgDialog(self, 'information', 'OK', 'Saved!', 'Times saved!')
         md.run()

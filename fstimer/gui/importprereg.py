@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -31,16 +31,15 @@ class ComboValueError(Exception):
 class ImportPreRegWin(Gtk.Window):
     '''Handling of the window dedicated to importation of pre-registration'''
 
-    def __init__(self, cwd, path, fields, fieldsdic):
+    def __init__(self, path, fields, fieldsdic):
         '''Builds and display the importation window'''
         super(ImportPreRegWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.path = path
-        self.cwd = cwd
         self.fields = fields
         self.fieldsdic = fieldsdic
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_icon_from_file('fstimer/data/icon.png')
-        self.set_title('fsTimer - ' + path)
+        self.set_title('fsTimer - ' + os.path.basename(path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.hide())
         self.set_border_width(10)
@@ -175,27 +174,27 @@ class ImportPreRegWin(Gtk.Window):
         iter_end = textbuffer.get_end_iter()
         textbuffer.insert_with_tags_by_name(iter_end, 'Nothing done.', 'blue')
 
-    def combo_changed(self, widget_unused, path, text):
+    def combo_changed(self, widget_unused, gtkpath, text):
         '''Handles a change in the combo boxes' selections'''
-        self.fieldsmodel[path][1] = text
+        self.fieldsmodel[gtkpath][1] = text
         if text == '-- Advanced expression --':
-            if len(self.fieldsmodel[path][2]) == 0:
-                self.fieldsmodel[path][2] = '-- enter python expression --'
-            self.fieldsmodel[path][3] = True
+            if len(self.fieldsmodel[gtkpath][2]) == 0:
+                self.fieldsmodel[gtkpath][2] = '-- enter python expression --'
+            self.fieldsmodel[gtkpath][3] = True
         else:
-            self.fieldsmodel[path][3] = False
+            self.fieldsmodel[gtkpath][3] = False
 
-    def text_changed(self, widget_unused, path, text):
+    def text_changed(self, widget_unused, gtkpath, text):
         '''Handles a change in the advanced boxes'''
-        self.fieldsmodel[path][2] = text
+        self.fieldsmodel[gtkpath][2] = text
 
     def advanced_import_ok(self, jnk_unused, textbuffer1, textbuffer2):
         '''Handles click on OK button in the advanced interface'''
         textbuffer2.delete(textbuffer2.get_start_iter(), textbuffer2.get_end_iter())
         self.fields_mapping = {}
-        for path in range(len(self.fieldsmodel)):
-            field = self.fieldsmodel[path][0]
-            csv_col = self.fieldsmodel[path][1]
+        for gtkpath in range(len(self.fieldsmodel)):
+            field = self.fieldsmodel[gtkpath][0]
+            csv_col = self.fieldsmodel[gtkpath][1]
             if csv_col == '-- select --':
                 textbuffer2.insert_with_tags_by_name(textbuffer2.get_end_iter(), 'Nothing selected for field %s' % field, 'red')
                 return
@@ -203,7 +202,7 @@ class ImportPreRegWin(Gtk.Window):
                 self.fields_mapping[field] = lambda reg, col=csv_col: ''
             elif csv_col == '-- Advanced expression --':
                 try:
-                    code = compile(self.fieldsmodel[path][2], '', 'eval')
+                    code = compile(self.fieldsmodel[gtkpath][2], '', 'eval')
                     self.fields_mapping[field] = lambda reg, code=code: eval(code)
                 except SyntaxError as e:
                     iter_end = textbuffer2.get_end_iter()
@@ -239,7 +238,7 @@ class ImportPreRegWin(Gtk.Window):
         ffilter.set_name('csv files')
         ffilter.add_pattern('*.csv')
         chooser.add_filter(ffilter)
-        chooser.set_current_folder(os.path.join(self.cwd, self.path, ''))
+        chooser.set_current_folder(self.path)
         response = chooser.run()
         if response == Gtk.ResponseType.OK:
             filename = chooser.get_filename()
@@ -281,6 +280,6 @@ Correct the error and try again.""" % (row+1, value, field, optstr)
                 tmpdict[field] = value
             preregdata.append(tmpdict.copy())
             row += 1
-        with open(os.path.join(self.cwd, self.path, self.path+'_registration_prereg.json'), 'w', encoding='utf-8') as fout:
+        with open(os.path.join(self.path, os.path.basename(self.path)+'_registration_prereg.json'), 'w', encoding='utf-8') as fout:
             json.dump(preregdata, fout)
-        textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), 'Success! Imported pre-registration saved to '+self.path+'_registration_prereg.json\nFinished!', 'blue')
+        textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), 'Success! Imported pre-registration saved to '+os.path.basename(self.path)+'_registration_prereg.json\nFinished!', 'blue')

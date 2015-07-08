@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class RootWin(Gtk.Window):
         super(RootWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_icon_from_file('fstimer/data/icon.png')
-        self.set_title('fsTimer - ' + path)
+        self.set_title('fsTimer - ' + os.path.basename(path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', Gtk.main_quit)
         self.set_border_width(0)
@@ -42,7 +42,7 @@ class RootWin(Gtk.Window):
         helpm = Gtk.MenuItem('Help')
         helpm.set_submenu(helpmenu)
         menuhelp = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_HELP, None)
-        menuhelp.connect('activate', lambda jnk: webbrowser.open(os.path.realpath('documentation/documentation_sec2.htm')))
+        menuhelp.connect('activate', lambda jnk: webbrowser.open(os.path.join(path,'../documentation/documentation_sec2.htm')))
         helpmenu.append(menuhelp)
         menuabout = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ABOUT, None)
         menuabout.connect('activate', show_about_cb)
@@ -51,7 +51,7 @@ class RootWin(Gtk.Window):
         ### Frame
         rootframe = Gtk.Frame(label='al')
         rootframe_label = Gtk.Label(label='')
-        rootframe_label.set_markup('<b>fsTimer - ' + path + '</b>')
+        rootframe_label.set_markup('<b>fsTimer - ' + os.path.basename(path) + '</b>')
         rootframe.set_label_widget(rootframe_label)
         rootframe.set_border_width(20)
         #And now fill the frame with a table

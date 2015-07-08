@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
+import os
 
 class EditT0Win(Gtk.Window):
     '''Handling of the window used for editing t0, the race start time'''
@@ -30,7 +31,7 @@ class EditT0Win(Gtk.Window):
         super(EditT0Win, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.okclicked_cb = okclicked_cb
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
-        self.set_title('fsTimer - ' + path)
+        self.set_title('fsTimer - ' + os.path.basename(path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_transient_for(parent)
         self.set_modal(True)

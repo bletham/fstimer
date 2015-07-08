@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ class CompilationWin(Gtk.Window):
         self.merge_cb = merge_cb
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_icon_from_file('fstimer/data/icon.png')
-        self.set_title('fsTimer - ' + path)
+        self.set_title('fsTimer - ' + os.path.basename(path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.hide())
         self.set_border_width(10)
@@ -113,7 +113,7 @@ class CompilationWin(Gtk.Window):
         ffilter.set_name('Registration files')
         ffilter.add_pattern('*registration_*.json')
         chooser.add_filter(ffilter)
-        chooser.set_current_folder(os.path.join(os.getcwd(), self.path))
+        chooser.set_current_folder(self.path)
         response = chooser.run()
         if response == Gtk.ResponseType.OK:
             filenames = chooser.get_filenames()
@@ -125,7 +125,7 @@ class CompilationWin(Gtk.Window):
         '''Handling click on Merge button'''
         # Grab all of the filenames from the liststore
         filenames = []
-        self.reglist.foreach(lambda model, path, titer: filenames.append(model.get_value(titer, 0)))
+        self.reglist.foreach(lambda model, gtkpath, titer: filenames.append(model.get_value(titer, 0)))
         self.merge_cb(filenames)
 
     def resetLabels(self):
