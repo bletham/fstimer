@@ -21,6 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class ProjectTypeWin(Gtk.Window):
     '''Handles setting project settings'''
@@ -64,13 +65,13 @@ class ProjectTypeWin(Gtk.Window):
         hbox_0.pack_start(numlapsbtn, False, False, 8)
         # And an hbox with 2 buttons
         hbox_1 = Gtk.HBox(False, 0)
-        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
         btnCANCEL.connect('clicked', lambda btn: self.hide())
         alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnBACK = Gtk.Button(stock=Gtk.STOCK_GO_BACK)
+        btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,"Back")
         btnBACK.connect('clicked', back_clicked_cb)
-        btnNEXT = Gtk.Button(stock=Gtk.STOCK_GO_FORWARD)
+        btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Next")
         btnNEXT.connect('clicked', next_clicked_cb, rbs, check_button, numlapsbtn)
         alignNEXT = Gtk.Alignment.new(1, 0, 1, 0)
         alignNEXT.add(btnNEXT)

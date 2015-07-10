@@ -23,6 +23,7 @@ from gi.repository import Gtk
 import fstimer.gui
 import os
 from fstimer.gui.util_classes import MsgDialog
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class PreRegistrationWin(Gtk.Window):
     '''Handling of the window handling preregistration setup'''
@@ -59,9 +60,9 @@ class PreRegistrationWin(Gtk.Window):
         preregtable.attach(self.preregfilelabel, 1, 2, 2, 3)
         ## buttons
         prereghbox = Gtk.HBox(True, 0)
-        preregbtnOK = Gtk.Button(stock=Gtk.STOCK_OK)
+        preregbtnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
         preregbtnOK.connect('clicked', self.preregister_ok_cb, regid_btn, handle_registration_cb)
-        preregbtnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        preregbtnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
         preregbtnCANCEL.connect('clicked', lambda b: self.hide())
         prereghbox.pack_start(preregbtnOK, False, False, 5)
         prereghbox.pack_start(preregbtnCANCEL, False, False, 5)

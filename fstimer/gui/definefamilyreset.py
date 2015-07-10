@@ -22,6 +22,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class FamilyResetWin(Gtk.Window):
     '''Handling of the window dedicated to the definition of the field
@@ -53,13 +54,13 @@ class FamilyResetWin(Gtk.Window):
             vbox.pack_start(btnlist[-1], True, True, 0)
         # And an hbox with 2 buttons
         hbox = Gtk.HBox(False, 0)
-        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
         btnCANCEL.connect('clicked', lambda btn: self.hide())
         alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnBACK = Gtk.Button(stock=Gtk.STOCK_GO_BACK)
+        btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,"Back")
         btnBACK.connect('clicked', back_clicked_cb)
-        btnNEXT = Gtk.Button(stock=Gtk.STOCK_GO_FORWARD)
+        btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Next")
         btnNEXT.connect('clicked', next_clicked_cb, btnlist)
         ##And populate
         hbox.pack_start(alignCANCEL, True, True, 0)

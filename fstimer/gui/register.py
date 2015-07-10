@@ -23,6 +23,7 @@ from gi.repository import Gtk
 import fstimer.gui
 import re
 from fstimer.gui.util_classes import MsgDialog
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class RegistrationWin(Gtk.Window):
     '''Handling of the window dedicated to registration'''
@@ -74,7 +75,7 @@ class RegistrationWin(Gtk.Window):
         self.filterentry = Gtk.Entry()
         self.filterentry.set_max_length(40)
         self.filterentry.connect('changed', self.filter_apply)
-        self.filterbtnCLEAR = Gtk.Button(stock=Gtk.STOCK_CLEAR)
+        self.filterbtnCLEAR = GtkStockButton(Gtk.STOCK_CLEAR,"Clear")
         self.filterbtnCLEAR.connect('clicked', self.filter_clear)
         self.filterbtnCLEAR.set_sensitive(False)
         filterbox.pack_start(self.filterentry, False, False, 0)
@@ -98,15 +99,15 @@ class RegistrationWin(Gtk.Window):
         regtable.set_row_spacings(5)
         regtable.set_col_spacings(5)
         regtable.set_border_width(5)
-        btnEDIT = Gtk.Button(stock=Gtk.STOCK_EDIT)
+        btnEDIT = GtkStockButton(Gtk.STOCK_EDIT,"Edit")
         btnEDIT.connect('clicked', self.edit_clicked)
-        btnREMOVE = Gtk.Button(stock=Gtk.STOCK_REMOVE)
+        btnREMOVE = GtkStockButton(Gtk.STOCK_REMOVE,"Remove")
         btnREMOVE.connect('clicked', self.rm_clicked)
         btnFAM = Gtk.Button('Add family')
         btnFAM.connect('clicked', self.fam_clicked)
-        btnNEW = Gtk.Button(stock=Gtk.STOCK_NEW)
+        btnNEW = GtkStockButton(Gtk.STOCK_NEW,"New")
         btnNEW.connect('clicked', self.new_clicked)
-        btnSAVE = Gtk.Button(stock=Gtk.STOCK_SAVE)
+        btnSAVE = GtkStockButton(Gtk.STOCK_SAVE,"Save")
         btnSAVE.connect('clicked', self.save_clicked)
         btnOK = Gtk.Button('Done')
         btnOK.connect('clicked', self.ok_clicked)
@@ -250,8 +251,8 @@ class RegistrationWin(Gtk.Window):
         self.editreg_win.set_border_width(10)
         #An hbox for the buttons
         editreghbox = Gtk.HBox(False, 8)
-        editregbtnOK = Gtk.Button(stock=Gtk.STOCK_OK)
-        editregbtnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        editregbtnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
+        editregbtnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
         editregbtnCANCEL.connect('clicked', lambda b: self.editreg_win.hide())
         editreghbox.pack_start(editregbtnOK, False, False, 5)
         editreghbox.pack_start(editregbtnCANCEL, False, False, 5)

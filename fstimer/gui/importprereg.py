@@ -23,6 +23,7 @@ from gi.repository import Gtk
 import fstimer.gui
 import os, csv, json
 import datetime
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class ComboValueError(Exception):
     '''Exception launched when decoding reveals an invalid value for a combo field'''
@@ -47,7 +48,7 @@ class ImportPreRegWin(Gtk.Window):
         # Start with some intro text.
         label1 = Gtk.Label(label='Select a pre-registration csv file to import.')
         #Continue to the load file.
-        btnFILE = Gtk.Button(stock=Gtk.STOCK_OPEN)
+        btnFILE = GtkStockButton(Gtk.STOCK_OPEN,"Open")
         ## Textbuffer
         textbuffer = Gtk.TextBuffer()
         try:
@@ -71,7 +72,7 @@ class ImportPreRegWin(Gtk.Window):
         hbox2.pack_start(btnFILE, False, False, 0)
         hbox2.pack_start(btn_algn, True, True, 0)
         ## buttons
-        btnOK = Gtk.Button(stock=Gtk.STOCK_OK)
+        btnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
         btnOK.connect('clicked', lambda b: self.hide())
         cancel_algn = Gtk.Alignment.new(0, 0, 1, 0)
         hbox3 = Gtk.HBox(False, 10)
@@ -151,9 +152,9 @@ class ImportPreRegWin(Gtk.Window):
         textview.set_cursor_visible(False)
         # hbox for the buttons
         hbox = Gtk.HBox(False, 0)
-        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
         btnCANCEL.connect('clicked', self.advanced_import_cancel, textbuffer1)
-        btnOK = Gtk.Button(stock=Gtk.STOCK_OK)
+        btnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
         btnOK.connect('clicked', self.advanced_import_ok, textbuffer1, textbuffer2)
         alignOK = Gtk.Alignment.new(1, 0, 0, 0)
         alignOK.add(btnOK)

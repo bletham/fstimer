@@ -32,6 +32,7 @@ import json
 from gi.repository import Pango
 from collections import defaultdict, Counter
 from fstimer.gui.util_classes import MsgDialog
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class MergeError(Exception):
     '''Exception used in case of merging error'''
@@ -193,7 +194,7 @@ class TimingWin(Gtk.Window):
         btnDROPID.connect('clicked', self.timing_rm_ID)
         btnDROPTIME = Gtk.Button('Drop time')
         btnDROPTIME.connect('clicked', self.timing_rm_time)
-        btnEDIT = Gtk.Button(stock=Gtk.STOCK_EDIT)
+        btnEDIT = GtkStockButton(Gtk.STOCK_EDIT,"Edit")
         btnEDIT.connect('clicked', self.edit_time)
         edit_vbox = Gtk.VBox(True, 8)
         edit_vbox.pack_start(btnDROPID, False, False, 0)
@@ -202,9 +203,9 @@ class TimingWin(Gtk.Window):
         edit_align = Gtk.Alignment.new(1, 0, 1, 0)
         edit_align.add(edit_vbox)
         #Then the print and save buttons
-        btnPRINT = Gtk.Button(stock=Gtk.STOCK_PRINT)
+        btnPRINT = GtkStockButton(Gtk.STOCK_PRINT,"Print")
         btnPRINT.connect('clicked', print_cb, False)
-        btnSAVE = Gtk.Button(stock=Gtk.STOCK_SAVE)
+        btnSAVE = GtkStockButton(Gtk.STOCK_SAVE,"Save")
         btnSAVE.connect('clicked', self.save_times)
         save_vbox = Gtk.VBox(True, 8)
         save_vbox.pack_start(btnPRINT, False, False, 0)

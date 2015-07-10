@@ -22,6 +22,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
 import os, json
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class PreTimeWin(Gtk.Window):
     '''Handling of the window dedicated to selecting the timing dictionnary to be used'''
@@ -57,9 +58,9 @@ class PreTimeWin(Gtk.Window):
         hbox3 = Gtk.HBox(False, 10)
         hbox3.pack_start(self.timebtncombobox, False, False, 8)
         hbox3.pack_start(label3, False, False, 8)
-        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
         btnCANCEL.connect('clicked', lambda b: self.hide())
-        pretimebtnOK = Gtk.Button(stock=Gtk.STOCK_OK)
+        pretimebtnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
         pretimebtnOK.connect('clicked', self.okclicked)
         btmhbox = Gtk.HBox(False, 8)
         btmhbox.pack_start(pretimebtnOK, False, False, 8)

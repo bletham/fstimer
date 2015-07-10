@@ -22,6 +22,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
 import webbrowser, os
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class RootWin(Gtk.Window):
     '''Handles the root window of the application'''
@@ -91,7 +92,7 @@ class RootWin(Gtk.Window):
         rootframe.add(roottable)
         ### Buttons
         roothbox = Gtk.HBox(True, 0)
-        rootbtnQUIT = Gtk.Button(stock=Gtk.STOCK_QUIT)
+        rootbtnQUIT = GtkStockButton(Gtk.STOCK_QUIT,"Quit")
         rootbtnQUIT.connect('clicked', Gtk.main_quit)
         roothbox.pack_start(rootbtnQUIT, False, False, 5)
         #Vbox

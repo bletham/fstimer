@@ -22,6 +22,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class DefineFieldsWin(Gtk.Window):
     '''Handles the definition of the fields in a project'''
@@ -83,16 +84,16 @@ class DefineFieldsWin(Gtk.Window):
         regfieldalgn.add(regfieldsw)
         #Now we put the buttons on the side.
         vbox2 = Gtk.VBox(False, 10)
-        btnUP = Gtk.Button(stock=Gtk.STOCK_GO_UP)
+        btnUP = GtkStockButton(Gtk.STOCK_GO_UP,"Up")
         btnUP.connect('clicked', self.regfield_up, selection)
         vbox2.pack_start(btnUP, False, False, 0)
-        btnDOWN = Gtk.Button(stock=Gtk.STOCK_GO_DOWN)
+        btnDOWN = GtkStockButton(Gtk.STOCK_GO_DOWN,"Down")
         btnDOWN.connect('clicked', self.regfield_down, selection)
         vbox2.pack_start(btnDOWN, False, False, 0)
-        btnEDIT = Gtk.Button(stock=Gtk.STOCK_EDIT)
+        btnEDIT = GtkStockButton(Gtk.STOCK_EDIT,"Edit")
         btnEDIT.connect('clicked', self.regfield_edit, selection)
         vbox2.pack_start(btnEDIT, False, False, 0)
-        btnREMOVE = Gtk.Button(stock=Gtk.STOCK_REMOVE)
+        btnREMOVE = GtkStockButton(Gtk.STOCK_REMOVE,"Remove")
         btnREMOVE.connect('clicked', self.regfield_remove, selection)
         vbox2.pack_start(btnREMOVE, False, False, 0)
         btnNEWentry = Gtk.Button('New entrybox')
@@ -108,13 +109,13 @@ class DefineFieldsWin(Gtk.Window):
         hbox4.pack_start(vbox2, False, False, 0)
         ##And an hbox with 3 buttons
         hbox3 = Gtk.HBox(False, 0)
-        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
         btnCANCEL.connect('clicked', lambda btn: self.hide())
         alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnBACK = Gtk.Button(stock=Gtk.STOCK_GO_BACK)
+        btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,"Back")
         btnBACK.connect('clicked', back_clicked_cb)
-        btnNEXT = Gtk.Button(stock=Gtk.STOCK_GO_FORWARD)
+        btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Next")
         btnNEXT.connect('clicked', next_clicked_cb)
         ##And populate
         hbox3.pack_start(alignCANCEL, True, True, 0)
@@ -192,9 +193,9 @@ class DefineFieldsWin(Gtk.Window):
         hbox2.pack_start(label2, False, False, 0)
         hbox2.pack_start(maxcharbtn, False, False, 0)
         label3 = Gtk.Label(label='')
-        btnOK = Gtk.Button(stock=Gtk.STOCK_OK)
+        btnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
         btnOK.connect('clicked', self.winnewentryOK, treeiter, nameentry, maxcharbtn, label3)
-        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
         btnCANCEL.connect('clicked', lambda b: self.winnewentry.hide())
         cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
         cancel_algn.add(btnCANCEL)
@@ -251,9 +252,9 @@ class DefineFieldsWin(Gtk.Window):
         hbox2.pack_start(label2, False, False, 0)
         hbox2.pack_start(optionentry, False, False, 0)
         label3 = Gtk.Label(label='')
-        btnOK = Gtk.Button(stock=Gtk.STOCK_OK)
+        btnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
         btnOK.connect('clicked', self.winnewcomboOK, treeiter, nameentry, optionentry, label3)
-        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
         btnCANCEL.connect('clicked', lambda b: self.winnewcombo.hide())
         cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
         cancel_algn.add(btnCANCEL)

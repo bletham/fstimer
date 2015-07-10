@@ -22,6 +22,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
 import os
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class CompilationErrorsWin(Gtk.Window):
     '''Handling of the window dedicated to the display of registration's compilation's errors'''
@@ -69,7 +70,7 @@ class CompilationErrorsWin(Gtk.Window):
         # buttons
         btnVIEW = Gtk.Button('View ID entries')
         btnVIEW.connect('clicked', self.view_entries_clicked)
-        btnOK = Gtk.Button(stock=Gtk.STOCK_OK)
+        btnOK = GtkStockButton(Gtk.STOCK_OK,'OK')
         btnOK.connect('clicked', self.ok_error)
         errvbalign = Gtk.Alignment.new(1, 0, 0, 0)
         vbox2 = Gtk.VBox(False, 10)
@@ -131,7 +132,7 @@ Otherwise, press "OK" to continue, no entry will be associated with this ID.''')
             errtable.set_border_width(5)
             btnKEEP = Gtk.Button('Keep entry')
             btnKEEP.connect('clicked', self.keep_correct, current_id, treeiter)
-            btnCANCEL = Gtk.Button(stock=Gtk.STOCK_OK)
+            btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,'Cancel')
             btnCANCEL.connect('clicked', lambda b: self.corerrorswin.hide())
             vsubbox = Gtk.VBox(False, 8)
             vsubbox.pack_start(btnCANCEL, False, False, 0)

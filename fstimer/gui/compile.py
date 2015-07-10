@@ -22,6 +22,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
 import os
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class CompilationWin(Gtk.Window):
     '''Handling of the window dedicated to compilation of registrations from multiple computers'''
@@ -70,9 +71,9 @@ class CompilationWin(Gtk.Window):
         regtable.set_row_spacings(5)
         regtable.set_col_spacings(5)
         regtable.set_border_width(5)
-        btnREMOVE = Gtk.Button(stock=Gtk.STOCK_REMOVE)
+        btnREMOVE = GtkStockButton(Gtk.STOCK_REMOVE,'Remove')
         btnREMOVE.connect('clicked', self.rm_clicked)
-        btnADD = Gtk.Button(stock=Gtk.STOCK_ADD)
+        btnADD = GtkStockButton(Gtk.STOCK_ADD,'Add')
         btnADD.connect('clicked', self.add_clicked)
         btnMERGE = Gtk.Button('Merge')
         btnMERGE.connect('clicked', self.merge_clicked)

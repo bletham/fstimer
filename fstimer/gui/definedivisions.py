@@ -21,6 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
+from fstimer.gui.GtkStockButton import GtkStockButton
 
 class DivisionsWin(Gtk.Window):
     '''Handling of the window where divisions are defined'''
@@ -100,19 +101,19 @@ class DivisionsWin(Gtk.Window):
         divalgn.add(divsw)
         #Now we put the buttons on the side.
         vbox2 = Gtk.VBox(False, 10)
-        btnUP = Gtk.Button(stock=Gtk.STOCK_GO_UP)
+        btnUP = GtkStockButton(Gtk.STOCK_GO_UP,'Up')
         btnUP.connect('clicked', self.div_up, selection)
         vbox2.pack_start(btnUP, False, False, 0)
-        btnDOWN = Gtk.Button(stock=Gtk.STOCK_GO_DOWN)
+        btnDOWN = GtkStockButton(Gtk.STOCK_GO_DOWN,'Down')
         btnDOWN.connect('clicked', self.div_down, selection)
         vbox2.pack_start(btnDOWN, False, False, 0)
-        btnEDIT = Gtk.Button(stock=Gtk.STOCK_EDIT)
+        btnEDIT = GtkStockButton(Gtk.STOCK_EDIT,'Edit')
         btnEDIT.connect('clicked', self.div_edit, selection)
         vbox2.pack_start(btnEDIT, False, False, 0)
-        btnREMOVE = Gtk.Button(stock=Gtk.STOCK_REMOVE)
+        btnREMOVE = GtkStockButton(Gtk.STOCK_REMOVE,'Remove')
         btnREMOVE.connect('clicked', self.div_remove, selection)
         vbox2.pack_start(btnREMOVE, False, False, 0)
-        btnNEW = Gtk.Button(stock=Gtk.STOCK_NEW)
+        btnNEW = GtkStockButton(Gtk.STOCK_NEW,'New')
         btnNEW.connect('clicked', self.div_new, ('', {}), None)
         vbox2.pack_start(btnNEW, False, False, 0)
         #And an hbox for the fields and the buttons
@@ -121,13 +122,13 @@ class DivisionsWin(Gtk.Window):
         hbox4.pack_start(vbox2, False, False, 0)
         ##And an hbox with 3 buttons
         hbox3 = Gtk.HBox(False, 0)
-        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,'Cancel')
         btnCANCEL.connect('clicked', lambda btn: self.hide())
         alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnBACK = Gtk.Button(stock=Gtk.STOCK_GO_BACK)
+        btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,'Back')
         btnBACK.connect('clicked', back_clicked_cb)
-        btnNEXT = Gtk.Button(stock=Gtk.STOCK_GO_FORWARD)
+        btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,'Next')
         btnNEXT.connect('clicked', next_clicked_cb)
         ##And populate
         hbox3.pack_start(alignCANCEL, True, True, 0)
@@ -246,9 +247,9 @@ class DivisionsWin(Gtk.Window):
                 HBoxes[field].pack_start(ComboBoxes[field], False, False, 0)
                 vbox.pack_start(HBoxes[field], False, False, 0)
         #On to the bottom buttons
-        btnOK = Gtk.Button(stock=Gtk.STOCK_OK)
+        btnOK = GtkStockButton(Gtk.STOCK_OK,'OK')
         btnOK.connect('clicked', self.winnewdivOK, treeiter, CheckButtons, ComboBoxes, minagebtn, maxagebtn, divnameentry)
-        btnCANCEL = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,'CANCEL')
         btnCANCEL.connect('clicked', lambda b: self.winnewdiv.hide())
         cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
         cancel_algn.add(btnCANCEL)
