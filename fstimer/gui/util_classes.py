@@ -30,7 +30,7 @@ class MsgDialog(Gtk.Dialog):
             btn_tpl = (Gtk.STOCK_OK, Gtk.ResponseType.OK, Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
         elif buttons == 'OK':
             btn_tpl = (Gtk.STOCK_OK, Gtk.ResponseType.OK)
-        GObject.GObject.__init__(self, title, parent, Gtk.DialogFlags.MODAL, btn_tpl)
+        Gtk.Dialog.__init__(self, title, parent, Gtk.DialogFlags.MODAL, btn_tpl)
         self.set_border_width(5)
         self.set_default_size(400, 50)
         #Load in the icon
@@ -39,7 +39,7 @@ class MsgDialog(Gtk.Dialog):
         label = Gtk.Label(label=text)
         #And pack
         hbox = Gtk.HBox(False, 0)
-        hbox.pack_start(Gtk.Image.new_from_pixbuf(pixbuf, True, True, 0), False, False,10)
+        hbox.pack_start(Gtk.Image.new_from_pixbuf(pixbuf), False, False,10)
         hbox.pack_start(label, False, False,10)
         vbox = Gtk.VBox(False, 0)
         vbox.pack_start(hbox, True, True, 15)
