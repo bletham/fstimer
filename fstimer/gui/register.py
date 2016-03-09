@@ -21,6 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
+import os
 import re
 from fstimer.gui.util_classes import MsgDialog
 from fstimer.gui.GtkStockButton import GtkStockButton
