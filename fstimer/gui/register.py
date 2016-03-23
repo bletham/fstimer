@@ -67,7 +67,7 @@ class RegistrationWin(Gtk.Window):
         self.set_icon_from_file('fstimer/data/icon.png')
         self.set_title('fsTimer - ' + os.path.basename(path))
         self.set_position(Gtk.WindowPosition.CENTER)
-        self.connect('delete_event', lambda b, jnk: self.ok_clicked(jnk))
+        self.connect('delete_event', lambda b, jnk: self.close_clicked(jnk))
         self.set_border_width(10)
         self.set_size_request(850, 450)
         #Now the filter entrybox
@@ -109,7 +109,7 @@ class RegistrationWin(Gtk.Window):
         btnSAVE = GtkStockButton(Gtk.STOCK_SAVE,"Save")
         btnSAVE.connect('clicked', self.save_clicked)
         btnOK = GtkStockButton(Gtk.STOCK_CLOSE,"Close")
-        btnOK.connect('clicked', self.ok_clicked)
+        btnOK.connect('clicked', self.close_clicked)
         vsubbox = Gtk.VBox(False, 8)
         vsubbox.pack_start(btnSAVE, False, False, 0)
         regvspacer = Gtk.Alignment.new(1, 1, 0, 0)
@@ -205,8 +205,8 @@ class RegistrationWin(Gtk.Window):
         filename = self.save_registration_cb()
         self.regstatus.set_markup('<span color="blue">Registration saved to %s</span>' % filename)
 
-    def ok_clicked(self, jnk_unused):
-        '''Handles click on the 'ok' button on the registration window.
+    def close_clicked(self, jnk_unused):
+        '''Handles click on the 'close' button on the registration window.
            Throws up a 'do you want to save' dialog, and close the window'''
         okreg_dialog = MsgDialog(self, 'question', 'YES_NO', 'Save?', 'Do you want to save before finishing?\nUnsaved data will be lost.')
         okreg_dialog.set_default_response(Gtk.ResponseType.YES)
@@ -324,5 +324,7 @@ class RegistrationWin(Gtk.Window):
         self.regstatus.set_markup('')
         # Filter results by this last name
         self.filterentry.set_text(new_vals['Last name'])
+        # Save
+        self.save_clicked(None)
         # we're done
         self.editreg_win.hide()
