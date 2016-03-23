@@ -7,7 +7,7 @@ mkdir pynsist_pkgs
 7z x pygi.exe -opygi
 
 # Copy the PyGI packages into the pynsist_pkgs folder
-7z x pygi/binding/py3.4-64/py3.4-64.7z -obindings
+7z x pygi/binding/py3.5-64/py3.5-64.7z -obindings
 cp -r bindings/* pynsist_pkgs
 rm -r bindings
 
