@@ -104,25 +104,21 @@ class RegistrationWin(Gtk.Window):
         btnEDIT.connect('clicked', self.edit_clicked)
         btnREMOVE = GtkStockButton(Gtk.STOCK_REMOVE,"Remove")
         btnREMOVE.connect('clicked', self.rm_clicked)
-        btnFAM = Gtk.Button('Add family')
-        btnFAM.connect('clicked', self.fam_clicked)
         btnNEW = GtkStockButton(Gtk.STOCK_NEW,"New")
         btnNEW.connect('clicked', self.new_clicked)
         btnSAVE = GtkStockButton(Gtk.STOCK_SAVE,"Save")
         btnSAVE.connect('clicked', self.save_clicked)
-        btnOK = Gtk.Button('Done')
+        btnOK = GtkStockButton(Gtk.STOCK_CLOSE,"Close")
         btnOK.connect('clicked', self.ok_clicked)
         vsubbox = Gtk.VBox(False, 8)
         vsubbox.pack_start(btnSAVE, False, False, 0)
-        vsubbox.pack_start(btnOK, False, False, 0)
         regvspacer = Gtk.Alignment.new(1, 1, 0, 0)
         regvspacer.add(vsubbox)
         regtable.attach(regvspacer, 0, 1, 1, 2)
         regvbox2 = Gtk.VBox(False, 8)
-        regvbox2.pack_start(btnEDIT, False, False, 0)
-        regvbox2.pack_start(btnREMOVE, False, False, 0)
-        regvbox2.pack_start(btnFAM, False, False, 0)
         regvbox2.pack_start(btnNEW, False, False, 0)
+        regvbox2.pack_start(btnEDIT, False, False, 0)
+        regvbox2.pack_start(btnREMOVE, False, False, 30)
         regvbalign = Gtk.Alignment.new(1, 0, 0, 0)
         regvbalign.add(regvbox2)
         regtable.attach(regvbalign, 0, 1, 0, 1)
@@ -130,7 +126,13 @@ class RegistrationWin(Gtk.Window):
         reghbox = Gtk.HBox(False, 8)
         reghbox.pack_start(vbox1align, True, True, 0)
         reghbox.pack_start(regtable, False, False, 0)
-        self.add(reghbox)
+        # Add in the close button on the bottom
+        vbox_all = Gtk.VBox(False, 0)
+        vbox_all.pack_start(reghbox, True, True, 0)
+        donespacer = Gtk.Alignment.new(0, 0, 0, 0)
+        donespacer.add(btnOK)
+        vbox_all.pack_start(donespacer, False, False, 5)
+        self.add(vbox_all)
         # And show.
         self.show_all()
 
@@ -191,24 +193,6 @@ class RegistrationWin(Gtk.Window):
                 self.regmodel.remove(self.modelfilter.convert_iter_to_child_iter(self.modelfiltersorted.convert_iter_to_child_iter(treeiter)))
                 # The latest stuff has no longer been saved.
                 self.regstatus.set_markup('')
-
-    def fam_clicked(self, jnk_unused):
-        '''Handles click on the 'add family' button on the registration window.
-           Constructs current_info the same as in self.edit_reg,
-           but passes None instead of treeiter'''
-        selection = self.treeview.get_selection()
-        treeiter = selection.get_selected()[1]
-        # if no selection, do nothing.
-        if treeiter:
-            # Grab the current information.
-            current_info = {}
-            for (colid, field) in enumerate(self.fields):
-                current_info[field] = self.modelfiltersorted.get_value(treeiter, colid)
-            # Drop some info
-            for field in self.clear_for_fam:
-                current_info[field] = ''
-            # Generate the window
-            self.edit_registration(None, None, current_info)
 
     def new_clicked(self, jnk_unused):
         '''Handles click on the 'new' button on the registration window
