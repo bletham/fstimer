@@ -29,13 +29,13 @@ from fstimer.gui.GtkStockButton import GtkStockButton
 class RegistrationWin(Gtk.Window):
     '''Handling of the window dedicated to registration'''
 
-    def __init__(self, path, fields, fieldsdic, prereg, clear_for_fam, projecttype, save_registration_cb):
+    def __init__(self, path, fields, fieldsdic, prereg, projecttype, save_registration_cb):
         '''Builds and display the registration window'''
         super(RegistrationWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.fields = fields
         self.fieldsdic = fieldsdic
         self.prereg = prereg
-        self.clear_for_fam = clear_for_fam
+        self.ids = set()
         self.projecttype = projecttype
         self.save_registration_cb = save_registration_cb
         self.editreg_win = None
@@ -57,6 +57,8 @@ class RegistrationWin(Gtk.Window):
         # Now we populate the model with the pre-registration info, if any
         for reg in prereg:
             self.regmodel.append([reg[field] for field in fields])
+            if reg['ID']:
+                self.ids.add(reg['ID'])
         # This is the string that we filter based on.
         self.searchstr = ''
         self.modelfilter.set_visible_func(self.visible_filter)
@@ -274,19 +276,22 @@ class RegistrationWin(Gtk.Window):
             hboxes[field].pack_start(Gtk.Label(field+':', True, True, 0), False, False, 0) #Pack the label
             hboxes[field].pack_start(self.editregfields[field], False, False, 0) #Pack the button/entry/..
             if self.projecttype == 'handicap' and field == 'Handicap':
-                label = Gtk.Label(label='hh:mm:ss')
-                hboxes[field].pack_start(label, False, False, 0)
+                label_hd = Gtk.Label(label='hh:mm:ss')
+                hboxes[field].pack_start(label_hd, False, False, 0)
+            if field == 'ID':
+                label_id = Gtk.Label('Must be unique')
+                hboxes[field].pack_start(label_id, False, False, 0)
             editregvbox.pack_start(hboxes[field], False, False, 0) #Pack this hbox into the big vbox.
         #Pack and show
         if self.projecttype == 'handicap':
-            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, label)
+            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, label_hd, label_id)
         else:
-            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, None)
+            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, None, label_id)
         editregvbox.pack_start(editreghbox, False, False, 5)
         self.editreg_win.add(editregvbox)
         self.editreg_win.show_all()
 
-    def validate_entry(self, jnk_unused, treeiter, preregiter, label):
+    def validate_entry(self, jnk_unused, treeiter, preregiter, label_hd, label_id):
         '''Handles a click on the 'ok' button of the entry edition window.
            Reads out the input information, and writes the changes to the treemodel'''
         #First check if we have entered a handicap, and if so, make sure it is valid
@@ -297,7 +302,7 @@ class RegistrationWin(Gtk.Window):
                     timePattern = r'((?P<days>-?\d+) day(s)?, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)'
                     re.match(timePattern, sduration).groupdict(0)
                 except AttributeError:
-                    label.set_markup('<span color="red">hh:mm:ss</span>')
+                    label_hd.set_markup('<span color="red">hh:mm:ss</span>')
                     return
         # If that was OK, we go through each field and grab the new value.
         new_vals = {}
@@ -312,14 +317,27 @@ class RegistrationWin(Gtk.Window):
                     new_vals[field] = ''
                 else:
                     new_vals[field] = self.fieldsdic[field]['options'][indx-1]
+        # Make sure we don't have a duplicate ID, unless we are editing and leave it the same.
+        if new_vals['ID'] == self.prereg[preregiter]['ID']:
+            pass  # No need for an ID check, it was already done.
+        elif new_vals['ID'] in self.ids:
+            label_id.set_markup('<span color="red">{} has already been used</span>'.format(new_vals['ID']))
+            return
         # Now we replace or append in the treemodel and in prereg
         if treeiter:
+            # Remove the old ID from the id store, and add the new value
+            if self.prereg[preregiter]['ID']:
+                self.ids.remove(self.prereg[preregiter]['ID'])
+            # Update the tree and prereg
             for (colid, field) in enumerate(self.fields):
                 self.regmodel.set_value(treeiter, colid, new_vals[field])
             self.prereg[preregiter] = new_vals
         else:
             self.regmodel.append([new_vals[field] for field in self.fields])
             self.prereg.append(new_vals)
+        # Add the new ID to the id store
+        if new_vals['ID']:
+            self.ids.add(new_vals['ID'])
         # The saved status is unsaved
         self.regstatus.set_markup('')
         # Filter results by this last name

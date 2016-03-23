@@ -221,7 +221,7 @@ class PyTimer(object):
         self.regid = regid
         if not hasattr(self, 'prereg'):
             self.prereg = [] #No pre-registration was selected
-        self.registrationwin = fstimer.gui.register.RegistrationWin(self.path, self.fields, self.fieldsdic, self.prereg, self.clear_for_fam, self.projecttype, self.save_registration)
+        self.registrationwin = fstimer.gui.register.RegistrationWin(self.path, self.fields, self.fieldsdic, self.prereg, self.projecttype, self.save_registration)
 
     def save_registration(self):
         '''saves registration'''
