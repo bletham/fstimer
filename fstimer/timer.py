@@ -253,7 +253,8 @@ class PyTimer(object):
                 reglist = json.load(fin)
             self.regmerge.extend(reglist)
         # Now remove trivial dups
-        self.reg_nodups0 = [dict(tupleized) for tupleized in set(tuple(item.items()) for item in self.regmerge)]
+        self.reg_nodups0 = [dict(tupleized) for tupleized in set(
+            tuple((field, item[field]) for field in self.fields) for item in self.regmerge)]
         # Get rid of entries that differ only by the ID. That is, items that were in the pre-reg and had no changes except an ID was assigned in one reg file.
         # we'll do this in O(n^2) time:-(
         self.reg_nodups = []
@@ -262,15 +263,16 @@ class PyTimer(object):
                 self.reg_nodups.append(reg)
             else:
                 # make sure there isn't an entry with everything else the same, but an ID
-                dupcheck = 0
+                dupcheck = False
                 for i in range(len(self.reg_nodups0)):
                     dicttmp = self.reg_nodups0[i].copy()
                     if dicttmp['ID']:
                         #lets make sure we aren't a dup of this one
                         dicttmp['ID'] = ''
                         if reg == dicttmp:
-                            dupcheck = 1
-                if dupcheck == 0:
+                            dupcheck = True
+                            break
+                if not dupcheck:
                     self.reg_nodups.append(reg)
         # Now form the Timing dictionary, and check for errors.
         self.compilewin.setLabel(1, '<span color="blue">Checking for errors...</span>')
