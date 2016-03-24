@@ -24,6 +24,7 @@ import fstimer.gui
 import fstimer.gui.editt0
 import fstimer.gui.edittime
 import fstimer.gui.editblocktimes
+from fstimer.gui.register import RegistrationWin
 import datetime
 import time
 import os
@@ -79,10 +80,15 @@ def time_sum(t1, t2):
 class TimingWin(Gtk.Window):
     '''Handling of the timing window'''
 
-    def __init__(self, path, parent, timebtn, rawtimes, timing, print_cb, projecttype, numlaps):
+    def __init__(self, path, parent, timebtn, rawtimes, timing, print_cb, projecttype, numlaps,
+                 fields, fieldsdic, write_timing_cb):
         '''Builds and display the compilation error window'''
         super(TimingWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.path = path
+        self.projecttype = projecttype
+        self.fields = fields
+        self.fieldsdic = fieldsdic
+        self.write_timing_cb = write_timing_cb
         self.timebtn = timebtn
         self.rawtimes = rawtimes
         self.timing = timing
@@ -169,6 +175,10 @@ class TimingWin(Gtk.Window):
         # buttons on the right side
         #First an options button that will actually be a menu
         options_menu = Gtk.Menu()
+        menu_editreg = Gtk.MenuItem('Edit registration data')
+        menu_editreg.connect_object("activate", self.edit_reg, None)
+        menu_editreg.show()
+        options_menu.append(menu_editreg)
         menu_editt0 = Gtk.MenuItem('Edit starting time')
         menu_editt0.connect_object("activate", self.edit_t0, None)
         menu_editt0.show()
@@ -302,6 +312,29 @@ class TimingWin(Gtk.Window):
         else:
             return False
 
+    def edit_reg(self, jnk_unused):
+        filename = os.path.join(self.path, os.path.basename(self.path)+'_registration_compiled.json')
+        with open(filename, 'r', encoding='utf-8') as fin:
+            self.reg_file = json.load(fin)
+        regwin = RegistrationWin(
+            self.path, self.fields, self.fieldsdic, self.reg_file, self.projecttype, self.save_reg, self, False,
+            'Loaded '+filename)
+    
+    def save_reg(self):
+        # Re-create the timing dictionary
+        timedict = defaultdict(lambda: defaultdict(str))
+        for reg in self.reg_file:
+            # Any registration without an ID is left out of the timing dictionary
+            if reg['ID']:
+                # have we already added this ID to the timing dictionary?
+                if reg['ID'] in timedict.keys():
+                    return 'ID {} NOT UNIQUE'.format(reg['ID']), False
+                else:
+                    timedict[reg['ID']] = reg
+        # Write the files and set the new timedict
+        filename = self.write_timing_cb(self.reg_file, timedict)
+        return filename, True
+    
     def edit_time(self, jnk_unused):
         '''Handles click on Edit button for a time
            Chooses which edit time window to open,

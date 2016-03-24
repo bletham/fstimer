@@ -228,7 +228,7 @@ class PyTimer(object):
         filename = os.path.join(self.path, basename(self.path)+'_registration_'+str(self.regid)+'.json')
         with open(filename, 'w', encoding='utf-8') as fout:
             json.dump(self.prereg, fout)
-        return filename
+        return filename, True
 
     def compreg_window(self, jnk_unused):
         '''Merges registration files and create the timing dictionary.'''
@@ -336,7 +336,20 @@ class PyTimer(object):
         # We will store 'raw' data, lists of times and IDs.
         self.rawtimes = {'times':[], 'ids':[]}
         # create Timing window
-        self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, self.rawtimes, self.timing, self.print_times, self.projecttype, self.numlaps)
+        self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, self.rawtimes, self.timing, self.print_times, self.projecttype, self.numlaps, self.fields, self.fieldsdic, self.write_updated_timing)
+
+    def write_updated_timing(self, reg, timedict):
+        filename = os.path.join(self.path, os.path.basename(self.path)+'_registration_compiled.json')
+        with open(filename, 'w', encoding='utf-8') as fout:
+            json.dump(reg, fout)
+        with open(join(self.path, basename(self.path)+'_timing_dict.json'), 'w', encoding='utf-8') as fout:
+            json.dump(timedict, fout)
+        with open(join(self.path, basename(self.path)+'_registration.csv'), 'w', encoding='utf-8') as fout:
+            dict_writer = csv.DictWriter(fout, self.fields)
+            dict_writer.writer.writerow(self.fields)
+            dict_writer.writerows(reg)
+        self.timing = timedict
+        return filename
 
     def print_times(self, jnk_unused, use_csv):
         '''print times to a file'''

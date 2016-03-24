@@ -29,15 +29,20 @@ from fstimer.gui.GtkStockButton import GtkStockButton
 class RegistrationWin(Gtk.Window):
     '''Handling of the window dedicated to registration'''
 
-    def __init__(self, path, fields, fieldsdic, prereg, projecttype, save_registration_cb):
+    def __init__(self, path, fields, fieldsdic, prereg, projecttype, save_registration_cb, parent_win=None,
+                 autosave=True, save_label=''):
         '''Builds and display the registration window'''
         super(RegistrationWin, self).__init__(Gtk.WindowType.TOPLEVEL)
+        if parent_win:
+            self.set_transient_for(parent_win)
+            self.set_modal(True)
         self.fields = fields
         self.fieldsdic = fieldsdic
         self.prereg = prereg
         self.ids = set()
         self.projecttype = projecttype
         self.save_registration_cb = save_registration_cb
+        self.autosave = autosave
         self.editreg_win = None
         self.editregfields = None
         # First we define the registration model.
@@ -89,7 +94,7 @@ class RegistrationWin(Gtk.Window):
         regsw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         regsw.add(self.treeview)
         # And a message that says if we have saved or not.
-        self.regstatus = Gtk.Label(label='')
+        self.regstatus = Gtk.Label(label=save_label)
         # Some boxes for all the stuff on the left
         regvbox1 = Gtk.VBox(False, 8)
         regvbox1.pack_start(filterbox, False, False, 0)
@@ -204,8 +209,11 @@ class RegistrationWin(Gtk.Window):
     def save_clicked(self, jnk_unused):
         '''Handles click on the 'save' button on the registration window.
            We do a json dump of self.prereg'''
-        filename = self.save_registration_cb()
-        self.regstatus.set_markup('<span color="blue">Registration saved to %s</span>' % filename)
+        filename, success = self.save_registration_cb()
+        if success:
+            self.regstatus.set_markup('<span color="blue">Registration saved to %s</span>' % filename)
+        else:
+            self.regstatus.set_markup('<span color="red">Registration NOT saved: %s</span>' % filename)
 
     def close_clicked(self, jnk_unused):
         '''Handles click on the 'close' button on the registration window.
@@ -343,6 +351,7 @@ class RegistrationWin(Gtk.Window):
         # Filter results by this last name
         self.filterentry.set_text(new_vals['Last name'])
         # Save
-        self.save_clicked(None)
+        if self.autosave:
+            self.save_clicked(None)
         # we're done
         self.editreg_win.hide()
