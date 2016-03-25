@@ -30,6 +30,10 @@ class MsgDialog(Gtk.Dialog):
             btn_tpl = (Gtk.STOCK_OK, Gtk.ResponseType.OK, Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
         elif buttons == 'OK':
             btn_tpl = (Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        elif buttons == 'YES_NO_CANCEL':
+            btn_tpl = (Gtk.STOCK_YES, Gtk.ResponseType.YES,
+                       Gtk.STOCK_NO, Gtk.ResponseType.NO,
+                       Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
         Gtk.Dialog.__init__(self, title, parent, Gtk.DialogFlags.MODAL, btn_tpl)
         self.set_border_width(5)
         self.set_default_size(400, 50)

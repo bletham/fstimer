@@ -159,6 +159,7 @@ class TimingWin(Gtk.Window):
         timevbox1 = Gtk.VBox(False, 8)
         timevbox1.pack_start(tophbox, False, False, 0)
         timevbox1.pack_start(timealgn, True, True, 0)
+        timevbox1.pack_start(Gtk.Label('Must select box below to mark times:'), False, False, 0)
         timevbox1.pack_start(self.entrybox, False, False, 0)
         # we will keep track of how many racers are still out.
         self.racers_reg = []
@@ -179,6 +180,10 @@ class TimingWin(Gtk.Window):
         menu_editreg.connect_object("activate", self.edit_reg, None)
         menu_editreg.show()
         options_menu.append(menu_editreg)
+        menu_resett0 = Gtk.MenuItem('Restart clock')
+        menu_resett0.connect_object("activate", self.restart_t0, None)
+        menu_resett0.show()
+        options_menu.append(menu_resett0)
         menu_editt0 = Gtk.MenuItem('Edit starting time')
         menu_editt0.connect_object("activate", self.edit_t0, None)
         menu_editt0.show()
@@ -223,7 +228,7 @@ class TimingWin(Gtk.Window):
         save_align = Gtk.Alignment.new(1, 1, 1, 0)
         save_align.add(save_vbox)
         #And finally the finish button
-        btnOK = Gtk.Button('Done')
+        btnOK = GtkStockButton(Gtk.STOCK_CLOSE,"Close")
         btnOK.connect('clicked', self.done_timing)
         done_align = Gtk.Alignment.new(1, 0.7, 1, 0)
         done_align.add(btnOK)
@@ -288,12 +293,23 @@ class TimingWin(Gtk.Window):
         # keep updating
         return True
 
-    def set_t0(self, jnk_unused):
+    def set_t0(self, btn):
         '''Handles click on Start button
            Sets t0 to the current time'''
         self.t0 = time.time()
         GLib.timeout_add(100, self.update_clock) #update clock every 100ms
+        btn.set_sensitive(False)
 
+    def restart_t0(self, jnk_unused):
+        '''Handles click on restart clock button'''
+        restart_t0_dialog = MsgDialog(self, 'warning', 'YES_NO', 'Are you sure?', 
+                                      'Are you sure you want to restart the race clock?\nThis cannot be undone.')
+        restart_t0_dialog.set_default_response(Gtk.ResponseType.NO)
+        response = restart_t0_dialog.run()
+        restart_t0_dialog.destroy()
+        if response == Gtk.ResponseType.YES:
+            self.t0 = time.time()
+    
     def edit_t0(self, jnk_unused):
         '''Handles click on Edit button for the t0 value.
            Loads up a window and query the new t0'''
@@ -620,21 +636,15 @@ class TimingWin(Gtk.Window):
 
     def done_timing(self, source):
         '''Handles click on the Done button
-           Gives two dialogs before closing.'''
-        if str(type(source)) == "<type 'Gtk.Button'>":
-            oktime_dialog1 = MsgDialog(self, 'question', 'YES_NO', 'Leave?', 'Are you sure you want to leave?')
-            response1 = oktime_dialog1.run()
-            oktime_dialog1.destroy()
-        else:
-            # in case of delete_event the window closes regardless.
-            response1 = Gtk.ResponseType.YES
-        if response1 == Gtk.ResponseType.YES:
-            oktime_dialog2 = MsgDialog(self, 'question', 'YES_NO', 'Save?', 'Do you want to save before finishing?\nUnsaved data will be lost.')
-            response2 = oktime_dialog2.run()
-            oktime_dialog2.destroy()
-            if response2 == Gtk.ResponseType.YES:
-                self.save_times(None)
-            self.hide()
+           Gives a dialog before closing.'''
+        oktime_dialog2 = MsgDialog(self, 'question', 'YES_NO_CANCEL', 'Save?', 'Do you want to save before finishing?\nUnsaved data will be lost.')
+        response2 = oktime_dialog2.run()
+        oktime_dialog2.destroy()
+        if response2 == Gtk.ResponseType.CANCEL:
+            return
+        elif response2 == Gtk.ResponseType.YES:
+            self.save_times(None)
+        self.hide()
 
     def update_racers(self, ID):
         '''Updates racers_reg and racers_in after arrival of user ID'''
