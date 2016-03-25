@@ -34,7 +34,7 @@ class FamilyResetWin(Gtk.Window):
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_transient_for(parent)
         self.set_modal(True)
-        self.set_title('fsTimer - New project')
+        self.set_title('fsTimer - Family reset')
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(20)
         self.connect('delete_event', lambda b, jnk: self.hide())
