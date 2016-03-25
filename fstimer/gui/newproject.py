@@ -21,6 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import os, re
+from os.path import normpath, join, dirname, abspath
 import fstimer.gui
 from fstimer.gui.GtkStockButton import GtkStockButton
 
@@ -48,6 +49,17 @@ class NewProjectWin(Gtk.Window):
         # And the text entry
         self.entry = Gtk.Entry()
         self.entry.set_max_length(32)
+        # Select a file to import, if desired
+        label_2 = Gtk.Label('Select a project to import settings from (optional)')
+        # A combobox to select the project
+        combobox = Gtk.ComboBoxText()
+        projectlist = ["-- No import --"]
+        rootdir = normpath(join(dirname(abspath(__file__)),'../../'))
+        projectlist.extend([i for i in os.listdir(rootdir) if os.path.isdir(join(rootdir,i)) and os.path.exists(join(rootdir,i+'/'+i+'.reg'))]) #List the folders in pwd that contain a .reg registration file
+        projectlist.sort()
+        for project in projectlist:
+            combobox.append_text(project)
+        combobox.set_active(0)
         # And an hbox with 2 buttons
         hbox_1 = Gtk.HBox(False, 0)
         btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
@@ -55,7 +67,7 @@ class NewProjectWin(Gtk.Window):
         alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
         btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Next")
-        btnNEXT.connect('clicked', self.nextClicked, set_projecttype_cb)
+        btnNEXT.connect('clicked', self.nextClicked, set_projecttype_cb, projectlist, combobox)
         alignNEXT = Gtk.Alignment.new(1, 0, 1, 0)
         alignNEXT.add(btnNEXT)
         btnNEXT.set_sensitive(False)
@@ -66,6 +78,8 @@ class NewProjectWin(Gtk.Window):
         vbox.pack_start(label_0, False, False, 0)
         vbox.pack_start(self.entry, False, False, 0)
         vbox.pack_start(self.label_1, False, False, 0)
+        vbox.pack_start(label_2, False, False, 0)
+        vbox.pack_start(combobox, False, False, 0)
         vbox.pack_start(hbox_1, False, False, 0)
         self.show_all()
 
@@ -76,7 +90,7 @@ class NewProjectWin(Gtk.Window):
                               (not re.search('[^a-zA-Z0-9_]+', txt)))
         return
 
-    def nextClicked(self, jnk_unused, set_projecttype_cb):
+    def nextClicked(self, jnk_unused, set_projecttype_cb, projectlist, combobox):
         '''handles click on next by checking new project name
            and calling back fsTimer'''
         entry_text = str(self.entry.get_text())
@@ -87,4 +101,4 @@ class NewProjectWin(Gtk.Window):
         else:
             self.label_1.set_markup('')
             self.hide()
-            set_projecttype_cb(entry_text)
+            set_projecttype_cb(entry_text, projectlist, combobox)

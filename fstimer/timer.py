@@ -88,10 +88,23 @@ class PyTimer(object):
                                                 self.gen_pretimewin)
 
     def create_project(self, jnk_unused):
+        #And load the new project window
+        self.newprojectwin = fstimer.gui.newproject.NewProjectWin(self.set_projecttype,
+                                                                  self.introwin)
+
+    def set_projecttype(self, path, projectlist, combobox):
         '''creates a new project'''
         self.project_types = ['standard', 'handicap'] #Options for project types
-        #First load in the default project settings
-        with open('fstimer/data/fstimer_default_project.reg', 'r', encoding='utf-8') as fin:
+        #First load in the project settings
+        indx = combobox.get_active()
+        if indx == 0:
+            # Default settings
+            fname = 'fstimer/data/fstimer_default_project.reg'
+        else:
+            importname = projectlist[indx]
+            importpath = normpath(join(dirname(dirname(abspath(__file__))), importname))
+            fname = os.path.join(importpath, importname+'.reg')
+        with open(fname, 'r', encoding='utf-8') as fin:
             regdata = json.load(fin)
         #Assign all of the project settings
         self.fields = regdata['fields']
@@ -100,11 +113,6 @@ class PyTimer(object):
         self.divisions = regdata['divisions']
         self.projecttype = regdata['projecttype']
         self.numlaps = regdata['numlaps']
-        #And load the new project window
-        self.newprojectwin = fstimer.gui.newproject.NewProjectWin(self.set_projecttype,
-                                                                  self.introwin)
-
-    def set_projecttype(self, path):
         '''Handles setting project type'''
         self.path = path
         self.projecttypewin = fstimer.gui.projecttype.ProjectTypeWin(self.project_types,
