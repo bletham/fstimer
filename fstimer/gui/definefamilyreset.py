@@ -28,7 +28,7 @@ class FamilyResetWin(Gtk.Window):
     '''Handling of the window dedicated to the definition of the field
        to reset when registering several members of a family'''
 
-    def __init__(self, fields, clear_for_fam, back_clicked_cb, next_clicked_cb, parent):
+    def __init__(self, fields, clear_for_fam, back_clicked_cb, next_clicked_cb, advanced_ranking_cb, parent):
         '''Creates family reset window'''
         super(FamilyResetWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
@@ -60,11 +60,14 @@ class FamilyResetWin(Gtk.Window):
         alignCANCEL.add(btnCANCEL)
         btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,"Back")
         btnBACK.connect('clicked', back_clicked_cb)
+        btnADVRANK = Gtk.Button(label='Advanced Ranking')
+        btnADVRANK.connect('clicked', advanced_ranking_cb, btnlist)
         btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Next")
         btnNEXT.connect('clicked', next_clicked_cb, btnlist)
         ##And populate
         hbox.pack_start(alignCANCEL, True, True, 0)
         hbox.pack_start(btnBACK, False, False, 2)
+        hbox.pack_start(btnADVRANK, False, False, 2)
         hbox.pack_start(btnNEXT, False, False, 0)
         vbox.pack_start(hbox, False, False, 8)
         self.show_all()
