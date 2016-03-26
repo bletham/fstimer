@@ -326,7 +326,7 @@ class RegistrationWin(Gtk.Window):
                 else:
                     new_vals[field] = self.fieldsdic[field]['options'][indx-1]
         # Make sure we don't have a duplicate ID, unless we are editing and leave it the same.
-        if new_vals['ID'] == self.prereg[preregiter]['ID']:
+        if treeiter and new_vals['ID'] == self.prereg[preregiter]['ID']:
             pass  # No need for an ID check, it was already done.
         elif new_vals['ID'] in self.ids:
             label_id.set_markup('<span color="red">{} has already been used</span>'.format(new_vals['ID']))
