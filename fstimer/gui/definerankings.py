@@ -27,7 +27,7 @@ from fstimer.gui.util_classes import MsgDialog
 class RankingsWin(Gtk.Window):
     '''Handling of the window where rankings are defined'''
 
-    def __init__(self, rankings, back_clicked_cb, next_clicked_cb, parent):
+    def __init__(self, rankings, divisions, printfields, back_clicked_cb, next_clicked_cb, parent):
         '''Creates divisions window'''
         super(RankingsWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.rankings = rankings
@@ -40,30 +40,51 @@ class RankingsWin(Gtk.Window):
         self.set_size_request(600, 400)
         self.connect('delete_event', lambda b, jnk_unused: self.hide())
         # top label
-        top_label = Gtk.Label('Use the checkbox to enable/disable sub ranking per category\nUse expression field to give the python code producing the value on which the ranking will be performed')
+        top_label = Gtk.Label('Select which field the results will be ranked by.\nYou can use any one of the results fields defined on the previous window.')
+        self.fieldslist = list(printfields.keys())
+        try:
+            self.indx = self.fieldslist.index(self.rankings['Overall'])
+        except ValueError:
+            self.indx = 0
+        #overall_align = Gtk.Alignment.new(0, 0, 0, 0)
+        #overall_align.add(Gtk.Label('Rank overall results by: '))
+        ov_hbox = Gtk.HBox(False, 5)
+        ov_hbox.pack_start(Gtk.Label('Rank overall results by:'), False, False, 0)
+        # Prep the combobox
+        combobox = Gtk.ComboBoxText()
+        for field in self.fieldslist:
+            combobox.append_text(field)
+        combobox.set_active(self.indx)
+        combobox.connect('changed', self.overall_edit)
+        ov_hbox.pack_start(combobox, False, False, 0)
+        apply_btn = Gtk.Button('Apply to divisions')
+        apply_btn.connect('clicked', self.apply_to_divs)
+        ov_hbox.pack_start(apply_btn, False, False, 5)
         # Create a treeview and add columns
         self.rankingview = Gtk.TreeView()
-        # Make the model, a liststore with columns str, bool, str
-        self.rankingmodel = Gtk.ListStore(str, bool, str)
-        for ranking in rankings:
-            self.rankingmodel.append(ranking)
+        # Make the model, a liststore with columns str, str
+        self.rankingmodel = Gtk.ListStore(str, str)
+        for div in divisions:
+            self.rankingmodel.append([div[0], self.fieldslist[self.indx]])
         self.rankingview.set_model(self.rankingmodel)
         selection = self.rankingview.get_selection()
         # Add following columns to the treeview :
-        # ranking name | use_divs | python code
+        # Division | Ranking field
         ranking_renderer = Gtk.CellRendererText()
-        ranking_renderer.set_property("editable", True)
-        ranking_renderer.connect("edited", self.ranking_edit)
-        column = Gtk.TreeViewColumn('Ranking', ranking_renderer, text=0)
+        ranking_renderer.set_property("editable", False)
+        column = Gtk.TreeViewColumn('Division', ranking_renderer, text=0)
         self.rankingview.append_column(column)
-        toggle_renderer = Gtk.CellRendererToggle()
-        toggle_renderer.connect("toggled", self.toggle_edit)
-        column = Gtk.TreeViewColumn('Use Divs', toggle_renderer, active=1)
-        self.rankingview.append_column(column)
-        code_renderer = Gtk.CellRendererText()
-        code_renderer.set_property("editable", True)
-        code_renderer.connect("edited", self.code_edit)
-        column = Gtk.TreeViewColumn('Python Code', code_renderer, text=2)
+        #Prepare the combobox liststore
+        liststore_fields = Gtk.ListStore(str)
+        for field in self.fieldslist:
+            liststore_fields.append([field])
+        combo_renderer = Gtk.CellRendererCombo()
+        combo_renderer.set_property("editable", True)
+        combo_renderer.set_property("model", liststore_fields)
+        combo_renderer.set_property("text-column", 0)
+        combo_renderer.set_property("has-entry", False)
+        combo_renderer.connect("edited", self.ranking_edit)
+        column = Gtk.TreeViewColumn('Rank by:', combo_renderer, text=1)
         self.rankingview.append_column(column)
         # Create scrolled window, in an alignment
         rankingsw = Gtk.ScrolledWindow()
@@ -72,24 +93,9 @@ class RankingsWin(Gtk.Window):
         rankingsw.add(self.rankingview)
         rankingalgn = Gtk.Alignment.new(0, 0, 1, 1)
         rankingalgn.add(rankingsw)
-        # Now we put the buttons on the side.
-        vbox2 = Gtk.VBox(False, 10)
-        btnREMOVE = GtkStockButton(Gtk.STOCK_REMOVE,"Remove")
-        btnREMOVE.connect('clicked', self.ranking_remove, selection)
-        vbox2.pack_start(btnREMOVE, False, False, 0)
-        btnNEW = GtkStockButton(Gtk.STOCK_NEW,"New")
-        btnNEW.connect('clicked', self.ranking_new, selection)
-        vbox2.pack_start(btnNEW, False, False, 0)
-        btnUP = GtkStockButton(Gtk.STOCK_GO_UP,"Up")
-        btnUP.connect('clicked', self.ranking_up, selection)
-        vbox2.pack_start(btnUP, False, False, 0)
-        btnDOWN = GtkStockButton(Gtk.STOCK_GO_DOWN,"Down")
-        btnDOWN.connect('clicked', self.ranking_down, selection)
-        vbox2.pack_start(btnDOWN, False, False, 0)
         # And an hbox for the fields and the buttons
         hbox4 = Gtk.HBox(False, 0)
         hbox4.pack_start(rankingalgn, True, True, 10)
-        hbox4.pack_start(vbox2, False, False, 0)
         # Add an hbox with 3 buttons
         hbox3 = Gtk.HBox(False, 0)
         btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
@@ -106,88 +112,31 @@ class RankingsWin(Gtk.Window):
         hbox3.pack_start(btnNEXT, False, False, 0)
         vbox = Gtk.VBox(False, 0)
         vbox.pack_start(top_label, False, False, 0)
+        vbox.pack_start(ov_hbox, False, False, 15)
         vbox.pack_start(hbox4, True, True, 0)
         vbox.pack_start(hbox3, False, False, 10)
         self.add(vbox)
         self.show_all()
 
-    def ranking_remove(self, jnk_unused, selection):
-        '''handles a click on REMOVE button'''
-        treeiter1 = selection.get_selected()[1]
-        if treeiter1:
-            row = self.rankingmodel.get_path(treeiter1)
-            row = row[0]
-            self.rankingmodel.remove(treeiter1)
-            self.rankings.pop(row)
-            selection.select_path((row, ))
-        return
-
-    def ranking_new(self, jnk_unused, selection):
-        '''handles a click on NEW button'''
-        # create new name
-        name = 'new ranking'
-        i = 1
-        while name in [r[0] for r in self.rankings]:
-            name = 'new ranking%d' % i
-            i = i + 1
-        # append new line with default content
-        self.rankings.append((name, True, 'entry[1]'))
-        self.rankingmodel.append((name, True, 'entry[1]'))
-        return
-
-    def ranking_up(self, jnk_unused, selection):
-        '''Handled click on the UP button'''
-        model, treeiter1 = selection.get_selected()
-        if treeiter1:
-            row = self.rankingmodel.get_path(treeiter1)
-            row = row[0]
-            if row > 0:
-                #this isn't the bottom item, so we can move it up.
-                treeiter2 = model.get_iter(row-1)
-                self.rankingmodel.swap(treeiter1, treeiter2)
-                self.rankings[row], self.rankings[row-1] = self.rankings[row-1], self.rankings[row]
-        return
-
-    def ranking_down(self, jnk_unused, selection):
-        '''Handled click on the DOWN button'''
-        model, treeiter1 = selection.get_selected()
-        if treeiter1:
-            row = self.rankingmodel.get_path(treeiter1)
-            row = row[0]
-            if row < len(self.rankings)-1:
-                #this isn't the bottom item, so we can move it down.
-                treeiter2 = model.get_iter(row+1)
-                self.rankingmodel.swap(treeiter1, treeiter2)
-                self.rankings[row], self.rankings[row+1] = self.rankings[row+1], self.rankings[row]
-        return
-
     def ranking_edit(self, widget, path, text):
-        '''handles a change of a ranking name'''
-        ipath = int(path)
-        if text != self.rankings[ipath][0]:
-            if text not in [r[0] for r in self.rankings]:
-                self.rankingmodel[path][0] = text
-                oldranking = self.rankings[ipath]
-                self.rankings[ipath] = (text, oldranking[1], oldranking[2])
-            else:
-                md = MsgDialog(self, 'error', 'OK', 'Error!', 'Ranking name "%s" is already used!' % text)
-                md.run()
-                md.destroy()
-        return
-
-    def toggle_edit(self, widget, path):
-        '''handles a change of the use divs of a ranking'''
-        ipath = int(path)
-        oldranking = self.rankings[ipath]
-        self.rankingmodel[path][1] = not oldranking[1]
-        self.rankings[ipath] = (oldranking[0], not oldranking[1], oldranking[2])
+        '''handles a change of a ranking field'''
+        treeiter = self.rankingmodel.get_iter(path)
+        div = self.rankingmodel.get_value(treeiter, 0)
+        self.rankingmodel[path][1] = text
+        self.rankings[div] = text
         return
     
-    def code_edit(self, widget, path, text):
-        '''handles a change of the ranking code'''
-        # ToDo : check code validity
-        ipath = int(path)
-        oldranking = self.rankings[ipath]
-        self.rankingmodel[path][2] = text
-        self.rankings[ipath] = (oldranking[0], oldranking[1], text)
+    def overall_edit(self, widget):
+        '''handles a change of the overall ranking field'''
+        idx = widget.get_active()
+        self.rankings['Overall'] = self.fieldslist[idx]
         return
+    
+    def apply_to_divs(self, widget):
+        '''sets divs to the overall setting on button click'''
+        for div in self.rankings:
+            if div != 'Overall':
+                self.rankings[div] = str(self.rankings['Overall'])
+        for i in range(len(self.rankings)-1):
+            itr = self.rankingmodel.get_iter(i)
+            self.rankingmodel.set_value(itr, 1, self.rankings['Overall'])

@@ -29,8 +29,8 @@ import fstimer.gui.intro
 import fstimer.gui.newproject
 import fstimer.gui.projecttype
 import fstimer.gui.definefields
-import fstimer.gui.definefamilyreset
 import fstimer.gui.definedivisions
+import fstimer.gui.printfields
 import fstimer.gui.definerankings
 import fstimer.gui.root
 import fstimer.gui.about
@@ -68,7 +68,6 @@ class PyTimer(object):
         #Assign all of the project settings
         self.fields = regdata['fields']
         self.fieldsdic = regdata['fieldsdic']
-        self.clear_for_fam = regdata['clear_for_fam']
         self.divisions = regdata['divisions']
         try:
             self.projecttype = regdata['projecttype']
@@ -83,7 +82,18 @@ class PyTimer(object):
             self.rankings = regdata['rankings']
         except KeyError:
             # old project, with no rankings, rankings is thus default one
-            self.rankings = [('times', True, 'entry[1]')]
+            self.rankings = {'Overall': 'Time'}
+            for div in self.divisions:
+                self.rankings[div[0]] = 'Time'
+        try:
+            self.printfields = regdata['printfields']
+        except KeyError:
+            # fill with default
+            for field in ['ID', 'Age', 'Gender']:
+                self.printfields[field] = '{' + field + '}'
+            if 'Name' not in self.fields:
+                self.printfields['Name'] = "{First name} + ' ' + {Last name}"
+            
         #Move on to the main window
         self.introwin.hide()
         self.rootwin = fstimer.gui.root.RootWin(self.path,
@@ -115,11 +125,20 @@ class PyTimer(object):
         #Assign all of the project settings
         self.fields = regdata['fields']
         self.fieldsdic = regdata['fieldsdic']
-        self.clear_for_fam = regdata['clear_for_fam']
         self.divisions = regdata['divisions']
         self.projecttype = regdata['projecttype']
         self.numlaps = regdata['numlaps']
-        self.rankings = [('times', True, 'entry[1]')]
+        try:
+            self.rankings = regdata['rankings']
+        except KeyError:
+            # old project, with no rankings, rankings is thus default one
+            self.rankings = {'Overall': 'Time'}
+            for div in self.divisions:
+                self.rankings[div[0]] = 'Time'
+        try:
+            self.printfields = regdata['printfields']
+        except KeyError:
+            self.printfields = {}
         '''Handles setting project type'''
         self.path = path
         self.projecttypewin = fstimer.gui.projecttype.ProjectTypeWin(self.project_types,
@@ -146,11 +165,10 @@ class PyTimer(object):
             if 'Handicap' not in self.fields:
                 self.fields.append('Handicap')
                 self.fieldsdic['Handicap'] = {'type':'entrybox', 'max':20}
-                self.clear_for_fam.append('Handicap')
         #And now generate the window.
         self.definefieldswin = fstimer.gui.definefields.DefineFieldsWin \
           (self.fields, self.fieldsdic, self.projecttype, self.back_to_projecttype,
-           self.define_family_reset, self.introwin)
+           self.define_divisions, self.introwin)
 
     def back_to_projecttype(self, jnk_unused):
         '''Goes back to new project window'''
@@ -161,55 +179,106 @@ class PyTimer(object):
         '''Goes back to new project window'''
         self.projecttypewin.hide()
         self.newprojectwin.show_all()
-
-    def define_family_reset(self, jnk_unused):
-        '''Goes to family reset window'''
-        self.definefieldswin.hide()
-        self.divisionswin = None
-        self.rankingswin = None
-        self.familyresetwin = fstimer.gui.definefamilyreset.FamilyResetWin \
-          (self.fields, self.clear_for_fam, self.back_to_define_fields,
-           self.define_divisions, self.define_rankings, self.introwin)
-
-    def back_to_define_fields(self, jnk_unused):
-        '''Goes back to define fields window from the family reset one'''
-        self.familyresetwin.hide()
-        self.definefieldswin.show_all()
     
-    def set_fam_rest(self, btnlist):
-        self.clear_for_fam = []
-        for (field, btn) in zip(self.fields, btnlist):
-            if btn.get_active():
-                self.clear_for_fam.append(field)
-    
-    def define_divisions(self, jnk_unused, btnlist):
+    def define_divisions(self, jnk_unused):
         '''Defines default divisions and launched the division edition window'''
-        if btnlist:
-            self.set_fam_rest(btnlist)
-        self.familyresetwin.hide()
-        if self.rankingswin:
-            self.rankingswin.hide()
+        self.definefieldswin.hide()
         self.divisionswin = fstimer.gui.definedivisions.DivisionsWin \
-          (self.fields, self.fieldsdic, self.divisions, self.back_to_family_reset, self.store_new_project, self.introwin)
+          (self.fields, self.fieldsdic, self.divisions, self.back_to_fields, self.print_fields, self.introwin)
 
-    def back_to_family_reset(self, jnk_unused):
+    def back_to_fields(self, jnk_unused):
         '''Goes back to family reset window, from the division edition one'''
-        if self.divisionswin:
-            self.divisionswin.hide()
-        if self.rankingswin:
-            self.rankingswin.hide()
-        self.familyresetwin.show_all()
-
-    def define_rankings(self, jnk_unused, btnlist):
-        '''Defines default ranking and launch the ranking edition window'''
-        self.set_fam_rest(btnlist)
-        self.rankingswin = fstimer.gui.definerankings.RankingsWin \
-          (self.rankings, self.back_to_family_reset, self.define_divisions, self.introwin)
+        self.divisionswin.hide()
+        self.definefieldswin.show_all()
         
-    def back_to_define_divisions(self, jnk_unused):
-        '''Goes back to define divisions window, from the ranking edition one'''
-        self.rankingswin.hide()
+    def print_fields(self, jnk_unused):
+        '''Launch print fields window'''
+        # First filter the current self.printfields to only include ones that use fields
+        # from self.fields.
+        bad_fields = []
+        for field, text in self.printfields.items():
+            if not (field in self.fields or field in ['Time', 'Pace']):
+                vars_ = re.findall("\{[^}]+\}", text)
+                for var in vars_:
+                    name = var[1:-1]
+                    if not (name in self.fields or name == 'Time'):
+                        bad_fields.append(field)
+        for field in bad_fields:
+            self.printfields.pop(field)
+        # Now launch the window
+        self.divisionswin.hide()
+        self.printfieldswin = fstimer.gui.printfields.PrintFieldsWin(
+            self.fields, self.printfields, self.back_to_divisions, self.define_rankings, self.introwin)
+    
+    def back_to_divisions(self, jnk_unused, btnlist, btn_time, btn_pace, entry_pace, printfields_m):
+        '''Goes back to define fields window from the print fields'''
+        res = self.set_printfields(btnlist, btn_time, btn_pace, entry_pace, printfields_m)
+        if not res:
+            return
+        #else
+        self.printfieldswin.hide()
         self.divisionswin.show_all()
+    
+    def set_printfields(self, btnlist, btn_time, btn_pace, entry_pace, printfields_m):
+        '''Update self.printfields'''
+        # First check it is valid.
+        if btn_pace.get_active():
+            try:
+                d = float(entry_pace.get_text())
+            except ValueError:
+                md = MsgDialog(self.printfieldswin, 'error', 'OK', 'Error!', 'Distance must be a number.')
+                md.run()
+                md.destroy()
+                return False
+        # It will be valid. Let's continue.
+        self.printfields = {}  # re-set
+        # Start with the registration fields
+        for field, btn in zip(self.fields, btnlist):
+            if btn.get_active():
+                self.printfields[field] = '{' + field + '}'
+        # Then timing button and pace button
+        if btn_time.get_active():
+            self.printfields['Time'] = '{Time_str}'
+        if btn_pace.get_active():
+            self.printfields['Pace'] = '{Time} / 60 / ' + entry_pace.get_text()
+        # Finally custom fields
+        for field in printfields_m:
+            if field not in self.fields and field not in ['Time', 'Pace']:
+                self.printfields[field] = str(printfields_m[field])
+        if len(self.printfields) == 0:
+            md = MsgDialog(self.printfieldswin, 'error', 'OK', 'Error!', 'Must include at least one field.')
+            md.run()
+            md.destroy()
+            return False
+        return True
+    
+    def define_rankings(self, jnk_unused, btnlist, btn_time, btn_pace, entry_pace, printfields_m):
+        '''Goes to the define rankings window'''
+        # Store away the printfields information.
+        res = self.set_printfields(btnlist, btn_time, btn_pace, entry_pace, printfields_m)
+        if not res:
+            return
+        # else move on.
+        # Edit the current self.rankings to make sure its keys match the divisions in div.
+        old_divs = list(self.rankings.keys())
+        old_divs.remove('Overall')
+        for div, descr in self.divisions:
+            if div not in self.rankings:
+                self.rankings[div] = self.rankings['Overall']
+            else:
+                old_divs.remove(div)
+        # Get rid of any removed divs
+        for div in old_divs:
+            self.rankings.pop(div)
+        # Now we're ready.
+        self.printfieldswin.hide()
+        self.rankingswin = fstimer.gui.definerankings.RankingsWin(
+            self.rankings, self.divisions, self.printfields, self.back_to_printfields, self.store_new_project, self.introwin)
+
+    def back_to_printfields(self, jnk_unused):
+        '''Goes back to define fields window from the family reset one'''
+        self.rankingswin.hide()
+        self.printfieldswin.show_all()
 
     def store_new_project(self, jnk_unused):
         '''Stores a new project to file and goes to root window'''
@@ -219,7 +288,7 @@ class PyTimer(object):
         regdata['numlaps'] = self.numlaps
         regdata['fields'] = self.fields
         regdata['fieldsdic'] = self.fieldsdic
-        regdata['clear_for_fam'] = self.clear_for_fam
+        regdata['printfields'] = self.printfields
         regdata['divisions'] = self.divisions
         regdata['rankings'] = self.rankings
         with open(join(self.path, basename(self.path)+'.reg'), 'w', encoding='utf-8') as fout:
@@ -227,7 +296,6 @@ class PyTimer(object):
         md = MsgDialog(self.divisionswin, 'information', 'OK', 'Created!', 'Project '+basename(self.path)+' successfully created!')
         md.run()
         md.destroy()
-        self.divisionswin.hide()
         self.rankingswin.hide()
         self.introwin.hide()
         self.rootwin = fstimer.gui.root.RootWin(self.path,
