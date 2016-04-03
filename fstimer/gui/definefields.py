@@ -299,9 +299,8 @@ class DefineFieldsWin(Gtk.Window):
                 self.fieldsdic[nameentry]['options'] = optionlist
                 self.regfieldsmodel.set_value(treeiter, 2, 'options: '+optstr)
                 self.winnewcombo.hide()
-            elif nameentry in self.fields:
-                #Not the original name, but an existing name.
-                label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            elif not self.name_validate(nameentry, label3):
+                pass
             else:
                 #A completely new name.
                 self.fields[self.fields.index(oldname)] = nameentry #replace the name in self.fields
@@ -312,8 +311,8 @@ class DefineFieldsWin(Gtk.Window):
                 self.winnewcombo.hide()
         else:
             #no treeiter- this was a new entry. Two possibilities...
-            if nameentry in self.fields:
-                label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            if not self.name_validate(nameentry, label3):
+                pass
             else:
                 self.fields.append(nameentry)
                 self.fieldsdic[nameentry] = {'type':'combobox', 'options':optionlist} #new entry
@@ -332,9 +331,8 @@ class DefineFieldsWin(Gtk.Window):
                 self.fieldsdic[nameentry]['max'] = int(maxchar)
                 self.regfieldsmodel.set_value(treeiter, 2, 'max characters: '+maxchar)
                 self.winnewentry.hide()
-            elif nameentry in self.fields:
-                #Not the original name, but an existing name.
-                label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            elif not self.name_validate(nameentry, label3):
+                pass
             else:
                 #A completely new name.
                 self.fields[self.fields.index(oldname)] = nameentry #replace the name in self.fields
@@ -345,8 +343,8 @@ class DefineFieldsWin(Gtk.Window):
                 self.winnewentry.hide()
         else:
             #no treeiter- this was a new entry. Two possibilities...
-            if nameentry in self.fields:
-                label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            if not self.name_validate(nameentry, label3):
+                pass
             else:
                 self.fields.append(nameentry)
                 self.fieldsdic[nameentry] = {'type':'entrybox', 'max':int(maxchar)} #new entry
@@ -354,3 +352,12 @@ class DefineFieldsWin(Gtk.Window):
                 self.winnewentry.hide()
         return
 
+    def name_validate(self, nameentry, label3):
+        if nameentry in self.fields:
+            label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            return False
+        elif '{' in nameentry or '}' in nameentry:
+            label3.set_markup('<span color="red">{ and } cannot be used in field name! Try again.</span>')
+            return False
+        else:
+            return True
