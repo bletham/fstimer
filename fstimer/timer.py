@@ -528,7 +528,8 @@ class PyTimer(object):
                     scratchresults += printer.scratch_entry(row)
                 mydivs = self.get_divisions(tag)
                 for div in mydivs:
-                    divresults[div] += printer.cat_entry(div, row)
+                    if self.ranking[div] == ranking_key:
+                        divresults[div] += printer.cat_entry(div, row)
         scratchresults += printer.scratch_table_footer()
         for div in divresults:
             divresults[div] += printer.cat_table_footer(div)
