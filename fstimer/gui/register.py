@@ -58,7 +58,6 @@ class RegistrationWin(Gtk.Window):
             column = Gtk.TreeViewColumn(field, Gtk.CellRendererText(), text=colid)
             column.set_sort_column_id(colid)
             self.treeview.append_column(column)
-        self.lastnamecol = fields.index('Last name')
         # Now we populate the model with the pre-registration info, if any
         for reg in prereg:
             self.regmodel.append([reg[field] for field in fields])
@@ -79,7 +78,13 @@ class RegistrationWin(Gtk.Window):
         self.set_size_request(850, 450)
         #Now the filter entrybox
         filterbox = Gtk.HBox(False, 8)
-        filterbox.pack_start(Gtk.Label('Filter by last name:', True, True, 0), False, False, 0)
+        filterbox.pack_start(Gtk.Label('Filter by ', True, True, 0), False, False, 0)
+        self.filter_combo = Gtk.ComboBoxText()
+        for field in self.fields:
+            self.filter_combo.append_text(field)
+        self.filter_combo.set_active(0)
+        filterbox.pack_start(self.filter_combo, False, False, 0)
+        filterbox.pack_start(Gtk.Label(':'), False, False, 0)
         self.filterentry = Gtk.Entry()
         self.filterentry.set_max_length(40)
         self.filterentry.connect('changed', self.filter_apply)
@@ -145,13 +150,14 @@ class RegistrationWin(Gtk.Window):
 
     def visible_filter(self, model, titer, data):
         '''This is the filter function.
-           It checks if self.searchstr is contained in column self.lastnamecol,
+           It checks if self.searchstr is contained in column matching self.filter_combo
            case insensitive'''
         if self.searchstr:
-            if not model.get_value(titer, self.lastnamecol):
+            col_idx = self.filter_combo.get_active()
+            if not model.get_value(titer, col_idx):
                 return False
             else:
-                return self.searchstr.lower() in model.get_value(titer, self.lastnamecol).lower()
+                return self.searchstr.lower() in model.get_value(titer, col_idx).lower()
         else:
             return True
 
@@ -340,16 +346,18 @@ class RegistrationWin(Gtk.Window):
             for (colid, field) in enumerate(self.fields):
                 self.regmodel.set_value(treeiter, colid, new_vals[field])
             self.prereg[preregiter] = new_vals
+            path = self.treemodel.get_path(treeiter)
         else:
             self.regmodel.append([new_vals[field] for field in self.fields])
             self.prereg.append(new_vals)
+            path = len(self.regmodel)
         # Add the new ID to the id store
         if new_vals['ID']:
             self.ids.add(new_vals['ID'])
         # The saved status is unsaved
         self.regstatus.set_markup('')
-        # Filter results by this last name
-        self.filterentry.set_text(new_vals['Last name'])
+        # Filter results by the current filter field, for this value
+        self.filterentry.set_text(new_vals[self.filter_combo.get_active_text()])
         # Save
         if self.autosave:
             self.save_clicked(None)
