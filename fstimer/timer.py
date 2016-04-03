@@ -183,6 +183,19 @@ class PyTimer(object):
     
     def define_divisions(self, jnk_unused):
         '''Defines default divisions and launched the division edition window'''
+        # First edit the current divisions to use only available fields
+        divs = []
+        for div, fields_dict in self.divisions:
+            keep_div = True
+            for field in fields_dict:
+                if field not in self.fields:
+                    keep_div = False
+                    break
+            if keep_div:
+                divs.append([div, fields_dict])
+        # replace
+        self.divisions = list(divs)
+        # continue
         self.definefieldswin.hide()
         self.divisionswin = fstimer.gui.definedivisions.DivisionsWin \
           (self.fields, self.fieldsdic, self.divisions, self.back_to_fields, self.print_fields, self.introwin)
@@ -204,6 +217,7 @@ class PyTimer(object):
                     name = var[1:-1]
                     if not (name in self.fields or name == 'Time'):
                         bad_fields.append(field)
+                        break
         for field in bad_fields:
             self.printfields.pop(field)
         # Now launch the window

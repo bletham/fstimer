@@ -44,9 +44,9 @@ class DefineFieldsWin(Gtk.Window):
         self.connect('delete_event', lambda b, jnk_unused: self.hide())
         #Specify the fields that are required and so will be locked.
         if projecttype == 'handicap':
-            self.reqfields = ['Last name', 'First name', 'ID', 'Age', 'Gender', 'Handicap']
+            self.reqfields = ['ID', 'Age', 'Handicap']
         else:
-            self.reqfields = ['Last name', 'First name', 'ID', 'Age', 'Gender']
+            self.reqfields = ['ID', 'Age']
         ##Now create the vbox.
         vbox1 = Gtk.VBox(False, 10)
         self.add(vbox1)
