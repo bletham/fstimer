@@ -159,7 +159,7 @@ class TimingWin(Gtk.Window):
         timevbox1 = Gtk.VBox(False, 8)
         timevbox1.pack_start(tophbox, False, False, 0)
         timevbox1.pack_start(timealgn, True, True, 0)
-        timevbox1.pack_start(Gtk.Label('Must select box below to mark times:'), False, False, 0)
+        timevbox1.pack_start(Gtk.Label('Select box below in order to mark times:'), False, False, 0)
         timevbox1.pack_start(self.entrybox, False, False, 0)
         # we will keep track of how many racers are still out.
         self.racers_reg = []
