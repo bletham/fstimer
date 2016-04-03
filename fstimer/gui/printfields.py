@@ -30,7 +30,7 @@ class PrintFieldsWin(Gtk.Window):
     '''Handling of the window dedicated to the definition of the field
        to reset when registering several members of a family'''
 
-    def __init__(self, fields, printfields, back_clicked_cb, next_clicked_cb, parent):
+    def __init__(self, fields, printfields, back_clicked_cb, next_clicked_cb, parent, edit):
         '''Creates print fields window'''
         super(PrintFieldsWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
@@ -140,7 +140,7 @@ class PrintFieldsWin(Gtk.Window):
         btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,"Back")
         btnBACK.connect('clicked', back_clicked_cb, btnlist, btn_time, btn_pace, entry_pace, self.printfields)
         btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Next")
-        btnNEXT.connect('clicked', next_clicked_cb, btnlist, btn_time, btn_pace, entry_pace, self.printfields)
+        btnNEXT.connect('clicked', next_clicked_cb, btnlist, btn_time, btn_pace, entry_pace, self.printfields, edit)
         ##And populate
         hbox.pack_start(alignCANCEL, True, True, 0)
         hbox.pack_start(btnBACK, False, False, 2)
@@ -208,8 +208,10 @@ class PrintFieldsWin(Gtk.Window):
             for var in vars_:
                 if var == '{Time}':
                     text_test = text_test.replace(var, "3.14159")
+                if var == '{Age}':
+                    text_test = text_test.replace(var, "20")
                 else:
-                    # Use a string of a number so that int() works (e.g. for Age)
+                    # Use a string of a number so that int() works
                     # In the future we will have typed fields.
                     text_test = text_test.replace(var, "'1000000001'")
             eval(text_test)

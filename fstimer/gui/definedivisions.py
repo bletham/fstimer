@@ -26,7 +26,7 @@ from fstimer.gui.GtkStockButton import GtkStockButton
 class DivisionsWin(Gtk.Window):
     '''Handling of the window where divisions are defined'''
 
-    def __init__(self, fields, fieldsdic, divisions, back_clicked_cb, next_clicked_cb, parent):
+    def __init__(self, fields, fieldsdic, divisions, back_clicked_cb, next_clicked_cb, parent, edit):
         '''Creates divisions window'''
         super(DivisionsWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.divisions = divisions
@@ -127,9 +127,12 @@ class DivisionsWin(Gtk.Window):
         alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
         btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,'Back')
-        btnBACK.connect('clicked', back_clicked_cb)
+        if edit:
+            btnBACK.set_sensitive(False)
+        else:
+            btnBACK.connect('clicked', back_clicked_cb)
         btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,'Next')
-        btnNEXT.connect('clicked', next_clicked_cb)
+        btnNEXT.connect('clicked', next_clicked_cb, edit)
         ##And populate
         hbox3.pack_start(alignCANCEL, True, True, 0)
         hbox3.pack_start(btnBACK, False, False, 2)

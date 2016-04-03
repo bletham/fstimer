@@ -27,7 +27,7 @@ from fstimer.gui.util_classes import MsgDialog
 class RankingsWin(Gtk.Window):
     '''Handling of the window where rankings are defined'''
 
-    def __init__(self, rankings, divisions, printfields, back_clicked_cb, next_clicked_cb, parent):
+    def __init__(self, rankings, divisions, printfields, back_clicked_cb, next_clicked_cb, parent, edit):
         '''Creates divisions window'''
         super(RankingsWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.rankings = rankings
@@ -65,7 +65,8 @@ class RankingsWin(Gtk.Window):
         # Make the model, a liststore with columns str, str
         self.rankingmodel = Gtk.ListStore(str, str)
         for div in divisions:
-            self.rankingmodel.append([div[0], self.fieldslist[self.indx]])
+            indx_div = self.fieldslist.index(self.rankings[div[0]])
+            self.rankingmodel.append([div[0], self.fieldslist[indx_div]])
         self.rankingview.set_model(self.rankingmodel)
         selection = self.rankingview.get_selection()
         # Add following columns to the treeview :
@@ -105,7 +106,7 @@ class RankingsWin(Gtk.Window):
         btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,"Back")
         btnBACK.connect('clicked', back_clicked_cb)
         btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Forward")
-        btnNEXT.connect('clicked', next_clicked_cb, None)
+        btnNEXT.connect('clicked', next_clicked_cb, edit)
         # Populate
         hbox3.pack_start(alignCANCEL, True, True, 0)
         hbox3.pack_start(btnBACK, False, False, 2)

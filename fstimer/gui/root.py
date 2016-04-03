@@ -28,7 +28,7 @@ class RootWin(Gtk.Window):
     '''Handles the root window of the application'''
 
     def __init__(self, path, show_about_cb, importprereg_cb,
-                 prereg_cb, compreg_cb, pretime_cb):
+                 prereg_cb, compreg_cb, pretime_cb, edit_cb):
         '''Creates the root window with choices for the tasks'''
         super(RootWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
@@ -40,8 +40,11 @@ class RootWin(Gtk.Window):
         # Generate the menubar
         mb = Gtk.MenuBar()
         helpmenu = Gtk.Menu()
-        helpm = Gtk.MenuItem('Help')
+        helpm = Gtk.MenuItem('Menu')
         helpm.set_submenu(helpmenu)
+        menuedit = Gtk.ImageMenuItem.new_with_label('Edit project settings')
+        menuedit.connect('activate', edit_cb, True)
+        helpmenu.append(menuedit)
         menuhelp = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_HELP, None)
         menuhelp.connect('activate', lambda x: webbrowser.open_new('http://fstimer.org/documentation/documentation_sec2.htm'))
         helpmenu.append(menuhelp)

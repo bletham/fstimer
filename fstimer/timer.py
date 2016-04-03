@@ -94,7 +94,7 @@ class PyTimer(object):
                 self.printfields[field] = '{' + field + '}'
             if 'Name' not in self.fields:
                 self.printfields['Name'] = "{First name} + ' ' + {Last name}"
-            
+        
         #Move on to the main window
         self.introwin.hide()
         self.rootwin = fstimer.gui.root.RootWin(self.path,
@@ -102,7 +102,8 @@ class PyTimer(object):
                                                 self.import_prereg,
                                                 self.handle_preregistration,
                                                 self.compreg_window,
-                                                self.gen_pretimewin)
+                                                self.gen_pretimewin,
+                                                self.define_divisions)
 
     def create_project(self, jnk_unused):
         #And load the new project window
@@ -181,7 +182,7 @@ class PyTimer(object):
         self.projecttypewin.hide()
         self.newprojectwin.show_all()
     
-    def define_divisions(self, jnk_unused):
+    def define_divisions(self, jnk_unused, edit=False):
         '''Defines default divisions and launched the division edition window'''
         # First edit the current divisions to use only available fields
         divs = []
@@ -196,16 +197,20 @@ class PyTimer(object):
         # replace
         self.divisions = list(divs)
         # continue
-        self.definefieldswin.hide()
+        if edit:
+            parent_win = self.rootwin
+        else:
+            self.definefieldswin.hide()
+            parent_win = self.introwin
         self.divisionswin = fstimer.gui.definedivisions.DivisionsWin \
-          (self.fields, self.fieldsdic, self.divisions, self.back_to_fields, self.print_fields, self.introwin)
+          (self.fields, self.fieldsdic, self.divisions, self.back_to_fields, self.print_fields, parent_win, edit)
 
     def back_to_fields(self, jnk_unused):
         '''Goes back to family reset window, from the division edition one'''
         self.divisionswin.hide()
         self.definefieldswin.show_all()
         
-    def print_fields(self, jnk_unused):
+    def print_fields(self, jnk_unused, edit):
         '''Launch print fields window'''
         # First filter the current self.printfields to only include ones that use fields
         # from self.fields.
@@ -221,9 +226,10 @@ class PyTimer(object):
         for field in bad_fields:
             self.printfields.pop(field)
         # Now launch the window
+        parent_win = self.rootwin if edit else self.introwin
         self.divisionswin.hide()
         self.printfieldswin = fstimer.gui.printfields.PrintFieldsWin(
-            self.fields, self.printfields, self.back_to_divisions, self.define_rankings, self.introwin)
+            self.fields, self.printfields, self.back_to_divisions, self.define_rankings, parent_win, edit)
     
     def back_to_divisions(self, jnk_unused, btnlist, btn_time, btn_pace, entry_pace, printfields_m):
         '''Goes back to define fields window from the print fields'''
@@ -267,7 +273,7 @@ class PyTimer(object):
             return False
         return True
     
-    def define_rankings(self, jnk_unused, btnlist, btn_time, btn_pace, entry_pace, printfields_m):
+    def define_rankings(self, jnk_unused, btnlist, btn_time, btn_pace, entry_pace, printfields_m, edit):
         '''Goes to the define rankings window'''
         # Store away the printfields information.
         res = self.set_printfields(btnlist, btn_time, btn_pace, entry_pace, printfields_m)
@@ -286,18 +292,20 @@ class PyTimer(object):
         for div in old_divs:
             self.rankings.pop(div)
         # Now we're ready.
+        parent_win = self.rootwin if edit else self.introwin
         self.printfieldswin.hide()
         self.rankingswin = fstimer.gui.definerankings.RankingsWin(
-            self.rankings, self.divisions, self.printfields, self.back_to_printfields, self.store_new_project, self.introwin)
+            self.rankings, self.divisions, self.printfields, self.back_to_printfields, self.store_new_project, parent_win, edit)
 
     def back_to_printfields(self, jnk_unused):
         '''Goes back to define fields window from the family reset one'''
         self.rankingswin.hide()
         self.printfieldswin.show_all()
 
-    def store_new_project(self, jnk_unused):
+    def store_new_project(self, jnk_unused, edit):
         '''Stores a new project to file and goes to root window'''
-        os.system('mkdir '+ self.path)
+        if not edit:
+            os.system('mkdir '+ self.path)
         regdata = {}
         regdata['projecttype'] = self.projecttype
         regdata['numlaps'] = self.numlaps
@@ -308,17 +316,22 @@ class PyTimer(object):
         regdata['rankings'] = self.rankings
         with open(join(self.path, basename(self.path)+'.reg'), 'w', encoding='utf-8') as fout:
             json.dump(regdata, fout)
-        md = MsgDialog(self.divisionswin, 'information', 'OK', 'Created!', 'Project '+basename(self.path)+' successfully created!')
+        if edit:
+            md = MsgDialog(self.divisionswin, 'information', 'OK', 'Edited!', 'Project '+basename(self.path)+' successfully edited!')
+        else:
+            md = MsgDialog(self.divisionswin, 'information', 'OK', 'Created!', 'Project '+basename(self.path)+' successfully created!')
         md.run()
         md.destroy()
         self.rankingswin.hide()
-        self.introwin.hide()
-        self.rootwin = fstimer.gui.root.RootWin(self.path,
-                                                self.show_about,
-                                                self.import_prereg,
-                                                self.handle_preregistration,
-                                                self.compreg_window,
-                                                self.gen_pretimewin)
+        if not edit:
+            self.introwin.hide()
+            self.rootwin = fstimer.gui.root.RootWin(self.path,
+                                                    self.show_about,
+                                                    self.import_prereg,
+                                                    self.handle_preregistration,
+                                                    self.compreg_window,
+                                                    self.gen_pretimewin,
+                                                    self.define_divisions)
 
     def show_about(self, jnk_unused):
         '''Displays the about window'''
