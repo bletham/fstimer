@@ -218,7 +218,7 @@ class TimingWin(Gtk.Window):
         edit_align = Gtk.Alignment.new(1, 0, 1, 0)
         edit_align.add(edit_vbox)
         #Then the print and save buttons
-        btnPRINT = GtkStockButton(Gtk.STOCK_PRINT,"Print")
+        btnPRINT = Gtk.Button('Printouts')
         btnPRINT.connect('clicked', print_cb, False)
         btnSAVE = GtkStockButton(Gtk.STOCK_SAVE,"Save")
         btnSAVE.connect('clicked', self.save_times)
