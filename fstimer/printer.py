@@ -66,20 +66,12 @@ class Printer(object):
            @param category: name of the category handled by the table'''
         return ''
 
-    def scratch_entry(self, bibid, timing_data, runner_data):
+    def scratch_entry(self, row):
         '''Returns the printout of the entry of a given runner
-           in the scratch results
-           @type bibid: string
-           @param bibid: the bibid of the runner
-           @type timing_data: timedelta|list
-           @param timing_data: timing data for the runner. May be his/her time
-                               or a list of times for multi lap races
-           @type runner_data: dict
-           @param runner_data: data concerning the runner. A dictionnary
-                               of field name / field value'''
+           in the scratch results'''
         return ''
 
-    def cat_entry(self, bibid, category, timing_data, runner_data):
+    def cat_entry(self, row):
         '''Returns the printout of the entry of a given runner
            in the results by category
            @type bibid: string

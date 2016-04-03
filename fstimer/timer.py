@@ -89,6 +89,7 @@ class PyTimer(object):
             self.printfields = regdata['printfields']
         except KeyError:
             # fill with default
+            self.printfields = {'Time': '{Time_str}'}
             for field in ['ID', 'Age', 'Gender']:
                 self.printfields[field] = '{' + field + '}'
             if 'Name' not in self.fields:
@@ -471,65 +472,93 @@ class PyTimer(object):
                 printer_class = fstimer.printhtmllaps.HTMLPrinterLaps
             else:
                 printer_class = fstimer.printhtml.HTMLPrinter
-        # Figure out what the columns will be
-        other_fields = set([field for div in self.divisions for field in div[1]
-                            if field not in ['Age', 'Gender']])
-        fields = ['Place', 'Time']
-        if self.numlaps > 1:
-            fields.append('Lap Times')
-        fields.extend(['Name', 'Bib ID', 'Gender', 'Age'])
-        fields.extend(list(other_fields))
-        # loop through different types of ranking
-        for file_ext, do_div, ranking_code,  in self.rankings:
-            # instantiate the printer
-            printer = printer_class(fields, [div[0] for div in self.divisions])
-            # first build all results into strings
-            scratchresults = printer.scratch_table_header()
-            if do_div:
-                divresults = {div[0]:'\n'+printer.cat_table_header(div[0])
-                            for div in self.divisions}
-            code = compile(ranking_code, '', 'eval')
-            sort_method = lambda entry, self=self, code=code:eval(code)
-            for (tag, time) in self.get_sorted_results(sort_method):
-                scratchresults += printer.scratch_entry(tag, time, self.timing[tag])
-                if do_div:
-                    mydivs = self.get_division(self.timing[tag])
-                    for div in mydivs:
-                        divresults[div] += printer.cat_entry(tag, div, time, self.timing[tag])
-            scratchresults += printer.scratch_table_footer()
-            if do_div:
-                for div in divresults:
-                    divresults[div] += printer.cat_table_footer(div)
-            # now save to files
-            scratch_file = os.path.join(self.path,
-                                        '_'.join([self.path,
-                                                  self.timewin.timestr,
-                                                  'all' + file_ext + '.' + printer.file_extension()]))
-            with open(scratch_file, 'w') as scratch_out:
-                scratch_out.write(printer.header())
-                scratch_out.write(scratchresults)
-                scratch_out.write(printer.footer())
-            if do_div:
-                div_file = os.path.join(self.path,
-                                        '_'.join([self.path,
-                                                  self.timewin.timestr,
-                                                  'div' + file_ext + '.' + printer.file_extension()]))
-                with open(div_file, 'w') as div_out:
-                    div_out.write(printer.header())
-                    for div in self.divisions:
-                        div_out.write(divresults[div[0]])
-                    div_out.write(printer.footer())
+        # Figure out what the columns will be.
+        cols = []
+        # Prefer next time, and then pace, if they are in the printfields
+        for field in ['Time', 'Pace']:
+            if field in self.printfields:
+                cols.append(field)
+        if self.numlaps > 1 and 'Time' in self.printfields:
+            cols.append('Lap Times')
+        # Then add in the calculated fields, and then registration fields
+        regfields = []
+        for field in self.printfields:
+            if field in self.fields:
+                regfields.append(field)
+            elif field in ['Time', 'Pace']:
+                pass  # already covered
+            else:
+                cols.append(field)  # A computed field
+        cols.extend(regfields)
+        # Prepare functions for computing each column
+        col_fns = []
+        for col in cols:
+            if col == 'Lap Times':
+                text = 'lap_time'
+            else:
+                text = self.printfields[col]
+                # Sub {Time} and {Time_str}
+                text = text.replace('{Time_str}', 'time')
+                text = text.replace('{Time}', 'time.total_seconds()')
+                # Age
+                text = text.replace('{Age}', "int(userdata['Age'])")
+                # ID
+                text = text.replace('{ID}', "tag")
+                # And the other registration fields
+                for field in self.fields:
+                    if field not in ['Age', 'ID']:
+                        text = text.replace('{' + field + '}', "userdata['{}']".format(field))
+            col_fns.append(text)
+        # Get the list of different things we will rank by
+        ranking_keys = set(self.rankings.values())
+        # instantiate the printer
+        printer = printer_class(cols, [div[0] for div in self.divisions])
+        # Build the results
+        scratchresults = printer.scratch_table_header()
+        divresults = {div[0]:'\n'+printer.cat_table_header(div[0])
+                      for div in self.divisions}
+        # Do the ranking for each ranking key
+        ranked_results = {}
+        for ranking_key in ranking_keys:
+            rank_indx = cols.index(ranking_key)
+            ranked_results = self.get_sorted_results(rank_indx, col_fns)
+            for tag, row in ranked_results:
+                # Add this to the appropriate results
+                if self.rankings['Overall'] == ranking_key:
+                    scratchresults += printer.scratch_entry(row)
+                mydivs = self.get_divisions(tag)
+                for div in mydivs:
+                    divresults[div] += printer.cat_entry(div, row)
+        scratchresults += printer.scratch_table_footer()
+        for div in divresults:
+            divresults[div] += printer.cat_table_footer(div)
+        # now save to files
+        scratch_file = os.path.join(self.path,
+                                    '_'.join([self.projectname,
+                                                self.timewin.timestr,
+                                                'alltimes.' + printer.file_extension()]))
+        with open(scratch_file, 'w') as scratch_out:
+            scratch_out.write(printer.header())
+            scratch_out.write(scratchresults)
+            scratch_out.write(printer.footer())
+        div_file = os.path.join(self.path,
+                                '_'.join([self.projectname,
+                                            self.timewin.timestr,
+                                            'divtimes.' + printer.file_extension()]))
+        with open(div_file, 'w') as div_out:
+            div_out.write(printer.header())
+            for div in self.divisions:
+                div_out.write(divresults[div[0]])
+            div_out.write(printer.footer())
         # display user dialog that all was successful
-        md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT,
-                               gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE,
-                               "Results saved to " + printer.file_extension() + "!")
+        md = MsgDialog(self.timewin, 'information', 'OK', 'Success!', "Results saved to " + printer.file_extension() + "!")
         md.run()
         md.destroy()
 
-    def get_division(self, timingEntry):
+    def get_divisions(self, tag):
         '''Get the divisions for a given timing entry'''
         try:
-            age = int(timingEntry['Age'])
+            age = int(self.timing[tag]['Age'])
         except ValueError:
             age = ''
         mydivs = []
@@ -541,7 +570,7 @@ class PyTimer(object):
                     if not age or age < div[1]['Age'][0] or age > div[1]['Age'][1]:
                         break
                 else:
-                    if timingEntry[field] != div[1][field]:
+                    if self.timing[tag][field] != div[1][field]:
                         break
             else:
                 mydivs.append(div[0])
@@ -564,7 +593,7 @@ class PyTimer(object):
             adj_times = list(self.rawtimes['times'])
         return adj_ids, adj_times
 
-    def get_sorted_results(self, sort_method):
+    def get_sorted_results(self, rank_indx, col_fns):
         '''returns a sorted list of (id, result) items.
            The content of result depends on the race type'''
         # get raw times
@@ -585,12 +614,8 @@ class PyTimer(object):
         else:
             #Drop times that are blank or have the passid
             timeslist = [(tag, time) for tag, time in timeslist if tag and time and tag != self.passid]
-        # sort by time
-        timeslist = sorted(timeslist, key=sort_method)
-        # single lap case
-        if self.numlaps == 1:
-            return timeslist
-        else:
+        # Compute lap times, if a lap race
+        if self.numlaps > 1:
             # multi laps - groups times by tag
             # Each value of laptimesdic is a list, sorted in order from
             # fastest time (1st lap) to longest time (last lap).
@@ -598,15 +623,47 @@ class PyTimer(object):
             for (tag, time) in sorted(timeslist, key=lambda x:x[1]):
                 laptimesdic[tag].append(time)
             # compute the lap times.
-            laptimesdic2 = defaultdict(list)
+            lap_times = {}
+            total_times = {}
             for tag in laptimesdic:
                 # First put the total race time
                 if len(laptimesdic[tag]) == self.numlaps:
-                    laptimesdic2[tag] = [laptimesdic[tag][-1]]
+                    total_times[tag] = laptimesdic[tag][-1]
                 else:
-                    laptimesdic2[tag] = ['<>']
-                # And now the first lap
-                laptimesdic2[tag].append(laptimesdic[tag][0])
+                    total_times[tag] = '<>'
+                # And the first lap
+                lap_times[tag] = ['1 - ' + laptimesdic[tag][0]]
                 # And now the subsequent laps
-                laptimesdic2[tag].extend([time_diff(laptimesdic[tag][ii+1],laptimesdic[tag][ii]) for ii in range(len(laptimesdic[tag])-1)])
-            return sorted(laptimesdic2.items(), key=lambda entry: sort_method((entry[1][0])))
+                for ii in range(len(laptimesdic[tag])-1):
+                    lap_times[tag].append(str(ii+2) + ' - ' + time_diff(laptimesdic[tag][ii+1],laptimesdic[tag][ii]))
+            # Now correct timeslist to have the new total times
+            timeslist = list(total_times.items())
+        else:
+            lap_times = defaultdict(int)
+        # Compute each results row
+        result_rows = []
+        for tag, time in timeslist:
+            row = []
+            lap_time = lap_times[tag]
+            userdata = self.timing[tag]
+            for i, col_fn in enumerate(col_fns):
+                try:
+                    row.append(str(eval(col_fn)))
+                except (SyntaxError, TypeError, AttributeError, ValueError):
+                    if i == rank_indx:
+                        row.append('<>')  # To push null values to the bottom
+                    else:
+                        row.append('')
+            result_rows.append((tag, row))
+        # sort by key
+        result_rows = sorted(result_rows, key=lambda x: x[1][rank_indx])
+        # remove duplicate entries: If a tag has multiple entries, keep only the most highly ranked.
+        taglist = set()
+        result_rows_dedup = []
+        for tag, row in result_rows:
+            if tag in taglist:
+                pass  # drop it
+            else:
+                taglist.add(tag)
+                result_rows_dedup.append((tag, row))
+        return result_rows_dedup

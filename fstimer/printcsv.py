@@ -43,7 +43,7 @@ class CSVPrinter(fstimer.printer.Printer):
 
     def scratch_table_header(self):
         '''Returns the header of the printout for scratch results'''
-        return ','.join(self.fields) + '\n'
+        return 'Place' + ','.join(self.fields) + '\n'
 
     def cat_table_header(self, category):
         '''Returns the header of the printout for results by category.
@@ -51,54 +51,21 @@ class CSVPrinter(fstimer.printer.Printer):
            @param category: name of the category handled by the table'''
         return category + '\n' + self.scratch_table_header()
 
-    def common_entry(self, bibid, timing_data, runner_data):
+    def common_entry(self, row):
         '''Returns the common part of the printout of the entry
-           of a given runner for scratch or by category results
-           @type bibid: string
-           @param bibid: the bibid of the runner
-           @type timing_data: timedelta|list
-           @param timing_data: timing data for the runner. May be his/her time
-                               or a list of times for multi lap races
-           @type runner_data: dict
-           @param runner_data: data concerning the runner. A dictionnary
-                               of field name / field value'''
-        data = [str(timing_data),
-                runner_data['First name'] + ' '+ runner_data['Last name'],
-                bibid,
-                runner_data['Gender'],
-                str(runner_data['Age'])]
-        for field in self.fields[6:]:
-            data.append(runner_data[field])
-        return ','.join(data) + '\n'
+           of a given runner for scratch or by category results'''
+        return ','.join(row) + '\n'
 
-    def scratch_entry(self, bibid, timing_data, runner_data):
+    def scratch_entry(self, row):
         '''Returns the printout of the entry of a given runner
-           in the scratch results
-           @type bibid: string
-           @param bibid: the bibid of the runner
-           @type timing_data: timedelta|list
-           @param timing_data: timing data for the runner. May be his/her time
-                               or a list of times for multi lap races
-           @type runner_data: dict
-           @param runner_data: data concerning the runner. A dictionnary
-                               of field name / field value'''
-        result = str(self.place) + ',' + self.common_entry(bibid, timing_data, runner_data)
+           in the scratch results'''
+        result = str(self.place) + ',' + self.common_entry(row)
         self.place += 1
         return result
 
-    def cat_entry(self, bibid, category, timing_data, runner_data):
+    def cat_entry(self, category, row):
         '''Returns the printout of the entry of a given runner
-           in the divisional results
-           @type bibid: string
-           @param bibid: the bibid of the runner
-           @type category: string
-           @param category: name of the category for this runner
-           @type timing_data: timedelta|list
-           @param timing_data: timing data for the runner. May be his/her time
-                               or a list of times for multi lap races
-           @type runner_data: dict
-           @param runner_data: data concerning the runner. A dictionnary
-                               of field name / field value'''
-        result = str(self.cat_place[category]) + ',' + self.common_entry(bibid, timing_data, runner_data)
+           in the divisional results'''
+        result = str(self.cat_place[category]) + ',' + self.common_entry(row)
         self.cat_place[category] += 1
         return result

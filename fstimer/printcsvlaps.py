@@ -34,30 +34,15 @@ class CSVPrinterLaps(fstimer.printcsv.CSVPrinter):
            @param categories: existing categories'''
         super(CSVPrinterLaps, self).__init__(fields, categories)
 
-    def common_entry(self, bibid, timing_data, runner_data):
+    def common_entry(self, row):
         '''Returns the common part of the printout of the entry
-           of a given runner for scratch or by category results
-           @type bibid: string
-           @param bibid: the bibid of the runner
-           @type timing_data: timedelta|list
-           @param timing_data: timing data for the runner. May be his/her time
-                               or a list of times for multi lap races
-           @type runner_data: dict
-           @param runner_data: data concerning the runner. A dictionnary
-                               of field name / field value'''
-        # first line, with total time and first lap
-        data = [str(timing_data[0]),
-                '1 - ' + str(timing_data[1]),
-                runner_data['First name'] + ' '+ runner_data['Last name'],
-                bibid,
-                runner_data['Gender'],
-                str(runner_data['Age'])]
-        for field in self.fields[7:]:
-            data.append(runner_data[field])
-        entry = ','.join(data) + '\n'
-        # others lines, with other lap times
-        for i in range(2, len(timing_data)):
-            data = ['', '', str(i) + ' - ' + str(timing_data[i]), '', '', '', '']
-            data.extend(['']*(len(self.fields)-7))
-            entry += ','.join(data) + '\n'
+           of a given runner for scratch or by category results'''
+        # first line, as before
+        entry = ','.join(row)+'\n'
+        if 'Lap Times' in self.fields:
+            idx_lap = self.fields.index('Lap Times')
+            for i in range(1, len(row[idx_lap])):
+                row2 = ['' for j in range(len(row))]
+                row2[idx_lap] = str(row[idx_lap][i])
+                entry += ','.join(row2) + '\n'
         return entry
