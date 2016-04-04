@@ -116,6 +116,9 @@ class DivisionsWin(Gtk.Window):
         btnNEW = GtkStockButton(Gtk.STOCK_NEW,'New')
         btnNEW.connect('clicked', self.div_new, ('', {}), None)
         vbox2.pack_start(btnNEW, False, False, 0)
+        btnCOPY = GtkStockButton(Gtk.STOCK_COPY,'Copy')
+        btnCOPY.connect('clicked', self.div_copy, selection)
+        vbox2.pack_start(btnCOPY, False, False, 0)
         #And an hbox for the fields and the buttons
         hbox4 = Gtk.HBox(False, 0)
         hbox4.pack_start(divalgn, True, True, 10)
@@ -273,6 +276,33 @@ class DivisionsWin(Gtk.Window):
             self.divisions.pop(row)
             selection.select_path((row, ))
 
+    def div_copy(self, jnk_unused, selection):
+        '''handles a click on COPY button'''
+        treeiter1 = selection.get_selected()[1]
+        if treeiter1:
+            row = self.divmodel.get_path(treeiter1)
+            row = row[0]
+            div = self.divisions[row]
+            new_name = div[0] + ' (Copy)'
+            self.divisions.append([new_name, div[1]])
+            #Add in the divisional name
+            divmodelrow = [new_name]
+            #Next the two age columns
+            if 'Age' in    div[1]:
+                divmodelrow.extend([str(div[1]['Age'][0]), str(div[1]['Age'][1])])
+            else:
+                divmodelrow.extend(['', ''])
+            #And then all other columns
+            for field in self.fields:
+                if self.fieldsdic[field]['type'] == 'combobox':
+                    if field in div[1]:
+                        divmodelrow.append(div[1][field])
+                    else:
+                        divmodelrow.append('')
+            #All done! Add this row in.
+            self.divmodel.append(divmodelrow)
+            selection.select_path((len(self.divisions), ))
+    
     def winnewdivOK(self, jnk_unused, treeiter, CheckButtons, ComboBoxes, minagebtn, maxagebtn, divnameentry):
         '''handles a click on OK button'''
         #First get the division name
