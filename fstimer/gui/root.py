@@ -49,7 +49,7 @@ class RootWin(Gtk.Window):
         menuhelp.connect('activate', lambda x: webbrowser.open_new('http://fstimer.org/documentation/documentation_sec2.htm'))
         helpmenu.append(menuhelp)
         menuabout = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ABOUT, None)
-        menuabout.connect('activate', show_about_cb)
+        menuabout.connect('activate', show_about_cb, self)
         helpmenu.append(menuabout)
         mb.append(helpm)
         ### Frame

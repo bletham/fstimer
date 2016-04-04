@@ -24,9 +24,11 @@ from gi.repository import Gtk, GdkPixbuf
 class AboutWin(Gtk.AboutDialog):
     '''Handles the about window of the application'''
 
-    def __init__(self):
+    def __init__(self, parent):
         '''Creates the about window'''
         super(AboutWin, self).__init__()
+        self.set_transient_for(parent)
+        self.set_modal(True)
         self.set_logo(GdkPixbuf.Pixbuf.new_from_file("fstimer/data/icon.png"))
         self.set_program_name('fsTimer')
         self.set_version('0.6')

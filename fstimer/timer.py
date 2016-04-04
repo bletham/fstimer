@@ -333,9 +333,9 @@ class PyTimer(object):
                                                     self.gen_pretimewin,
                                                     self.define_divisions)
 
-    def show_about(self, jnk_unused):
+    def show_about(self, jnk_unused, parent):
         '''Displays the about window'''
-        fstimer.gui.about.AboutWin()
+        fstimer.gui.about.AboutWin(parent)
 
     def import_prereg(self, jnk_unused):
         '''import pre-registration from a csv'''
