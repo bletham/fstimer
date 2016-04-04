@@ -202,8 +202,16 @@ class RegistrationWin(Gtk.Window):
             response = rmreg_dialog.run()
             rmreg_dialog.destroy()
             if response == Gtk.ResponseType.YES:
+                # Grab the current information.
+                current_info = {}
+                for (colid, field) in enumerate(self.fields):
+                    current_info[field] = self.modelfiltersorted.get_value(treeiter, colid)
+                # Find where this is in self.prereg
+                preregiter = self.prereg.index(current_info)
                 # converts the treeiter from sorted to filter to model, and remove
                 self.regmodel.remove(self.modelfilter.convert_iter_to_child_iter(self.modelfiltersorted.convert_iter_to_child_iter(treeiter)))
+                self.ids.remove(current_info['ID'])
+                self.prereg.pop(preregiter)
                 # The latest stuff has no longer been saved.
                 self.regstatus.set_markup('')
 
@@ -346,11 +354,9 @@ class RegistrationWin(Gtk.Window):
             for (colid, field) in enumerate(self.fields):
                 self.regmodel.set_value(treeiter, colid, new_vals[field])
             self.prereg[preregiter] = new_vals
-            path = self.treemodel.get_path(treeiter)
         else:
             self.regmodel.append([new_vals[field] for field in self.fields])
             self.prereg.append(new_vals)
-            path = len(self.regmodel)
         # Add the new ID to the id store
         if new_vals['ID']:
             self.ids.add(new_vals['ID'])
