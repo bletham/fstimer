@@ -78,7 +78,7 @@ class PreRegistrationWin(Gtk.Window):
 
     def file_selected(self, jnk_unused):
         '''Handle selection of a pre-reg file using a filechooser.'''
-        chooser = Gtk.FileChooserDialog(title='Select pre-registration file', action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        chooser = Gtk.FileChooserDialog(title='Select pre-registration file', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
         ffilter = Gtk.FileFilter()
         ffilter.set_name('Registration files')
         ffilter.add_pattern('*_registration_*.json')

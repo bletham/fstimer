@@ -84,7 +84,7 @@ class PreTimeWin(Gtk.Window):
     def choose_timingdict(self, jnk_unused):
         '''Handles click on Choose file button
            Converts the selected file into a defaultdict'''
-        chooser = Gtk.FileChooserDialog(title='Choose timing dictionary', action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        chooser = Gtk.FileChooserDialog(title='Choose timing dictionary', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
         chooser.set_current_folder(self.path)
         ffilter = Gtk.FileFilter()
         ffilter.set_name('Timing dictionaries')

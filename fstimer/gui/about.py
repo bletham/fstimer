@@ -30,7 +30,7 @@ class AboutWin(Gtk.AboutDialog):
         self.set_logo(GdkPixbuf.Pixbuf.new_from_file("fstimer/data/icon.png"))
         self.set_program_name('fsTimer')
         self.set_version('0.6')
-        self.set_copyright("""Copyright 2012-15 Ben Letham\
+        self.set_copyright("""Copyright 2012-16 Ben Letham\
         \nThis program comes with ABSOLUTELY NO WARRANTY; for details see license.\
         \nThis is free software, and you are welcome to redistribute it under certain conditions; see license for details""")
         self.set_comments('free, open source software for race timing.\nhttp://fstimer.org')

@@ -60,7 +60,7 @@ class CompilationWin(Gtk.Window):
             self.comblabel.append(label)
         # Pack it all
         regvbox1 = Gtk.VBox(False, 8)
-        regvbox1.pack_start(Gtk.Label('Select all of the registration files to merge', True, True, 0), False, False, 0)
+        regvbox1.pack_start(Gtk.Label('Select all of the registration files to compile', True, True, 0), False, False, 0)
         regvbox1.pack_start(compregsw, True, True, 0)
         for i in range(3):
             regvbox1.pack_start(self.comblabel[i], False, False, 0)
@@ -75,7 +75,7 @@ class CompilationWin(Gtk.Window):
         btnREMOVE.connect('clicked', self.rm_clicked)
         btnADD = GtkStockButton(Gtk.STOCK_ADD,'Add')
         btnADD.connect('clicked', self.add_clicked)
-        btnMERGE = Gtk.Button('Merge')
+        btnMERGE = Gtk.Button('Compile')
         btnMERGE.connect('clicked', self.merge_clicked)
         btnOK = Gtk.Button('Done')
         btnOK.connect('clicked', lambda jnk: self.hide())
@@ -108,7 +108,7 @@ class CompilationWin(Gtk.Window):
 
     def add_clicked(self, jnk_unused):
         '''Handling click on Add button, using a FileChooser'''
-        chooser = Gtk.FileChooserDialog(title='Select registration files', action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_ADD, Gtk.ResponseType.OK))
+        chooser = Gtk.FileChooserDialog(title='Select registration files', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_ADD, Gtk.ResponseType.OK))
         chooser.set_select_multiple(True)
         ffilter = Gtk.FileFilter()
         ffilter.set_name('Registration files')

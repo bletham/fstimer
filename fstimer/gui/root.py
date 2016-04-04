@@ -78,7 +78,7 @@ class RootWin(Gtk.Window):
         rootbtnCOMP.connect('clicked', compreg_cb)
         rootlabelCOMP = Gtk.Label(label='')
         rootlabelCOMP.set_alignment(0, 0.5)
-        rootlabelCOMP.set_markup('Compile registrations from multiple computers.')
+        rootlabelCOMP.set_markup('Compile registration file(s)')
         rootbtnTIME = Gtk.Button('Time')
         rootbtnTIME.connect('clicked', pretime_cb)
         rootlabelTIME = Gtk.Label(label='')

@@ -568,7 +568,7 @@ class TimingWin(Gtk.Window):
 
     def resume_times(self, jnk_unused, isMerge):
         '''Handles click on Resume button'''
-        chooser = Gtk.FileChooserDialog(title='Choose timing results to resume', action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        chooser = Gtk.FileChooserDialog(title='Choose timing results to resume', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
         chooser.set_current_folder(self.path)
         ffilter = Gtk.FileFilter()
         ffilter.set_name('Timing results')

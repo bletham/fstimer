@@ -234,7 +234,7 @@ class ImportPreRegWin(Gtk.Window):
 
     def select_preregistration(self, jnk_unused, textbuffer):
         '''Handle selection of a pre-reg file using a filechooser'''
-        chooser = Gtk.FileChooserDialog(title='Select pre-registration csv', action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        chooser = Gtk.FileChooserDialog(title='Select pre-registration csv', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
         ffilter = Gtk.FileFilter()
         ffilter.set_name('csv files')
         ffilter.add_pattern('*.csv')
