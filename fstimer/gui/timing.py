@@ -375,6 +375,11 @@ class TimingWin(Gtk.Window):
     def editsingletimedone(self, treeiter, new_id, new_time):
         '''Handled result of the editing of a given time'''
         row = self.timemodel.get_path(treeiter)[0]
+        if not re.match('^[0-9:.]*$', new_time):
+            md = MsgDialog(self, 'error', 'OK', 'Error!', 'Time is not valid format.')
+            md.run()
+            md.destroy()
+            return
         if row < self.offset:
             if new_id:
                 # we are putting an ID in a slot that we hadn't reached yet
