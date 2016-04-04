@@ -45,7 +45,7 @@ import fstimer.printcsv
 import fstimer.printcsvlaps
 import fstimer.printhtml
 import fstimer.printhtmllaps
-from fstimer.gui.timing import time_diff
+from fstimer.gui.timing import time_diff, time_parse
 from collections import defaultdict
 from fstimer.gui.util_classes import MsgDialog
 
@@ -261,7 +261,7 @@ class PyTimer(object):
         if btn_time.get_active():
             self.printfields['Time'] = '{Time_str}'
         if btn_pace.get_active():
-            self.printfields['Pace'] = '{Time} / 60 / ' + entry_pace.get_text()
+            self.printfields['Pace'] = 'str(datetime.timedelta(seconds={Time}/' + entry_pace.get_text() + '))[:-5]'
         # Finally custom fields
         for field in printfields_m:
             if field not in self.fields and field not in ['Time', 'Pace']:
@@ -526,7 +526,7 @@ class PyTimer(object):
                 text = self.printfields[col]
                 # Sub {Time} and {Time_str}
                 text = text.replace('{Time_str}', 'time')
-                text = text.replace('{Time}', 'time.total_seconds()')
+                text = text.replace('{Time}', 'time_parse(time).total_seconds()')
                 # Age
                 text = text.replace('{Age}', "int(userdata['Age'])")
                 # ID
@@ -555,7 +555,7 @@ class PyTimer(object):
                     scratchresults += printer.scratch_entry(row)
                 mydivs = self.get_divisions(tag)
                 for div in mydivs:
-                    if self.ranking[div] == ranking_key:
+                    if self.rankings[div] == ranking_key:
                         divresults[div] += printer.cat_entry(div, row)
         scratchresults += printer.scratch_table_footer()
         for div in divresults:
