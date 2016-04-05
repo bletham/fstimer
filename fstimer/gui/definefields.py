@@ -359,7 +359,7 @@ class DefineFieldsWin(Gtk.Window):
         elif '{' in nameentry or '}' in nameentry:
             label3.set_markup('<span color="red">{ and } cannot be used in field name! Try again.</span>')
             return False
-        elif nameentry in ['Time', 'Pace', 'Time_str', 'Place', 'Lap Times']:
+        elif nameentry in ['Time', 'Pace', 'Place', 'Lap Times']:
             label3.set_markup('<span color="red">Name "{}" is reserved and cannot be used. Try again.</span>'.format(nameentry))
         else:
             return True

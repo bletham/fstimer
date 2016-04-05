@@ -45,7 +45,7 @@ import fstimer.printcsv
 import fstimer.printcsvlaps
 import fstimer.printhtml
 import fstimer.printhtmllaps
-from fstimer.gui.timing import time_diff, time_parse
+from fstimer.gui.timing import time_diff, time_parse, time_format
 from collections import defaultdict
 from fstimer.gui.util_classes import MsgDialog
 
@@ -60,10 +60,10 @@ class PyTimer(object):
 
     def load_project(self, jnk_unused, combobox, projectlist):
         '''Loads the registration settings of a project, and go back to rootwin'''
-        self.projectname = projectlist[combobox.get_active()]
-        self.path = normpath(join(dirname(dirname(abspath(__file__))),self.projectname))
+        projectname = projectlist[combobox.get_active()]
+        self.path = normpath(join(dirname(dirname(abspath(__file__))), projectname))
         #self.path is now _absolute_, it is not project name.
-        with open(os.path.join(self.path, self.projectname+'.reg'), 'r', encoding='utf-8') as fin:
+        with open(join(self.path, projectname + '.reg'), 'r', encoding='utf-8') as fin:
             regdata = json.load(fin)
         #Assign all of the project settings
         self.fields = regdata['fields']
@@ -89,7 +89,7 @@ class PyTimer(object):
             self.printfields = regdata['printfields']
         except KeyError:
             # fill with default
-            self.printfields = {'Time': '{Time_str}'}
+            self.printfields = {'Time': '{time}'}
             for field in ['ID', 'Age', 'Gender']:
                 self.printfields[field] = '{' + field + '}'
             if 'Name' not in self.fields:
@@ -259,9 +259,9 @@ class PyTimer(object):
                 self.printfields[field] = '{' + field + '}'
         # Then timing button and pace button
         if btn_time.get_active():
-            self.printfields['Time'] = '{Time_str}'
+            self.printfields['Time'] = '{Time}'
         if btn_pace.get_active():
-            self.printfields['Pace'] = 'str(datetime.timedelta(seconds={Time}/' + entry_pace.get_text() + '))[:-5]'
+            self.printfields['Pace'] = '{Time}/' + entry_pace.get_text()
         # Finally custom fields
         for field in printfields_m:
             if field not in self.fields and field not in ['Time', 'Pace']:
@@ -501,22 +501,20 @@ class PyTimer(object):
                 printer_class = fstimer.printhtml.HTMLPrinter
         # Figure out what the columns will be.
         cols = []
-        # Prefer next time, and then pace, if they are in the printfields
+        # Prefer first time, and then pace, if they are in the printfields
         for field in ['Time', 'Pace']:
             if field in self.printfields:
                 cols.append(field)
         if self.numlaps > 1 and 'Time' in self.printfields:
             cols.append('Lap Times')
-        # Then add in the calculated fields, and then registration fields
-        regfields = []
+        # Then add in the calculated fields
         for field in self.printfields:
-            if field in self.fields:
-                regfields.append(field)
-            elif field in ['Time', 'Pace']:
-                pass  # already covered
-            else:
+            if not field in ['Time', 'Pace'] and not field in self.fields:
                 cols.append(field)  # A computed field
-        cols.extend(regfields)
+        # Finally registration fields
+        for field in self.fields:
+            if field in self.printfields:
+                cols.append(field)
         # Prepare functions for computing each column
         col_fns = []
         for col in cols:
@@ -524,8 +522,7 @@ class PyTimer(object):
                 text = 'lap_time'
             else:
                 text = self.printfields[col]
-                # Sub {Time} and {Time_str}
-                text = text.replace('{Time_str}', 'time')
+                # Sub {Time}
                 text = text.replace('{Time}', 'time_parse(time).total_seconds()')
                 # Age
                 text = text.replace('{Age}', "int(userdata['Age'])")
@@ -548,7 +545,7 @@ class PyTimer(object):
         ranked_results = {}
         for ranking_key in ranking_keys:
             rank_indx = cols.index(ranking_key)
-            ranked_results = self.get_sorted_results(rank_indx, col_fns)
+            ranked_results = self.get_sorted_results(rank_indx, cols, col_fns)
             for tag, row in ranked_results:
                 # Add this to the appropriate results
                 if self.rankings['Overall'] == ranking_key:
@@ -562,7 +559,7 @@ class PyTimer(object):
             divresults[div] += printer.cat_table_footer(div)
         # now save to files
         scratch_file = os.path.join(self.path,
-                                    '_'.join([self.projectname,
+                                    '_'.join([basename(self.path),
                                                 self.timewin.timestr,
                                                 'alltimes.' + printer.file_extension()]))
         with open(scratch_file, 'w') as scratch_out:
@@ -570,7 +567,7 @@ class PyTimer(object):
             scratch_out.write(scratchresults)
             scratch_out.write(printer.footer())
         div_file = os.path.join(self.path,
-                                '_'.join([self.projectname,
+                                '_'.join([basename(self.path),
                                             self.timewin.timestr,
                                             'divtimes.' + printer.file_extension()]))
         with open(div_file, 'w') as div_out:
@@ -621,7 +618,7 @@ class PyTimer(object):
             adj_times = list(self.rawtimes['times'])
         return adj_ids, adj_times
 
-    def get_sorted_results(self, rank_indx, col_fns):
+    def get_sorted_results(self, rank_indx, cols, col_fns):
         '''returns a sorted list of (id, result) items.
            The content of result depends on the race type'''
         # get raw times
@@ -635,8 +632,8 @@ class PyTimer(object):
                     try:
                         new_timeslist.append((tag, time_diff(time,self.timing[tag]['Handicap'])))
                     except AttributeError:
-                        #Either time or Handicap couldn't be converted to timedelta. It will be dropped.
-                        pass
+                        #Either time or Handicap couldn't be converted to timedelta.
+                        new_timeslist.append((tag, '_'))
                 #else: We just drop entries with blank tag, blank time, or the pass ID
             timeslist = list(new_timeslist) #replace
         else:
@@ -658,7 +655,7 @@ class PyTimer(object):
                 if len(laptimesdic[tag]) == self.numlaps:
                     total_times[tag] = laptimesdic[tag][-1]
                 else:
-                    total_times[tag] = '<>'
+                    total_times[tag] = '_'
                 # And the first lap
                 lap_times[tag] = ['1 - ' + laptimesdic[tag][0]]
                 # And now the subsequent laps
@@ -678,14 +675,21 @@ class PyTimer(object):
                 try:
                     row.append(str(eval(col_fn)))
                 except (SyntaxError, TypeError, AttributeError, ValueError):
-                    if i == rank_indx:
-                        row.append('<>')  # To push null values to the bottom
+                    if cols[i] == 'ID':
+                        row.append(tag)
+                    elif i == rank_indx:
+                        row.append('_')  # To push null values to the bottom
                     else:
                         row.append('')
             result_rows.append((tag, row))
         # sort by key
         result_rows = sorted(result_rows, key=lambda x: x[1][rank_indx])
         # remove duplicate entries: If a tag has multiple entries, keep only the most highly ranked.
+        # Also replace total times and pace times with formatted times
+        indx_format_time = []
+        for field in ['Time', 'Pace']:
+            if field in cols:
+                indx_format_time.append(cols.index(field))
         taglist = set()
         result_rows_dedup = []
         for tag, row in result_rows:
@@ -693,5 +697,11 @@ class PyTimer(object):
                 pass  # drop it
             else:
                 taglist.add(tag)
-                result_rows_dedup.append((tag, row))
+                row_new = list(row)
+                for indx in indx_format_time:
+                    try:
+                        row_new[indx] = time_format(float(row_new[indx]))
+                    except ValueError:
+                        pass
+                result_rows_dedup.append((tag, row_new))
         return result_rows_dedup

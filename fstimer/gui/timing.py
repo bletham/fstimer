@@ -44,38 +44,32 @@ def time_format(t):
     milli = int((t - int(t)) * 10)
     hours, rem = divmod(int(t), 3600)
     minutes, seconds = divmod(rem, 60)
-    days, hours = divmod(hours, 24)
-    s = '%02d:%02d:%02d.%01d' % (hours, minutes, seconds, milli)
-    if days > 0:
-        s = '%s day%s, ' % (days, 's' if days > 1 else '') + s
+    if hours > 0:
+        s = '%d:%02d:%02d.%01d' % (hours, minutes, seconds, milli)
+    else:
+        s = '%d:%02d.%01d' % (minutes, seconds, milli)
     return s
 
 def time_parse(dt):
     '''converts string time to datetime.timedelta'''
     if dt and dt[0] == '-':
         return datetime.timedelta(0) #we don't allow negative times
-    d = re.match(r'((?P<days>\d+) days?, )?((?P<hours>\d+):)?(?P<minutes>\d+):(?P<seconds>\d+)(\.(?P<milliseconds>\d+))?', dt).groupdict(0)
-    d['milliseconds'] = int(d['milliseconds'])*100
+    d = re.match(r'((?P<hours>\d+):)?(?P<minutes>\d+):(?P<seconds>\d+)(\.(?P<milliseconds>\d+))?', dt).groupdict(0)
+    d['milliseconds'] = int(d['milliseconds'])*100  # they are actually centiseconds in the string
     return datetime.timedelta(**dict(((key, int(value)) for key, value in d.items())))
 
 def time_diff(t1, t2):
     '''takes the diff of two string times and returns it as a time, rectified to 0. t1-t2.'''
     delta_t = time_parse(t1) - time_parse(t2)
     if delta_t < datetime.timedelta(0):
-        return '0:00:00.0'
+        return '0:00.0'
     else:
-        if delta_t.microseconds == 0:
-            return str(delta_t)+'.0'
-        else:
-            return str(delta_t)[:-5]
+        return time_format(delta_t.total_seconds())
 
 def time_sum(t1, t2):
     '''takes the sum of two string times and returns it as a time, t1+t2.'''
     timesum = time_parse(t1) + time_parse(t2)
-    if timesum.microseconds == 0:
-        return str(timesum)+'.0'
-    else:
-        return str(timesum)[:-5]
+    return time_format(timesum.total_seconds())
 
 class TimingWin(Gtk.Window):
     '''Handling of the timing window'''
@@ -694,7 +688,7 @@ class TimingWin(Gtk.Window):
 
     def new_blank_time(self):
         '''Record a new time'''
-        t = str(datetime.timedelta(milliseconds=int(1000*(time.time()-self.t0))))[:-5]
+        t = time_format(time.time()-self.t0)
         self.rawtimes['times'].insert(0, t) #we prepend to rawtimes, just as we prepend to timemodel
         if self.offset >= 0:
             # No IDs in the buffer, so just prepend it to the liststore.

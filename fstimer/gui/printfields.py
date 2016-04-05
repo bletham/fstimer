@@ -81,7 +81,7 @@ class PrintFieldsWin(Gtk.Window):
         # Fill it in
         if 'Pace' in self.printfields:
             btn_pace.set_active(True)
-            entry_pace.set_text(str(float(self.printfields['Pace'].split('/')[-1])))
+            entry_pace.set_text(str(float(self.printfields['Pace'].split('/')[1])))
         hbox_pace = Gtk.HBox(False, 5)
         hbox_pace.pack_start(btn_pace, False, False, 0)
         hbox_pace.pack_start(label_pace, False, False, 2)
