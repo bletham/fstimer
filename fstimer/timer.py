@@ -685,19 +685,33 @@ class PyTimer(object):
             userdata = self.timing[tag]
             for i, col_fn in enumerate(col_fns):
                 try:
-                    row.append(str(eval(col_fn)))
+                    row.append((eval(col_fn)))
                 except (SyntaxError, TypeError, AttributeError, ValueError):
                     if cols[i] == 'ID':
                         row.append(tag)
-                    elif i == rank_indx:
-                        row.append('_')  # To push null values to the bottom
                     else:
-                        row.append('')
+                        row.append(None)
             result_rows.append((tag, row))
-        # sort by key
-        result_rows = sorted(result_rows, key=lambda x: x[1][rank_indx])
+        # sort by column rank_indx.
+        # Try sorting as float, but if that doesn't work, use string.
+        try:
+            # Define a sorter that will handle the Nones
+            def floatsort(x):
+                if x[1][rank_indx] is None:
+                    return 1e20
+                else:
+                    return x[1][rank_indx]
+            result_rows = sorted(result_rows, key=floatsort)
+        except TypeError:
+            def stringsort(x):
+                if x[1][rank_indx] is None:
+                    return ''
+                else:
+                    return x[1][rank_indx]
+            result_rows = sorted(result_rows, key=stringsort)
         # remove duplicate entries: If a tag has multiple entries, keep only the most highly ranked.
-        # Also replace total times and pace times with formatted times
+        # Also replace total times and pace times with formatted times, stringify everything but Lap Times,
+        # and replace Nones.
         indx_format_time = []
         for field in ['Time', 'Pace']:
             if field in cols:
@@ -709,11 +723,19 @@ class PyTimer(object):
                 pass  # drop it
             else:
                 taglist.add(tag)
-                row_new = list(row)
-                for indx in indx_format_time:
-                    try:
-                        row_new[indx] = time_format(float(row_new[indx]))
-                    except ValueError:
-                        pass
+                row_new = []
+                for i, val in enumerate(row):
+                    if val is None:
+                        if i == rank_indx:
+                            val = '_'
+                        else:
+                            val = ''
+                    elif cols[i] in ['Time', 'Pace']:
+                        val = time_format(val)
+                    elif cols[i] == 'Lap Times':
+                        pass  # Leave it as is
+                    else:
+                        val = str(val)
+                    row_new.append(val)
                 result_rows_dedup.append((tag, row_new))
         return result_rows_dedup

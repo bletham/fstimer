@@ -41,7 +41,7 @@ class HTMLPrinterLaps(fstimer.printhtml.HTMLPrinter):
         row_print = list(row)
         if 'Lap Times' in self.fields:
             idx_lap = self.fields.index('Lap Times')
-            lap_times = eval(row[idx_lap])  # Take from str back to list
+            lap_times = row[idx_lap]  # Take from str back to list
             row_print[idx_lap] = lap_times[0]
         entry = '</td><td>'.join(row_print)+'</td></tr>\n'
         if 'Lap Times' in self.fields:
