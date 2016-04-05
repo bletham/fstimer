@@ -291,6 +291,15 @@ class PyTimer(object):
         # Get rid of any removed divs
         for div in old_divs:
             self.rankings.pop(div)
+        # Also change any rankings that are set to fields that no longer exist
+        # First for overall
+        if self.rankings['Overall'] not in self.printfields:
+            # Set to the first item by default then
+            self.rankings['Overall'] = list(self.printfields.keys())[0]
+        # Now check the others
+        for ranking in self.rankings:
+            if self.rankings[ranking] not in self.printfields:
+                self.rankings[ranking] = self.rankings['Overall']
         # Now we're ready.
         parent_win = self.rootwin if edit else self.introwin
         self.printfieldswin.hide()
@@ -660,7 +669,10 @@ class PyTimer(object):
                 lap_times[tag] = ['1 - ' + laptimesdic[tag][0]]
                 # And now the subsequent laps
                 for ii in range(len(laptimesdic[tag])-1):
-                    lap_times[tag].append(str(ii+2) + ' - ' + time_diff(laptimesdic[tag][ii+1],laptimesdic[tag][ii]))
+                    try:
+                        lap_times[tag].append(str(ii+2) + ' - ' + time_diff(laptimesdic[tag][ii+1],laptimesdic[tag][ii]))
+                    except AttributeError:
+                        lap_times[tag].append(str(ii+2) + ' - _')
             # Now correct timeslist to have the new total times
             timeslist = list(total_times.items())
         else:

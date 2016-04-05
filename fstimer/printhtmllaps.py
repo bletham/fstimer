@@ -38,12 +38,16 @@ class HTMLPrinterLaps(fstimer.printhtml.HTMLPrinter):
            of a given runner for scratch or by category results
            @type bibid: string'''
         # first line, as before
-        entry = '</td><td>'.join(row)+'</td></tr>\n'
+        row_print = list(row)
         if 'Lap Times' in self.fields:
             idx_lap = self.fields.index('Lap Times')
-            for i in range(1, len(row[idx_lap])):
-                entry += '<tr><td>'
-                row2 = ['' for j in range(len(row))]
-                row2[idx_lap] = str(row[idx_lap][i])
-                entry += '</td><td>'.join(row2) + '</tr>\n'
+            lap_times = eval(row[idx_lap])  # Take from str back to list
+            row_print[idx_lap] = lap_times[0]
+        entry = '</td><td>'.join(row_print)+'</td></tr>\n'
+        if 'Lap Times' in self.fields:
+            for i in range(1, len(lap_times)):
+                entry += '<tr><td></td><td>'  # extra for Place
+                row_print = ['' for j in range(len(row))]
+                row_print[idx_lap] = str(lap_times[i])
+                entry += '</td><td>'.join(row_print) + '</tr>\n'
         return entry

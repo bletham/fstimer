@@ -38,11 +38,16 @@ class CSVPrinterLaps(fstimer.printcsv.CSVPrinter):
         '''Returns the common part of the printout of the entry
            of a given runner for scratch or by category results'''
         # first line, as before
-        entry = ','.join(row)+'\n'
+        row_print = list(row)
         if 'Lap Times' in self.fields:
             idx_lap = self.fields.index('Lap Times')
-            for i in range(1, len(row[idx_lap])):
-                row2 = ['' for j in range(len(row))]
-                row2[idx_lap] = str(row[idx_lap][i])
-                entry += ','.join(row2) + '\n'
+            lap_times = eval(row[idx_lap])  # Take from str back to list
+            row_print[idx_lap] = lap_times[0]
+        entry = ','.join(row_print)+'\n'
+        if 'Lap Times' in self.fields:
+            for i in range(1, len(lap_times)):
+                entry += ','  # for Place
+                row_print = ['' for j in range(len(row))]
+                row_print[idx_lap] = str(lap_times[i])
+                entry += ','.join(row_print) + '\n'
         return entry
