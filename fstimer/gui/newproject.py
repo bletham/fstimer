@@ -23,7 +23,7 @@ from gi.repository import Gtk
 import os, re
 from os.path import normpath, join, dirname, abspath
 import fstimer.gui
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class NewProjectWin(Gtk.Window):
     '''Handles the creation of a new project'''
@@ -62,11 +62,11 @@ class NewProjectWin(Gtk.Window):
         combobox.set_active(0)
         # And an hbox with 2 buttons
         hbox_1 = Gtk.HBox(False, 0)
-        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        btnCANCEL = GtkStockButton('close',"Close")
         btnCANCEL.connect('clicked', lambda btn: self.hide())
         alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Next")
+        btnNEXT = GtkStockButton('forward',"Next")
         btnNEXT.connect('clicked', self.nextClicked, set_projecttype_cb, projectlist, combobox)
         alignNEXT = Gtk.Alignment.new(1, 0, 1, 0)
         alignNEXT.add(btnNEXT)

@@ -21,7 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class EditTimeWin(Gtk.Window):
     '''Handling of the window dedicated to editing a single time entry'''
@@ -54,9 +54,9 @@ class EditTimeWin(Gtk.Window):
         hbox2 = Gtk.HBox(False, 10)
         hbox2.pack_start(label2, False, False, 0)
         hbox2.pack_start(self.entrytime, False, False, 0)
-        btnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
+        btnOK = GtkStockButton('ok',"OK")
         btnOK.connect('clicked', self.winedittimeOK)
-        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        btnCANCEL = GtkStockButton('close',"Cancel")
         btnCANCEL.connect('clicked', lambda b: self.hide())
         cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
         cancel_algn.add(btnCANCEL)

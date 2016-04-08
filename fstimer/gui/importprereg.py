@@ -23,7 +23,7 @@ from gi.repository import Gtk
 import fstimer.gui
 import os, csv, json
 import datetime
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class ComboValueError(Exception):
     '''Exception launched when decoding reveals an invalid value for a combo field'''
@@ -48,7 +48,7 @@ class ImportPreRegWin(Gtk.Window):
         # Start with some intro text.
         label1 = Gtk.Label(label='Select a pre-registration csv file to import.')
         #Continue to the load file.
-        btnFILE = GtkStockButton(Gtk.STOCK_OPEN,"Open")
+        btnFILE = GtkStockButton('open',"Open")
         ## Textbuffer
         textbuffer = Gtk.TextBuffer()
         try:
@@ -72,7 +72,7 @@ class ImportPreRegWin(Gtk.Window):
         hbox2.pack_start(btnFILE, False, False, 0)
         hbox2.pack_start(btn_algn, True, True, 0)
         ## buttons
-        btnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
+        btnOK = GtkStockButton('ok',"OK")
         btnOK.connect('clicked', lambda b: self.hide())
         cancel_algn = Gtk.Alignment.new(0, 0, 1, 0)
         hbox3 = Gtk.HBox(False, 10)
@@ -152,9 +152,9 @@ class ImportPreRegWin(Gtk.Window):
         textview.set_cursor_visible(False)
         # hbox for the buttons
         hbox = Gtk.HBox(False, 0)
-        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        btnCANCEL = GtkStockButton('close',"Cancel")
         btnCANCEL.connect('clicked', self.advanced_import_cancel, textbuffer1)
-        btnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
+        btnOK = GtkStockButton('ok',"OK")
         btnOK.connect('clicked', self.advanced_import_ok, textbuffer1, textbuffer2)
         alignOK = Gtk.Alignment.new(1, 0, 0, 0)
         alignOK.add(btnOK)
@@ -234,7 +234,7 @@ class ImportPreRegWin(Gtk.Window):
 
     def select_preregistration(self, jnk_unused, textbuffer):
         '''Handle selection of a pre-reg file using a filechooser'''
-        chooser = Gtk.FileChooserDialog(title='Select pre-registration csv', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        chooser = Gtk.FileChooserDialog(title='Select pre-registration csv', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=('Cancel', Gtk.ResponseType.CANCEL, 'OK', Gtk.ResponseType.OK))
         ffilter = Gtk.FileFilter()
         ffilter.set_name('csv files')
         ffilter.add_pattern('*.csv')

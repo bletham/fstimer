@@ -22,7 +22,8 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
 import webbrowser, os
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
+from fstimer.gui.util_classes import MenuItemIcon
 
 class RootWin(Gtk.Window):
     '''Handles the root window of the application'''
@@ -42,14 +43,11 @@ class RootWin(Gtk.Window):
         helpmenu = Gtk.Menu()
         helpm = Gtk.MenuItem('Menu')
         helpm.set_submenu(helpmenu)
-        menuedit = Gtk.ImageMenuItem.new_with_label('Edit project settings')
-        menuedit.connect('activate', edit_cb, True)
+        menuedit = MenuItemIcon('edit', 'Edit project settings', edit_cb, True)
         helpmenu.append(menuedit)
-        menuhelp = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_HELP, None)
-        menuhelp.connect('activate', lambda x: webbrowser.open_new('http://fstimer.org/documentation/documentation_sec2.htm'))
+        menuhelp = MenuItemIcon('help', 'Documentation', lambda x: webbrowser.open_new('http://fstimer.org/documentation/documentation_sec2.htm'))
         helpmenu.append(menuhelp)
-        menuabout = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ABOUT, None)
-        menuabout.connect('activate', show_about_cb, self)
+        menuabout = MenuItemIcon('about', 'About', show_about_cb, self)
         helpmenu.append(menuabout)
         mb.append(helpm)
         ### Frame
@@ -95,7 +93,7 @@ class RootWin(Gtk.Window):
         rootframe.add(roottable)
         ### Buttons
         roothbox = Gtk.HBox(True, 0)
-        rootbtnQUIT = GtkStockButton(Gtk.STOCK_QUIT,"Quit")
+        rootbtnQUIT = GtkStockButton('close',"Quit")
         rootbtnQUIT.connect('clicked', Gtk.main_quit)
         roothbox.pack_start(rootbtnQUIT, False, False, 5)
         #Vbox

@@ -22,7 +22,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
 import os, json
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class PreTimeWin(Gtk.Window):
     '''Handling of the window dedicated to selecting the timing dictionnary to be used'''
@@ -58,9 +58,9 @@ class PreTimeWin(Gtk.Window):
         hbox3 = Gtk.HBox(False, 10)
         hbox3.pack_start(self.timebtncombobox, False, False, 8)
         hbox3.pack_start(label3, False, False, 8)
-        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        btnCANCEL = GtkStockButton('close',"Close")
         btnCANCEL.connect('clicked', lambda b: self.hide())
-        pretimebtnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
+        pretimebtnOK = GtkStockButton('ok',"OK")
         pretimebtnOK.connect('clicked', self.okclicked)
         btmhbox = Gtk.HBox(False, 8)
         btmhbox.pack_start(pretimebtnOK, False, False, 8)
@@ -84,7 +84,7 @@ class PreTimeWin(Gtk.Window):
     def choose_timingdict(self, jnk_unused):
         '''Handles click on Choose file button
            Converts the selected file into a defaultdict'''
-        chooser = Gtk.FileChooserDialog(title='Choose timing dictionary', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        chooser = Gtk.FileChooserDialog(title='Choose timing dictionary', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=('Cancel', Gtk.ResponseType.CANCEL, 'OK', Gtk.ResponseType.OK))
         chooser.set_current_folder(self.path)
         ffilter = Gtk.FileFilter()
         ffilter.set_name('Timing dictionaries')

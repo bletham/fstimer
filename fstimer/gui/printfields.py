@@ -23,7 +23,7 @@ import re
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 from fstimer.gui.util_classes import MsgDialog
 
 class PrintFieldsWin(Gtk.Window):
@@ -118,10 +118,10 @@ class PrintFieldsWin(Gtk.Window):
         customalgn.add(customsw)
         # Now we put the buttons on the side.
         vbox2 = Gtk.VBox(False, 10)
-        btnREMOVE = GtkStockButton(Gtk.STOCK_REMOVE,"Remove")
+        btnREMOVE = GtkStockButton('remove',"Remove")
         btnREMOVE.connect('clicked', self.custom_remove, selection)
         vbox2.pack_start(btnREMOVE, False, False, 0)
-        btnNEW = GtkStockButton(Gtk.STOCK_NEW,"New")
+        btnNEW = GtkStockButton('new',"New")
         btnNEW.connect('clicked', self.custom_new, selection)
         vbox2.pack_start(btnNEW, False, False, 0)
         # And an hbox for the fields and the buttons
@@ -133,13 +133,13 @@ class PrintFieldsWin(Gtk.Window):
         vbox.pack_start(vbox_comp, False, False, 0)
         # And an hbox with 2 buttons
         hbox = Gtk.HBox(False, 0)
-        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        btnCANCEL = GtkStockButton('close',"Close")
         btnCANCEL.connect('clicked', lambda btn: self.hide())
         alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,"Back")
+        btnBACK = GtkStockButton('back',"Back")
         btnBACK.connect('clicked', back_clicked_cb, btnlist, btn_time, btn_pace, entry_pace, self.printfields)
-        btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Next")
+        btnNEXT = GtkStockButton('forward',"Next")
         btnNEXT.connect('clicked', next_clicked_cb, btnlist, btn_time, btn_pace, entry_pace, self.printfields, edit)
         ##And populate
         hbox.pack_start(alignCANCEL, True, True, 0)
@@ -179,7 +179,7 @@ class PrintFieldsWin(Gtk.Window):
         # Check if it was changed
         if text != old_name:
             if text in ['Time', 'Pace']:
-                md = MsgDialog(self, 'error', 'OK', 'Error!', 'Names "Time" and "Pace" are reserved.')
+                md = MsgDialog(self, 'error', ['ok'], 'Error!', 'Names "Time" and "Pace" are reserved.')
                 md.run()
                 md.destroy()
             elif text not in self.printfields and text not in self.fields:
@@ -187,7 +187,7 @@ class PrintFieldsWin(Gtk.Window):
                 self.printfields[text] = self.printfields[old_name]
                 self.printfields.pop(old_name)
             else:
-                md = MsgDialog(self, 'error', 'OK', 'Error!', 'Field name "%s" is already used!' % text)
+                md = MsgDialog(self, 'error', ['ok'], 'Error!', 'Field name "%s" is already used!' % text)
                 md.run()
                 md.destroy()
         return
@@ -216,7 +216,7 @@ class PrintFieldsWin(Gtk.Window):
                     text_test = text_test.replace(var, "'1000000001'")
             eval(text_test)
         except Exception as e:
-            md = MsgDialog(self, 'error', 'OK', 'Error!', 'Invalid code:\n\n{}\n\nSee documentation.'.format(e))
+            md = MsgDialog(self, 'error', ['ok'], 'Error!', 'Invalid code:\n\n{}\n\nSee documentation.'.format(e))
             md.run()
             md.destroy()
             return

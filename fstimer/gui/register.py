@@ -24,7 +24,7 @@ import fstimer.gui
 import os
 import re
 from fstimer.gui.util_classes import MsgDialog
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class RegistrationWin(Gtk.Window):
     '''Handling of the window dedicated to registration'''
@@ -88,7 +88,7 @@ class RegistrationWin(Gtk.Window):
         self.filterentry = Gtk.Entry()
         self.filterentry.set_max_length(40)
         self.filterentry.connect('changed', self.filter_apply)
-        self.filterbtnCLEAR = GtkStockButton(Gtk.STOCK_CLEAR,"Clear")
+        self.filterbtnCLEAR = GtkStockButton('clear',"Clear")
         self.filterbtnCLEAR.connect('clicked', self.filter_clear)
         self.filterbtnCLEAR.set_sensitive(False)
         filterbox.pack_start(self.filterentry, False, False, 0)
@@ -112,15 +112,15 @@ class RegistrationWin(Gtk.Window):
         regtable.set_row_spacings(5)
         regtable.set_col_spacings(5)
         regtable.set_border_width(5)
-        btnEDIT = GtkStockButton(Gtk.STOCK_EDIT,"Edit")
+        btnEDIT = GtkStockButton('edit',"Edit")
         btnEDIT.connect('clicked', self.edit_clicked)
-        btnREMOVE = GtkStockButton(Gtk.STOCK_REMOVE,"Remove")
+        btnREMOVE = GtkStockButton('remove',"Remove")
         btnREMOVE.connect('clicked', self.rm_clicked)
-        btnNEW = GtkStockButton(Gtk.STOCK_NEW,"New")
+        btnNEW = GtkStockButton('new',"New")
         btnNEW.connect('clicked', self.new_clicked)
-        btnSAVE = GtkStockButton(Gtk.STOCK_SAVE,"Save")
+        btnSAVE = GtkStockButton('save',"Save")
         btnSAVE.connect('clicked', self.save_clicked)
-        btnOK = GtkStockButton(Gtk.STOCK_CLOSE,"Close")
+        btnOK = GtkStockButton('close',"Close")
         btnOK.connect('clicked', self.close_clicked)
         vsubbox = Gtk.VBox(False, 8)
         vsubbox.pack_start(btnSAVE, False, False, 0)
@@ -197,7 +197,7 @@ class RegistrationWin(Gtk.Window):
         treeiter = selection.get_selected()[1]
         # if nothing is selected, do nothing.
         if treeiter:
-            rmreg_dialog = MsgDialog(self, 'warning', 'YES_NO', 'Really delete?', 'Are you sure you want to delete this entry?\nThis cannot be undone.')
+            rmreg_dialog = MsgDialog(self, 'warning', ['yes', 'no'], 'Really delete?', 'Are you sure you want to delete this entry?\nThis cannot be undone.')
             rmreg_dialog.set_default_response(Gtk.ResponseType.NO)
             response = rmreg_dialog.run()
             rmreg_dialog.destroy()
@@ -210,7 +210,10 @@ class RegistrationWin(Gtk.Window):
                 preregiter = self.prereg.index(current_info)
                 # converts the treeiter from sorted to filter to model, and remove
                 self.regmodel.remove(self.modelfilter.convert_iter_to_child_iter(self.modelfiltersorted.convert_iter_to_child_iter(treeiter)))
-                self.ids.remove(current_info['ID'])
+                try:
+                    self.ids.remove(current_info['ID'])
+                except:
+                    pass
                 self.prereg.pop(preregiter)
                 # The latest stuff has no longer been saved.
                 self.regstatus.set_markup('')
@@ -232,7 +235,7 @@ class RegistrationWin(Gtk.Window):
     def close_clicked(self, jnk_unused):
         '''Handles click on the 'close' button on the registration window.
            Throws up a 'do you want to save' dialog, and close the window'''
-        okreg_dialog = MsgDialog(self, 'question', 'YES_NO', 'Save?', 'Do you want to save before finishing?\nUnsaved data will be lost.')
+        okreg_dialog = MsgDialog(self, 'question', ['yes', 'no'], 'Save?', 'Do you want to save before finishing?\nUnsaved data will be lost.')
         okreg_dialog.set_default_response(Gtk.ResponseType.YES)
         response = okreg_dialog.run()
         okreg_dialog.destroy()
@@ -260,8 +263,8 @@ class RegistrationWin(Gtk.Window):
         self.editreg_win.set_border_width(10)
         #An hbox for the buttons
         editreghbox = Gtk.HBox(False, 8)
-        editregbtnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
-        editregbtnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        editregbtnOK = GtkStockButton('ok',"OK")
+        editregbtnCANCEL = GtkStockButton('close',"Cancel")
         editregbtnCANCEL.connect('clicked', lambda b: self.editreg_win.hide())
         editreghbox.pack_start(editregbtnOK, False, False, 5)
         editreghbox.pack_start(editregbtnCANCEL, False, False, 5)

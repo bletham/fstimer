@@ -33,7 +33,7 @@ import json
 from gi.repository import Pango
 from collections import defaultdict, Counter
 from fstimer.gui.util_classes import MsgDialog
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class MergeError(Exception):
     '''Exception used in case of merging error'''
@@ -142,7 +142,7 @@ class TimingWin(Gtk.Window):
         tophbox = Gtk.HBox()
         # our default t0, and the stuff on top for setting/edit t0
         self.t0 = 0.
-        btn_t0 = Gtk.Button('Start!')
+        btn_t0 = GtkStockButton('clock', 'Start!')
         btn_t0.connect('clicked', self.set_t0)
         # time display
         self.clocklabel = Gtk.Label()
@@ -203,7 +203,7 @@ class TimingWin(Gtk.Window):
         btnDROPID.connect('clicked', self.timing_rm_ID)
         btnDROPTIME = Gtk.Button('Drop time')
         btnDROPTIME.connect('clicked', self.timing_rm_time)
-        btnEDIT = GtkStockButton(Gtk.STOCK_EDIT,"Edit")
+        btnEDIT = GtkStockButton('edit',"Edit")
         btnEDIT.connect('clicked', self.edit_time)
         edit_vbox = Gtk.VBox(True, 8)
         edit_vbox.pack_start(btnDROPID, False, False, 0)
@@ -214,7 +214,7 @@ class TimingWin(Gtk.Window):
         #Then the print and save buttons
         btnPRINT = Gtk.Button('Printouts')
         btnPRINT.connect('clicked', print_cb, False)
-        btnSAVE = GtkStockButton(Gtk.STOCK_SAVE,"Save")
+        btnSAVE = GtkStockButton('save',"Save")
         btnSAVE.connect('clicked', self.save_times)
         save_vbox = Gtk.VBox(True, 8)
         save_vbox.pack_start(btnPRINT, False, False, 0)
@@ -222,7 +222,7 @@ class TimingWin(Gtk.Window):
         save_align = Gtk.Alignment.new(1, 1, 1, 0)
         save_align.add(save_vbox)
         #And finally the finish button
-        btnOK = GtkStockButton(Gtk.STOCK_CLOSE,"Close")
+        btnOK = GtkStockButton('close',"Close")
         btnOK.connect('clicked', self.done_timing)
         done_align = Gtk.Alignment.new(1, 0.7, 1, 0)
         done_align.add(btnOK)
@@ -296,7 +296,7 @@ class TimingWin(Gtk.Window):
 
     def restart_t0(self, jnk_unused):
         '''Handles click on restart clock button'''
-        restart_t0_dialog = MsgDialog(self, 'warning', 'YES_NO', 'Are you sure?', 
+        restart_t0_dialog = MsgDialog(self, 'warning', ['yes', 'no'], 'Are you sure?', 
                                       'Are you sure you want to restart the race clock?\nThis cannot be undone.')
         restart_t0_dialog.set_default_response(Gtk.ResponseType.NO)
         response = restart_t0_dialog.run()
@@ -370,7 +370,7 @@ class TimingWin(Gtk.Window):
         '''Handled result of the editing of a given time'''
         row = self.timemodel.get_path(treeiter)[0]
         if not re.match('^[0-9:.]*$', new_time):
-            md = MsgDialog(self, 'error', 'OK', 'Error!', 'Time is not valid format.')
+            md = MsgDialog(self, 'error', ['ok'], 'Error!', 'Time is not valid format.')
             md.run()
             md.destroy()
             return
@@ -491,7 +491,7 @@ class TimingWin(Gtk.Window):
             if ididx >= 0:
                 # Otherwise, there is no ID here so there is nothing to do.
                 # Ask if we are sure.
-                rmID_dialog = MsgDialog(self, 'warning', 'YES_NO', 'Are you sure?', 'Are you sure you want to drop this ID and shift all later IDs down earlier in the list?\nThis cannot be undone.')
+                rmID_dialog = MsgDialog(self, 'warning', ['yes', 'no'], 'Are you sure?', 'Are you sure you want to drop this ID and shift all later IDs down earlier in the list?\nThis cannot be undone.')
                 rmID_dialog.set_default_response(Gtk.ResponseType.NO)
                 response = rmID_dialog.run()
                 rmID_dialog.destroy()
@@ -535,7 +535,7 @@ class TimingWin(Gtk.Window):
             if timeidx >= 0:
                 # Otherwise, there is no time here so there is nothing to do.
                 # Ask if we are sure.
-                rmtime_dialog = MsgDialog(self, 'warning', 'YES_NO', 'Are you sure?', 'Are you sure you want to drop this time and shift all later times down earlier in the list?\nThis cannot be undone.')
+                rmtime_dialog = MsgDialog(self, 'warning', ['yes', 'no'], 'Are you sure?', 'Are you sure you want to drop this time and shift all later times down earlier in the list?\nThis cannot be undone.')
                 rmtime_dialog.set_default_response(Gtk.ResponseType.NO)
                 response = rmtime_dialog.run()
                 rmtime_dialog.destroy()
@@ -562,7 +562,7 @@ class TimingWin(Gtk.Window):
 
     def resume_times(self, jnk_unused, isMerge):
         '''Handles click on Resume button'''
-        chooser = Gtk.FileChooserDialog(title='Choose timing results to resume', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        chooser = Gtk.FileChooserDialog(title='Choose timing results to resume', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=('Cancel', Gtk.ResponseType.CANCEL, 'OK', Gtk.ResponseType.OK))
         chooser.set_current_folder(self.path)
         ffilter = Gtk.FileFilter()
         ffilter.set_name('Timing results')
@@ -615,7 +615,7 @@ class TimingWin(Gtk.Window):
                 for entry in zip(adj_ids, adj_times):
                     self.timemodel.append(list(entry))
             except (IOError, ValueError, TypeError, MergeError) as e:
-                error_dialog = MsgDialog(self, 'error', 'OK', 'Oops...', 'ERROR: Failed to %s : %s.' % ('merge' if isMerge else 'resume', e))
+                error_dialog = MsgDialog(self, 'error', ['ok'], 'Oops...', 'ERROR: Failed to %s : %s.' % ('merge' if isMerge else 'resume', e))
                 response = error_dialog.run()
                 error_dialog.destroy()
         chooser.destroy()
@@ -636,7 +636,7 @@ class TimingWin(Gtk.Window):
     def done_timing(self, source):
         '''Handles click on the Done button
            Gives a dialog before closing.'''
-        oktime_dialog2 = MsgDialog(self, 'question', 'YES_NO_CANCEL', 'Save?', 'Do you want to save before finishing?\nUnsaved data will be lost.')
+        oktime_dialog2 = MsgDialog(self, 'question', ['yes', 'no', 'cancel'], 'Save?', 'Do you want to save before finishing?\nUnsaved data will be lost.')
         response2 = oktime_dialog2.run()
         oktime_dialog2.destroy()
         if response2 == Gtk.ResponseType.CANCEL:

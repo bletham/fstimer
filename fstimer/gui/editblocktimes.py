@@ -21,7 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class EditBlockTimesWin(Gtk.Window):
     '''Handling of the window used for editing a block of times'''
@@ -50,9 +50,9 @@ class EditBlockTimesWin(Gtk.Window):
         hbox1.pack_start(self.radiobutton, False, False, 0)
         hbox1.pack_start(radiobutton2, False, False, 0)
         hbox1.pack_start(self.entrytime, False, False, 0)
-        btnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
+        btnOK = GtkStockButton('ok',"OK")
         btnOK.connect('clicked', self.okclicked)
-        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        btnCANCEL = GtkStockButton('close',"Cancel")
         btnCANCEL.connect('clicked', lambda b: self.hide())
         cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
         cancel_algn.add(btnCANCEL)

@@ -247,7 +247,7 @@ class PyTimer(object):
             try:
                 d = float(entry_pace.get_text())
             except ValueError:
-                md = MsgDialog(self.printfieldswin, 'error', 'OK', 'Error!', 'Distance must be a number.')
+                md = MsgDialog(self.printfieldswin, 'error', ['ok'], 'Error!', 'Distance must be a number.')
                 md.run()
                 md.destroy()
                 return False
@@ -267,7 +267,7 @@ class PyTimer(object):
             if field not in self.fields and field not in ['Time', 'Pace']:
                 self.printfields[field] = str(printfields_m[field])
         if len(self.printfields) == 0:
-            md = MsgDialog(self.printfieldswin, 'error', 'OK', 'Error!', 'Must include at least one field.')
+            md = MsgDialog(self.printfieldswin, 'error', ['ok'], 'Error!', 'Must include at least one field.')
             md.run()
             md.destroy()
             return False
@@ -326,9 +326,9 @@ class PyTimer(object):
         with open(join(self.path, basename(self.path)+'.reg'), 'w', encoding='utf-8') as fout:
             json.dump(regdata, fout)
         if edit:
-            md = MsgDialog(self.divisionswin, 'information', 'OK', 'Edited!', 'Project '+basename(self.path)+' successfully edited!')
+            md = MsgDialog(self.divisionswin, 'information', ['ok'], 'Edited!', 'Project '+basename(self.path)+' successfully edited!')
         else:
-            md = MsgDialog(self.divisionswin, 'information', 'OK', 'Created!', 'Project '+basename(self.path)+' successfully created!')
+            md = MsgDialog(self.divisionswin, 'information', ['ok'], 'Created!', 'Project '+basename(self.path)+' successfully created!')
         md.run()
         md.destroy()
         self.rankingswin.hide()
@@ -585,7 +585,7 @@ class PyTimer(object):
                 div_out.write(divresults[div[0]])
             div_out.write(printer.footer())
         # display user dialog that all was successful
-        md = MsgDialog(self.timewin, 'information', 'OK', 'Success!', "Results saved to " + printer.file_extension() + "!")
+        md = MsgDialog(self.timewin, 'information', ['ok'], 'Success!', "Results saved to " + printer.file_extension() + "!")
         md.run()
         md.destroy()
 

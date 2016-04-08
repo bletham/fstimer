@@ -21,8 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
-from fstimer.gui.GtkStockButton import GtkStockButton
-from fstimer.gui.util_classes import MsgDialog
+from fstimer.gui.util_classes import GtkStockButton
 
 class RankingsWin(Gtk.Window):
     '''Handling of the window where rankings are defined'''
@@ -99,13 +98,13 @@ class RankingsWin(Gtk.Window):
         hbox4.pack_start(rankingalgn, True, True, 10)
         # Add an hbox with 3 buttons
         hbox3 = Gtk.HBox(False, 0)
-        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        btnCANCEL = GtkStockButton('close',"Close")
         btnCANCEL.connect('clicked', lambda btn: self.hide())
         alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnBACK = GtkStockButton(Gtk.STOCK_GO_BACK,"Back")
+        btnBACK = GtkStockButton('back',"Back")
         btnBACK.connect('clicked', back_clicked_cb)
-        btnNEXT = GtkStockButton(Gtk.STOCK_GO_FORWARD,"Forward")
+        btnNEXT = GtkStockButton('forward',"Next")
         btnNEXT.connect('clicked', next_clicked_cb, edit)
         # Populate
         hbox3.pack_start(alignCANCEL, True, True, 0)

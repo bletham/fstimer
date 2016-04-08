@@ -22,7 +22,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fstimer.gui
 import os
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class EditT0Win(Gtk.Window):
     '''Handling of the window used for editing t0, the race start time'''
@@ -43,9 +43,9 @@ class EditT0Win(Gtk.Window):
         self.t0box = Gtk.Entry()
         self.t0box.set_text(str(t0))
         hbox = Gtk.HBox(False, 8)
-        btnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
+        btnOK = GtkStockButton('ok',"OK")
         btnOK.connect('clicked', self.okclicked)
-        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        btnCANCEL = GtkStockButton('close',"Cancel")
         btnCANCEL.connect('clicked', lambda jnk: self.hide())
         hbox.pack_start(btnOK, False, False, 0)
         hbox.pack_start(btnCANCEL, False, False, 0)

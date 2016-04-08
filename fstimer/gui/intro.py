@@ -23,7 +23,7 @@ from gi.repository import Gtk
 import os
 from os.path import normpath, join, dirname, abspath
 import fstimer.gui
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class IntroWin(Gtk.Window):
     '''Handles an introduction window to select/create a project'''
@@ -59,14 +59,14 @@ class IntroWin(Gtk.Window):
         #An hbox for the buttons.
         hbox = Gtk.HBox(False, 0)
         #And build the buttons
-        btnNEW = GtkStockButton(Gtk.STOCK_NEW,'New')
+        btnNEW = GtkStockButton('new','New')
         btnNEW.connect('clicked', create_project_cb)
-        btnOK = GtkStockButton(Gtk.STOCK_OK,'OK')
+        btnOK = GtkStockButton('ok','OK')
         btnOK.connect('clicked', load_project_cb, combobox, projectlist)
         btnOK.set_sensitive(False)
         #Set combobox to lock btnOK, so we can't press OK until we have selected a project
         combobox.connect('changed', self.lock_btnOK, combobox, btnOK)
-        btnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,'Cancel')
+        btnCANCEL = GtkStockButton('close','Close')
         btnCANCEL.connect('clicked', Gtk.main_quit)
         #Now fill the hbox.
         hbox.pack_start(btnCANCEL, True, True, 0)

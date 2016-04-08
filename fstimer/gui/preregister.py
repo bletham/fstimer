@@ -23,7 +23,7 @@ from gi.repository import Gtk
 import fstimer.gui
 import os
 from fstimer.gui.util_classes import MsgDialog
-from fstimer.gui.GtkStockButton import GtkStockButton
+from fstimer.gui.util_classes import GtkStockButton
 
 class PreRegistrationWin(Gtk.Window):
     '''Handling of the window handling preregistration setup'''
@@ -60,9 +60,9 @@ class PreRegistrationWin(Gtk.Window):
         preregtable.attach(self.preregfilelabel, 1, 2, 2, 3)
         ## buttons
         prereghbox = Gtk.HBox(True, 0)
-        preregbtnOK = GtkStockButton(Gtk.STOCK_OK,"OK")
+        preregbtnOK = GtkStockButton('ok',"OK")
         preregbtnOK.connect('clicked', self.preregister_ok_cb, regid_btn, handle_registration_cb)
-        preregbtnCANCEL = GtkStockButton(Gtk.STOCK_CANCEL,"Cancel")
+        preregbtnCANCEL = GtkStockButton('close',"Close")
         preregbtnCANCEL.connect('clicked', lambda b: self.hide())
         prereghbox.pack_start(preregbtnOK, False, False, 5)
         prereghbox.pack_start(preregbtnCANCEL, False, False, 5)
@@ -78,7 +78,7 @@ class PreRegistrationWin(Gtk.Window):
 
     def file_selected(self, jnk_unused):
         '''Handle selection of a pre-reg file using a filechooser.'''
-        chooser = Gtk.FileChooserDialog(title='Select pre-registration file', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK))
+        chooser = Gtk.FileChooserDialog(title='Select pre-registration file', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=('Cancel', Gtk.ResponseType.CANCEL, 'OK', Gtk.ResponseType.OK))
         ffilter = Gtk.FileFilter()
         ffilter.set_name('Registration files')
         ffilter.add_pattern('*_registration_*.json')
@@ -102,10 +102,11 @@ class PreRegistrationWin(Gtk.Window):
         filename = os.path.join(self.path, os.path.basename(self.path)+'_registration_'+str(regid)+'.json')
         if os.path.exists(filename):
             #Raise a warning window
-            md = MsgDialog(self, 'warning', 'OK_CANCEL', 'Proceed?', "A file with this registration number already exists.\nIf you continue it will be overwritten!")
+            md = MsgDialog(self, 'warning', ['ok', 'cancel'], 'Proceed?', "A file with this registration number already exists.\nIf you continue it will be overwritten!")
             resp = md.run()
             md.destroy()
             #Check the result.
+            print(resp)
             if resp == Gtk.ResponseType.CANCEL:
                 #Do nothing.
                 return
