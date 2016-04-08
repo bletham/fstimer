@@ -629,7 +629,7 @@ class TimingWin(Gtk.Window):
         saveresults['t0'] = self.t0
         with open(os.path.join(self.path, os.path.basename(self.path)+'_'+self.timestr+'_times.json'), 'w', encoding='utf-8') as fout:
             json.dump(saveresults, fout)
-        md = MsgDialog(self, 'information', 'OK', 'Saved!', 'Times saved!')
+        md = MsgDialog(self, 'information', ['ok'], 'Saved!', 'Times saved!')
         md.run()
         md.destroy()
 
