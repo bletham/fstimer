@@ -229,8 +229,10 @@ class RegistrationWin(Gtk.Window):
         filename, success = self.save_registration_cb()
         if success:
             self.regstatus.set_markup('<span color="blue">Registration saved to %s</span>' % filename)
+            return True
         else:
             self.regstatus.set_markup('<span color="red">Registration NOT saved: %s</span>' % filename)
+            return False
 
     def close_clicked(self, jnk_unused):
         '''Handles click on the 'close' button on the registration window.
@@ -241,7 +243,9 @@ class RegistrationWin(Gtk.Window):
         okreg_dialog.destroy()
         if response == Gtk.ResponseType.YES:
             # this will save
-            self.save_clicked(None)
+            save_res = self.save_clicked(None)
+            if not save_res:
+                return
         self.hide()
         # Clear the file setting from pre-reg, in case pre-reg is
         # re-run without selecting a file
