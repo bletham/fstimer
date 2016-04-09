@@ -110,7 +110,7 @@ class PyTimer(object):
         self.newprojectwin = fstimer.gui.newproject.NewProjectWin(self.set_projecttype,
                                                                   self.introwin)
 
-    def set_projecttype(self, path, projectlist, combobox):
+    def set_projecttype(self, projectname, projectlist, combobox):
         '''creates a new project'''
         self.project_types = ['standard', 'handicap'] #Options for project types
         #First load in the project settings
@@ -144,8 +144,7 @@ class PyTimer(object):
             self.printfields = regdata['printfields']
         except KeyError:
             self.printfields = {}
-        '''Handles setting project type'''
-        self.path = path
+        self.path = normpath(join(dirname(dirname(abspath(__file__))), projectname))
         self.projecttypewin = fstimer.gui.projecttype.ProjectTypeWin(self.project_types,
                                                                      self.projecttype,
                                                                      self.numlaps,
