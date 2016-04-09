@@ -94,7 +94,8 @@ class NewProjectWin(Gtk.Window):
         '''handles click on next by checking new project name
            and calling back fsTimer'''
         entry_text = str(self.entry.get_text())
-        if os.path.exists(entry_text):
+        path = normpath(join(dirname(dirname(dirname(abspath(__file__)))), entry_text))
+        if os.path.exists(path):
             # Add the error text.
             self.label_1.set_markup('<span color="red">Error! File or directory named "'+entry_text+'" already exists. Try again.</span>')
             self.label_1.show()
