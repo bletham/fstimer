@@ -22,6 +22,11 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import os
 
+icon_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                '../data/adwaita_icons'))
+
 icon_files = {'new': 'actions/document-new.png',
               'close': 'actions/window-close.png',
               'ok': 'emblems/emblem-default.png',
@@ -57,7 +62,7 @@ class GtkStockButton(Gtk.Button):
         #Init a regular Gtk.Button
         Gtk.Button.__init__(self)
         #Add the icon and the label.
-        fname = os.path.join('fstimer/data/adwaita_icons', icon_files[icon_name])
+        fname = os.path.join(icon_path, icon_files[icon_name])
         btnIcon = Gtk.Image.new_from_file(fname)
         btnLabel = Gtk.Label(label_text+' ')
         #pack 'em into an HBox
@@ -81,7 +86,7 @@ class MsgDialog(Gtk.Dialog):
         self.set_border_width(5)
         self.set_default_size(400, 50)
         #Load in the icon
-        fname = os.path.join('fstimer/data/adwaita_icons', icon_files[icon_name])
+        fname = os.path.join(icon_path, icon_files[icon_name])
         msg_icon = Gtk.Image.new_from_file(fname)
         label = Gtk.Label(label=text)
         #And pack
@@ -109,7 +114,7 @@ class MenuItemIcon(Gtk.MenuItem):
     def __init__(self, icon_name, text, cb, *args):
         super(MenuItemIcon, self).__init__()
         hbox = Gtk.HBox(False, 0)
-        fname = os.path.join('fstimer/data/adwaita_icons', icon_files[icon_name])
+        fname = os.path.join(icon_path, icon_files[icon_name])
         msg_icon = Gtk.Image.new_from_file(fname)
         hbox.pack_start(msg_icon, False, False, 0)
         hbox.pack_start(Gtk.Label(label=text), False, False, 5)

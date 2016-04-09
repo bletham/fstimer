@@ -20,6 +20,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
+import os
 
 class AboutWin(Gtk.AboutDialog):
     '''Handles the about window of the application'''
@@ -29,7 +30,11 @@ class AboutWin(Gtk.AboutDialog):
         super(AboutWin, self).__init__()
         self.set_transient_for(parent)
         self.set_modal(True)
-        self.set_logo(GdkPixbuf.Pixbuf.new_from_file("fstimer/data/icon.png"))
+        fname = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                '../data/icon.png'))
+        self.set_logo(GdkPixbuf.Pixbuf.new_from_file(fname))
         self.set_program_name('fsTimer')
         self.set_version('0.6')
         self.set_copyright("""Copyright 2012-16 Ben Letham\
@@ -37,7 +42,11 @@ class AboutWin(Gtk.AboutDialog):
         \nThis is free software, and you are welcome to redistribute it under certain conditions; see license for details""")
         self.set_comments('free, open source software for race timing.\nhttp://fstimer.org')
         self.set_wrap_license(False)
-        with open('COPYING', 'r') as fin:
+        fname_c = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                '../../COPYING'))
+        with open(fname_c, 'r') as fin:
             gpl = fin.read()
         self.set_license(gpl)
         self.set_authors(['Ben Letham',

@@ -33,7 +33,11 @@ class RootWin(Gtk.Window):
         '''Creates the root window with choices for the tasks'''
         super(RootWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
-        self.set_icon_from_file('fstimer/data/icon.png')
+        fname = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                '../data/icon.png'))
+        self.set_icon_from_file(fname)
         self.set_title('fsTimer - ' + os.path.basename(path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', Gtk.main_quit)
