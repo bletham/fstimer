@@ -117,7 +117,10 @@ class PyTimer(object):
         indx = combobox.get_active()
         if indx == 0:
             # Default settings
-            fname = 'fstimer/data/fstimer_default_project.reg'
+            fname = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                'data/fstimer_default_project.reg'))
         else:
             importname = projectlist[indx]
             importpath = normpath(join(dirname(dirname(abspath(__file__))), importname))
