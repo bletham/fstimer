@@ -326,9 +326,9 @@ class PyTimer(object):
         with open(join(self.path, basename(self.path)+'.reg'), 'w', encoding='utf-8') as fout:
             json.dump(regdata, fout)
         if edit:
-            md = MsgDialog(self.divisionswin, 'information', ['ok'], 'Edited!', 'Project '+basename(self.path)+' successfully edited!')
+            md = MsgDialog(self.rankingswin, 'information', ['ok'], 'Edited!', 'Project '+basename(self.path)+' successfully edited!')
         else:
-            md = MsgDialog(self.divisionswin, 'information', ['ok'], 'Created!', 'Project '+basename(self.path)+' successfully created!')
+            md = MsgDialog(self.rankingswin, 'information', ['ok'], 'Created!', 'Project '+basename(self.path)+' successfully created!')
         md.run()
         md.destroy()
         self.rankingswin.hide()
