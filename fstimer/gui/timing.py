@@ -142,7 +142,7 @@ class TimingWin(Gtk.Window):
         tophbox = Gtk.HBox()
         # our default t0, and the stuff on top for setting/edit t0
         self.t0 = 0.
-        btn_t0 = GtkStockButton('clock', 'Start!')
+        btn_t0 = Gtk.Button('Start!')
         btn_t0.connect('clicked', self.set_t0)
         # time display
         self.clocklabel = Gtk.Label()

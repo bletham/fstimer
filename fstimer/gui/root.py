@@ -62,11 +62,11 @@ class RootWin(Gtk.Window):
         roottable.set_col_spacings(20)
         roottable.set_border_width(10)
         #And internal buttons
-        rootbtnPREREG = Gtk.Button('Preregister')
+        rootbtnPREREG = Gtk.Button('Import')
         rootbtnPREREG.connect('clicked', importprereg_cb)
         rootlabelPREREG = Gtk.Label(label='')
         rootlabelPREREG.set_alignment(0, 0.5)
-        rootlabelPREREG.set_markup('Prepare pre-registration file.')
+        rootlabelPREREG.set_markup('Import registration info from spreadsheet.')
         rootbtnREG = Gtk.Button('Register')
         rootbtnREG.connect('clicked', prereg_cb)
         rootlabelREG = Gtk.Label(label='')

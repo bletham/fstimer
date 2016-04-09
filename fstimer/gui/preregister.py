@@ -106,7 +106,6 @@ class PreRegistrationWin(Gtk.Window):
             resp = md.run()
             md.destroy()
             #Check the result.
-            print(resp)
             if resp == Gtk.ResponseType.CANCEL:
                 #Do nothing.
                 return
