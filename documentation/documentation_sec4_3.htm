@@ -42,25 +42,21 @@ When opening the Registration window, we first specify the computer's registrati
 
 When opening the registration window you may also load a pre-registration database. You can actually load any fsTimer registration database, including one that was previously saved from the registration window. For instance, suppose you were working in the registration window adding and editing entries, and then saved the results as project_name_registration_4.json. If you later want to make further edits/additions to the registration database, you can simply select "project_name_registration_4.json" as the pre-registration to load, and it will be loaded into the registration window.<br><br>
 
-The "New" button allows you to add a new entry by filling in data for all of the fields. Any of the fields can be left blank and this will not cause problems (for instance, if someone does not want to provide a certain piece of information, or does not have a certain piece of information, like an email address). However, if a field is left blank that is required for divisionals (like "Gender" if there are divisions that split by gender), then that individual will show up in the overall results but not in the divisional results.<br><br>
+The "New" button allows you to add a new entry by filling in data for all of the fields. Any of the fields can be left blank and this will not cause problems (for instance, if someone does not want to provide a certain piece of information, or does not have a certain piece of information, like an email address). However, if a field is left blank that is required for divisionals (like "Age" if there are divisions that split by age), then that individual will show up in the overall results but not in the divisional results.<br><br>
 
-The "Edit", "Remove", and "Add family" buttons require an entry to be selected. If no entry is selected, then these buttons will simply not do anything. When an entry is selected, then the "Edit" button allows you to change the values in any of the fields for the selected entry; it is pretty self explanatory. The "Remove" button deletes the selected entry from the registration database. This cannot be undone (other than closing without saving, and loading a previously saved file from before the entry was removed) and so you should exercise extreme caution.<br><br>
+The "Edit" and "Remove" buttons require an entry to be selected. If no entry is selected, then these buttons will simply not do anything. When an entry is selected, then the "Edit" button allows you to change the values in any of the fields for the selected entry; it is pretty self explanatory. The "Remove" button deletes the selected entry from the registration database. This cannot be undone (other than closing without saving, and loading a previously saved file from before the entry was removed) and so you should exercise extreme caution.<br><br>
 
-The "Add family" button would be better called the "Add family member" button, as its purpose is to add a family member for the selected entry. This button has exactly the same effect as the "New" button, except some of the fields (the ones specified when creating the project) will be pre-filled in with data from the selected entry (typically data like address, phone number, etc.).<br><br>
+Typing into the text field at the top of the window will filter the registration entries by whichever field is selected (here Last name):<br><br>
 
-<b>Important note for Mac users:</b> There's a strange behavior in the Mac version of fsTimer where sometimes clicking on the buttons in the registration window won't work. This behavior will generally exhibit itself on the day of registration when you are trying to edit an entry or add a new entry, and clicking on the button will not bring up the "Edit" or "New" window. When this happens, if you look closely, you will notice that there is a light blue box around the button - instead of clicking on the button, somehow the area around the button becomes selected. This never happens in Linux or in Windows, so I think it might be an issue with PyGTK for Mac? Whatever is happening, this behavior is annoying but is not critical. Just hit "Enter" and the button will be selected. Alternatively, click on a different part of the window (like back on the entry in the center of the registration window), and you will see the light blue box around the button disappear. Try again to click on the button, and it will work (or maybe after a few iterations of this).<br><br>
+<img width="682" height="381" src="documentation_figs/fstimer_fig36.png"><br><br> <!--866x595-->
 
-Typing into the text field at the top of the window will filter the registration entries by last name:<br><br>
-
-<img width="693" height="476" src="documentation_figs/fstimer_fig36.png"><br><br> <!--866x595-->
-
-Pressing the "Clear" button will clear the filter and show all entries again (or, just erase all of the text in the filter window). Notice that after you use "Edit" or "New" to edit/create an entry, fsTimer will automatically filter by the last name of the edited/new entry. This is just so you can easily see the edited/new entry and verify that the information is correct in the database.<br><br>
+Pressing the "Clear" button will clear the filter and show all entries again (or, just erase all of the text in the filter window). After you use "Edit" or "New" to edit/create an entry, fsTimer will automatically filter by the field of the edited/new entry corresponding to how the filter is set. This is just so you can easily see the edited/new entry and verify that the information is correct in the database.<br><br>
 
 Clicking on any of the field names above the registration entries (like "Last name" in the below image) will sort all of the registration entries using that field:<br><br>
 
-<img width="693" height="476" src="documentation_figs/fstimer_fig37.png"><br><br> <!--866x595-->
+<img width="682" height="381" src="documentation_figs/fstimer_fig37.png"><br><br> <!--866x595-->
 
-Press "Save" frequently, and press "Done" when you are finished with registration.<br><br>
+The results will automatically be saved any time a new entry is added, or an entry is removed. If the blue text is present at the bottom of the window, this indicates that the save is up to date.<br><br>
 
 Continue on to <a href="documentation_sec4_4.htm">Compiling registrations - details</a>.
 </div>

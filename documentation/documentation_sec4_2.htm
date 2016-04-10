@@ -36,7 +36,7 @@
 <div id="lower-box">
 <h3>Section 4.2 - Importing preregistration - details</h3><br>
 
-The preregistration module allows for a csv file to be imported into an fsTimer registration database. Starting from an Excel or Libreoffice spreadsheet, you can do "Save as" to save it as a csv file.<br><br>
+The import module allows for a csv file to be imported into an fsTimer registration database. Starting from an Excel or Libreoffice spreadsheet, you can do "Save as" to save it as a csv file.<br><br>
 
 <img width="682" height="399" src="documentation_figs/fstimer_fig4.png"><br><br> <!--853x499-->
 
@@ -58,11 +58,11 @@ Any python function of the CSV data can thus be used to populate a registration 
 
 "Found csv fields" lists all of the columns found in the csv file (these will be exactly all of the column headers). "Matched csv fields" lists all of the columns from the csv file that were automatically matched with the registration database fields by having identical names. "Did not match csv fields" lists the columns from the csv file that did not have exact matches in the registration database. "Did not find in csv" lists the registration fields that were not automtically matched with CSV columns - these fields were either manually assigned or specified to be left blank. In this case, "ID" is a registration field but was not in the csv (that will be the case if you assign bib IDs when runners pick up their bibs, as we do).<br><br>
 
-If you are importing data into a combobox (recall, this is the type of field that must take one of a few values) then all of the entries in that column in the csv file must match exactly one of the combobox values. For example, the "Gender" registration field is a combobox that takes values "male", "female", or blank. If "Gender" is matched to a column in the csv file, then all of the values in that column must be either "male", "female", or blank. This is case sensitive - "Male" will not match "male". If you try to import a csv file for which the values in a combobox column do not take valid values, you will get an error:<br><br>
+If you are importing data into a combobox (recall, this is the type of field that must take one of a few values) then all of the entries in that column in the csv file must match exactly one of the combobox values. For example, by default the "Gender" registration field is a combobox that takes values "male", "female", or blank. If "Gender" is matched to a column in the csv file, then all of the values in that column must be either "male", "female", or blank. This is case sensitive - "Male" will not match "male". If you try to import a csv file for which the values in a combobox column do not take valid values, you will get an error:<br><br>
 
 <img width="482" height="341" src="documentation_figs/fstimer_fig34.png"><br><br> <!--602x426-->
 
-The error tells you what the invalid value is ("Male" instead of "male", "female", or blank), and where in the csv the error is (row 12). Correct any errors until the csv imports directly. When the csv is successfully imported, it while write the corresponding registration database file to a file named project_name_registration_prereg.json, in the directory fstimer/project_name. The file name is printed in the text field on the pre-registration window. <b>Note</b> that if a file project_name_registration_prereg.json already exists (for instance, because you already imported another csv in this same project), <b>it will be overwritten</b>.<br><br>
+The error tells you what the invalid value is ("Male" instead of "male", "female", or blank), and where in the csv the error is (row 25). Correct any errors until the csv imports directly. When the csv is successfully imported, it will write the corresponding registration database file to a file named project_name_registration_prereg.json, in the directory fstimer/project_name. The file name is printed in the text field on the pre-registration window. <b>Note</b> that if a file project_name_registration_prereg.json already exists (for instance, because you already imported another csv in this same project), <b>it will be overwritten</b>.<br><br>
 
 
 Continue on to <a href="documentation_sec4_3.htm">Section 4.3 Registration - details</a>.
