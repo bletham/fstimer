@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -17,128 +17,151 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handling of the window dedicated to registration'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import fstimer.gui
+import os
 import re
+from fstimer.gui.util_classes import MsgDialog
+from fstimer.gui.util_classes import GtkStockButton
 
-class RegistrationWin(gtk.Window):
+class RegistrationWin(Gtk.Window):
     '''Handling of the window dedicated to registration'''
 
-    def __init__(self, path, fields, fieldsdic, prereg, clear_for_fam, projecttype, save_registration_cb):
+    def __init__(self, path, fields, fieldsdic, prereg, projecttype, save_registration_cb, parent_win=None,
+                 autosave=True, save_label=''):
         '''Builds and display the registration window'''
-        super(RegistrationWin, self).__init__(gtk.WINDOW_TOPLEVEL)
+        super(RegistrationWin, self).__init__(Gtk.WindowType.TOPLEVEL)
+        if parent_win:
+            self.set_transient_for(parent_win)
+            self.set_modal(True)
         self.fields = fields
         self.fieldsdic = fieldsdic
         self.prereg = prereg
-        self.clear_for_fam = clear_for_fam
+        self.ids = set()
         self.projecttype = projecttype
         self.save_registration_cb = save_registration_cb
+        self.autosave = autosave
         self.editreg_win = None
         self.editregfields = None
         # First we define the registration model.
         # We will setup a liststore that is wrapped in a treemodelfilter
         # that is wrapped in a treemodelsort that is put in a treeview
         # that is put in a scrolled window. Eesh.
-        self.regmodel = gtk.ListStore(*[str for field in self.fields])
+        self.regmodel = Gtk.ListStore(*[str for field in self.fields])
         self.modelfilter = self.regmodel.filter_new()
-        self.modelfiltersorted = gtk.TreeModelSort(self.modelfilter)
-        self.treeview = gtk.TreeView()
+        self.modelfiltersorted = Gtk.TreeModelSort(self.modelfilter)
+        self.treeview = Gtk.TreeView()
         # Now we define each column in the treeview
         for (colid, field) in enumerate(fields):
-            column = gtk.TreeViewColumn(field, gtk.CellRendererText(), text=colid)
+            column = Gtk.TreeViewColumn(field, Gtk.CellRendererText(), text=colid)
             column.set_sort_column_id(colid)
             self.treeview.append_column(column)
-        self.lastnamecol = fields.index('Last name')
         # Now we populate the model with the pre-registration info, if any
         for reg in prereg:
             self.regmodel.append([reg[field] for field in fields])
+            if reg['ID']:
+                self.ids.add(reg['ID'])
         # This is the string that we filter based on.
         self.searchstr = ''
         self.modelfilter.set_visible_func(self.visible_filter)
         self.treeview.set_model(self.modelfiltersorted)
         self.treeview.set_enable_search(False)
         # Now let us actually build the window
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
-        self.set_icon_from_file('fstimer/data/icon.png')
-        self.set_title('fsTimer - ' + path)
-        self.set_position(gtk.WIN_POS_CENTER)
-        self.connect('delete_event', lambda b, jnk: self.ok_clicked(jnk))
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
+        fname = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                '../data/icon.png'))
+        self.set_icon_from_file(fname)
+        self.set_title('fsTimer - ' + os.path.basename(path))
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.connect('delete_event', lambda b, jnk: self.close_clicked(jnk))
         self.set_border_width(10)
         self.set_size_request(850, 450)
         #Now the filter entrybox
-        filterbox = gtk.HBox(False, 8)
-        filterbox.pack_start(gtk.Label('Filter by last name:'), False, False, 0)
-        self.filterentry = gtk.Entry(max=40)
+        filterbox = Gtk.HBox(False, 8)
+        filterbox.pack_start(Gtk.Label('Filter by ', True, True, 0), False, False, 0)
+        self.filter_combo = Gtk.ComboBoxText()
+        for field in self.fields:
+            self.filter_combo.append_text(field)
+        self.filter_combo.set_active(0)
+        filterbox.pack_start(self.filter_combo, False, False, 0)
+        filterbox.pack_start(Gtk.Label(':'), False, False, 0)
+        self.filterentry = Gtk.Entry()
+        self.filterentry.set_max_length(40)
         self.filterentry.connect('changed', self.filter_apply)
-        self.filterbtnCLEAR = gtk.Button(stock=gtk.STOCK_CLEAR)
+        self.filterbtnCLEAR = GtkStockButton('clear',"Clear")
         self.filterbtnCLEAR.connect('clicked', self.filter_clear)
         self.filterbtnCLEAR.set_sensitive(False)
         filterbox.pack_start(self.filterentry, False, False, 0)
         filterbox.pack_start(self.filterbtnCLEAR, False, False, 0)
         # Now the scrolled window that contains the treeview
-        regsw = gtk.ScrolledWindow()
-        regsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        regsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        regsw = Gtk.ScrolledWindow()
+        regsw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        regsw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         regsw.add(self.treeview)
         # And a message that says if we have saved or not.
-        self.regstatus = gtk.Label('')
+        self.regstatus = Gtk.Label(label=save_label)
         # Some boxes for all the stuff on the left
-        regvbox1 = gtk.VBox(False, 8)
+        regvbox1 = Gtk.VBox(False, 8)
         regvbox1.pack_start(filterbox, False, False, 0)
         regvbox1.pack_start(regsw, True, True, 0)
         regvbox1.pack_start(self.regstatus, False, False, 0)
-        vbox1align = gtk.Alignment(0, 0, 1, 1)
+        vbox1align = Gtk.Alignment.new(0, 0, 1, 1)
         vbox1align.add(regvbox1)
         # And boxes/table for the buttons on the right
-        regtable = gtk.Table(2, 1, False)
+        regtable = Gtk.Table(2, 1, False)
         regtable.set_row_spacings(5)
         regtable.set_col_spacings(5)
         regtable.set_border_width(5)
-        btnEDIT = gtk.Button(stock=gtk.STOCK_EDIT)
+        btnEDIT = GtkStockButton('edit',"Edit")
         btnEDIT.connect('clicked', self.edit_clicked)
-        btnREMOVE = gtk.Button(stock=gtk.STOCK_REMOVE)
+        btnREMOVE = GtkStockButton('remove',"Remove")
         btnREMOVE.connect('clicked', self.rm_clicked)
-        btnFAM = gtk.Button('Add family')
-        btnFAM.connect('clicked', self.fam_clicked)
-        btnNEW = gtk.Button(stock=gtk.STOCK_NEW)
+        btnNEW = GtkStockButton('new',"New")
         btnNEW.connect('clicked', self.new_clicked)
-        btnSAVE = gtk.Button(stock=gtk.STOCK_SAVE)
+        btnSAVE = GtkStockButton('save',"Save")
         btnSAVE.connect('clicked', self.save_clicked)
-        btnOK = gtk.Button('Done')
-        btnOK.connect('clicked', self.ok_clicked)
-        vsubbox = gtk.VBox(False, 8)
+        btnOK = GtkStockButton('close',"Close")
+        btnOK.connect('clicked', self.close_clicked)
+        vsubbox = Gtk.VBox(False, 8)
         vsubbox.pack_start(btnSAVE, False, False, 0)
-        vsubbox.pack_start(btnOK, False, False, 0)
-        regvspacer = gtk.Alignment(1, 1, 0, 0)
+        regvspacer = Gtk.Alignment.new(1, 1, 0, 0)
         regvspacer.add(vsubbox)
         regtable.attach(regvspacer, 0, 1, 1, 2)
-        regvbox2 = gtk.VBox(False, 8)
-        regvbox2.pack_start(btnEDIT, False, False, 0)
-        regvbox2.pack_start(btnREMOVE, False, False, 0)
-        regvbox2.pack_start(btnFAM, False, False, 0)
+        regvbox2 = Gtk.VBox(False, 8)
         regvbox2.pack_start(btnNEW, False, False, 0)
-        regvbalign = gtk.Alignment(1, 0, 0, 0)
+        regvbox2.pack_start(btnEDIT, False, False, 0)
+        regvbox2.pack_start(btnREMOVE, False, False, 30)
+        regvbalign = Gtk.Alignment.new(1, 0, 0, 0)
         regvbalign.add(regvbox2)
         regtable.attach(regvbalign, 0, 1, 0, 1)
         #Now we pack everything together
-        reghbox = gtk.HBox(False, 8)
+        reghbox = Gtk.HBox(False, 8)
         reghbox.pack_start(vbox1align, True, True, 0)
         reghbox.pack_start(regtable, False, False, 0)
-        self.add(reghbox)
+        # Add in the close button on the bottom
+        vbox_all = Gtk.VBox(False, 0)
+        vbox_all.pack_start(reghbox, True, True, 0)
+        donespacer = Gtk.Alignment.new(0, 0, 0, 0)
+        donespacer.add(btnOK)
+        vbox_all.pack_start(donespacer, False, False, 5)
+        self.add(vbox_all)
         # And show.
         self.show_all()
 
-    def visible_filter(self, model, titer):
+    def visible_filter(self, model, titer, data):
         '''This is the filter function.
-           It checks if self.searchstr is contained in column self.lastnamecol,
+           It checks if self.searchstr is contained in column matching self.filter_combo
            case insensitive'''
         if self.searchstr:
-            if not model.get_value(titer, self.lastnamecol):
+            col_idx = self.filter_combo.get_active()
+            if not model.get_value(titer, col_idx):
                 return False
             else:
-                return self.searchstr.lower() in model.get_value(titer, self.lastnamecol).lower()
+                return self.searchstr.lower() in model.get_value(titer, col_idx).lower()
         else:
             return True
 
@@ -178,34 +201,26 @@ class RegistrationWin(gtk.Window):
         treeiter = selection.get_selected()[1]
         # if nothing is selected, do nothing.
         if treeiter:
-            rmreg_dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, 'Are you sure you want to delete this entry?\nThis cannot be undone.')
-            rmreg_dialog.set_title('Woah!')
-            rmreg_dialog.set_default_response(gtk.RESPONSE_NO)
+            rmreg_dialog = MsgDialog(self, 'warning', ['yes', 'no'], 'Really delete?', 'Are you sure you want to delete this entry?\nThis cannot be undone.')
+            rmreg_dialog.set_default_response(Gtk.ResponseType.NO)
             response = rmreg_dialog.run()
             rmreg_dialog.destroy()
-            if response == gtk.RESPONSE_YES:
+            if response == Gtk.ResponseType.YES:
+                # Grab the current information.
+                current_info = {}
+                for (colid, field) in enumerate(self.fields):
+                    current_info[field] = self.modelfiltersorted.get_value(treeiter, colid)
+                # Find where this is in self.prereg
+                preregiter = self.prereg.index(current_info)
                 # converts the treeiter from sorted to filter to model, and remove
-                self.regmodel.remove(self.modelfilter.convert_iter_to_child_iter(self.modelfiltersorted.convert_iter_to_child_iter(None, treeiter)))
+                self.regmodel.remove(self.modelfilter.convert_iter_to_child_iter(self.modelfiltersorted.convert_iter_to_child_iter(treeiter)))
+                try:
+                    self.ids.remove(current_info['ID'])
+                except:
+                    pass
+                self.prereg.pop(preregiter)
                 # The latest stuff has no longer been saved.
                 self.regstatus.set_markup('')
-
-    def fam_clicked(self, jnk_unused):
-        '''Handles click on the 'add family' button on the registration window.
-           Constructs current_info the same as in self.edit_reg,
-           but passes None instead of treeiter'''
-        selection = self.treeview.get_selection()
-        treeiter = selection.get_selected()[1]
-        # if no selection, do nothing.
-        if treeiter:
-            # Grab the current information.
-            current_info = {}
-            for (colid, field) in enumerate(self.fields):
-                current_info[field] = self.modelfiltersorted.get_value(treeiter, colid)
-            # Drop some info
-            for field in self.clear_for_fam:
-                current_info[field] = ''
-            # Generate the window
-            self.edit_registration(None, None, current_info)
 
     def new_clicked(self, jnk_unused):
         '''Handles click on the 'new' button on the registration window
@@ -215,20 +230,26 @@ class RegistrationWin(gtk.Window):
     def save_clicked(self, jnk_unused):
         '''Handles click on the 'save' button on the registration window.
            We do a json dump of self.prereg'''
-        filename = self.save_registration_cb()
-        self.regstatus.set_markup('<span color="blue">Registration saved to %s</span>' % filename)
+        filename, success = self.save_registration_cb()
+        if success:
+            self.regstatus.set_markup('<span color="blue">Registration saved to %s</span>' % filename)
+            return True
+        else:
+            self.regstatus.set_markup('<span color="red">Registration NOT saved: %s</span>' % filename)
+            return False
 
-    def ok_clicked(self, jnk_unused):
-        '''Handles click on the 'ok' button on the registration window.
+    def close_clicked(self, jnk_unused):
+        '''Handles click on the 'close' button on the registration window.
            Throws up a 'do you want to save' dialog, and close the window'''
-        okreg_dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, 'Do you want to save before finishing?\nUnsaved data will be lost.')
-        okreg_dialog.set_title('Save?')
-        okreg_dialog.set_default_response(gtk.RESPONSE_YES)
+        okreg_dialog = MsgDialog(self, 'question', ['yes', 'no'], 'Save?', 'Do you want to save before finishing?\nUnsaved data will be lost.')
+        okreg_dialog.set_default_response(Gtk.ResponseType.YES)
         response = okreg_dialog.run()
         okreg_dialog.destroy()
-        if response == gtk.RESPONSE_YES:
+        if response == Gtk.ResponseType.YES:
             # this will save
-            self.save_clicked(None)
+            save_res = self.save_clicked(None)
+            if not save_res:
+                return
         self.hide()
         # Clear the file setting from pre-reg, in case pre-reg is
         # re-run without selecting a file
@@ -238,20 +259,20 @@ class RegistrationWin(gtk.Window):
         '''handles creation/modification of a registration entry.
            Converts the treeiter from the treemodelsort to the liststore.'''
         if treeiter:
-            treeiter = self.modelfilter.convert_iter_to_child_iter(self.modelfiltersorted.convert_iter_to_child_iter(None, treeiter))
+            treeiter = self.modelfilter.convert_iter_to_child_iter(self.modelfiltersorted.convert_iter_to_child_iter(treeiter))
         # Define the window
-        self.editreg_win = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.editreg_win.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.editreg_win = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        self.editreg_win.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.editreg_win.set_title('Registration entry')
         self.editreg_win.set_transient_for(self)
         self.editreg_win.set_modal(True)
-        self.editreg_win.set_position(gtk.WIN_POS_CENTER)
+        self.editreg_win.set_position(Gtk.WindowPosition.CENTER)
         self.editreg_win.connect('delete_event', lambda b, jnk_unused: self.editreg_win.hide())
         self.editreg_win.set_border_width(10)
         #An hbox for the buttons
-        editreghbox = gtk.HBox(False, 8)
-        editregbtnOK = gtk.Button(stock=gtk.STOCK_OK)
-        editregbtnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        editreghbox = Gtk.HBox(False, 8)
+        editregbtnOK = GtkStockButton('ok',"OK")
+        editregbtnCANCEL = GtkStockButton('close',"Cancel")
         editregbtnCANCEL.connect('clicked', lambda b: self.editreg_win.hide())
         editreghbox.pack_start(editregbtnOK, False, False, 5)
         editreghbox.pack_start(editregbtnCANCEL, False, False, 5)
@@ -261,12 +282,13 @@ class RegistrationWin(gtk.Window):
             # Determine which type of entry is appropriate, create it and fill it.
             # Entrybox
             if self.fieldsdic[field]['type'] == 'entrybox':
-                self.editregfields[field] = gtk.Entry(max=self.fieldsdic[field]['max'])
+                self.editregfields[field] = Gtk.Entry()
+                self.editregfields[field].set_max_length(self.fieldsdic[field]['max'])
                 if current_info:
                     self.editregfields[field].set_text(current_info[field])
             # Combobox
             elif self.fieldsdic[field]['type'] == 'combobox':
-                self.editregfields[field] = gtk.combo_box_new_text()
+                self.editregfields[field] = Gtk.ComboBoxText()
                 self.editregfields[field].append_text('')
                 for val in self.fieldsdic[field]['options']:
                     self.editregfields[field].append_text(val)
@@ -279,27 +301,30 @@ class RegistrationWin(gtk.Window):
                 else:
                     self.editregfields[field].set_active(0)
         # Set up the vbox
-        editregvbox = gtk.VBox(False, 8)
+        editregvbox = Gtk.VBox(False, 8)
         # We will make a smaller hbox for each of the fields.
         hboxes = {}
         for field in self.fields:
-            hboxes[field] = gtk.HBox(False, 15)
-            hboxes[field].pack_start(gtk.Label(field+':'), False, False, 0) #Pack the label
+            hboxes[field] = Gtk.HBox(False, 15)
+            hboxes[field].pack_start(Gtk.Label(field+':', True, True, 0), False, False, 0) #Pack the label
             hboxes[field].pack_start(self.editregfields[field], False, False, 0) #Pack the button/entry/..
             if self.projecttype == 'handicap' and field == 'Handicap':
-                label = gtk.Label('hh:mm:ss')
-                hboxes[field].pack_start(label, False, False, 0)
+                label_hd = Gtk.Label(label='hh:mm:ss')
+                hboxes[field].pack_start(label_hd, False, False, 0)
+            if field == 'ID':
+                label_id = Gtk.Label('Must be unique')
+                hboxes[field].pack_start(label_id, False, False, 0)
             editregvbox.pack_start(hboxes[field], False, False, 0) #Pack this hbox into the big vbox.
         #Pack and show
         if self.projecttype == 'handicap':
-            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, label)
+            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, label_hd, label_id)
         else:
-            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, None)
+            editregbtnOK.connect('clicked', self.validate_entry, treeiter, preregiter, None, label_id)
         editregvbox.pack_start(editreghbox, False, False, 5)
         self.editreg_win.add(editregvbox)
         self.editreg_win.show_all()
 
-    def validate_entry(self, jnk_unused, treeiter, preregiter, label):
+    def validate_entry(self, jnk_unused, treeiter, preregiter, label_hd, label_id):
         '''Handles a click on the 'ok' button of the entry edition window.
            Reads out the input information, and writes the changes to the treemodel'''
         #First check if we have entered a handicap, and if so, make sure it is valid
@@ -310,7 +335,7 @@ class RegistrationWin(gtk.Window):
                     timePattern = r'((?P<days>-?\d+) day(s)?, )?((?P<hours>\d+):)?'r'(?P<minutes>\d+):(?P<seconds>\d+)'
                     re.match(timePattern, sduration).groupdict(0)
                 except AttributeError:
-                    label.set_markup('<span color="red">hh:mm:ss</span>')
+                    label_hd.set_markup('<span color="red">hh:mm:ss</span>')
                     return
         # If that was OK, we go through each field and grab the new value.
         new_vals = {}
@@ -325,17 +350,33 @@ class RegistrationWin(gtk.Window):
                     new_vals[field] = ''
                 else:
                     new_vals[field] = self.fieldsdic[field]['options'][indx-1]
+        # Make sure we don't have a duplicate ID, unless we are editing and leave it the same.
+        if treeiter and new_vals['ID'] == self.prereg[preregiter]['ID']:
+            pass  # No need for an ID check, it was already done.
+        elif new_vals['ID'] in self.ids:
+            label_id.set_markup('<span color="red">{} has already been used</span>'.format(new_vals['ID']))
+            return
         # Now we replace or append in the treemodel and in prereg
         if treeiter:
+            # Remove the old ID from the id store, and add the new value
+            if self.prereg[preregiter]['ID']:
+                self.ids.remove(self.prereg[preregiter]['ID'])
+            # Update the tree and prereg
             for (colid, field) in enumerate(self.fields):
                 self.regmodel.set_value(treeiter, colid, new_vals[field])
             self.prereg[preregiter] = new_vals
         else:
             self.regmodel.append([new_vals[field] for field in self.fields])
             self.prereg.append(new_vals)
+        # Add the new ID to the id store
+        if new_vals['ID']:
+            self.ids.add(new_vals['ID'])
         # The saved status is unsaved
         self.regstatus.set_markup('')
-        # Filter results by this last name
-        self.filterentry.set_text(new_vals['Last name'])
+        # Filter results by the current filter field, for this value
+        self.filterentry.set_text(new_vals[self.filter_combo.get_active_text()])
+        # Save
+        if self.autosave:
+            self.save_clicked(None)
         # we're done
         self.editreg_win.hide()

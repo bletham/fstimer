@@ -18,49 +18,50 @@
 '''Handling of the window dedicated to the definition of the fields
    used in a project'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import fstimer.gui
+from fstimer.gui.util_classes import GtkStockButton
 
-class DefineFieldsWin(gtk.Window):
+class DefineFieldsWin(Gtk.Window):
     '''Handles the definition of the fields in a project'''
 
     def __init__(self, fields, fieldsdic, projecttype, back_clicked_cb, next_clicked_cb, parent):
         '''Creates fields definition window'''
-        super(DefineFieldsWin, self).__init__(gtk.WINDOW_TOPLEVEL)
+        super(DefineFieldsWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.fields = fields
         self.fieldsdic = fieldsdic
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.winnewcombo = None
         self.winnewentry = None
         self.set_transient_for(parent)
         self.set_modal(True)
-        self.set_title('fsTimer - New project')
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_title('fsTimer - Fields')
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(20)
         self.set_size_request(600, 400)
         self.connect('delete_event', lambda b, jnk_unused: self.hide())
         #Specify the fields that are required and so will be locked.
         if projecttype == 'handicap':
-            self.reqfields = ['Last name', 'First name', 'ID', 'Age', 'Gender', 'Handicap']
+            self.reqfields = ['ID', 'Age', 'Handicap']
         else:
-            self.reqfields = ['Last name', 'First name', 'ID', 'Age', 'Gender']
+            self.reqfields = ['ID', 'Age']
         ##Now create the vbox.
-        vbox1 = gtk.VBox(False, 10)
+        vbox1 = Gtk.VBox(False, 10)
         self.add(vbox1)
         ##Now add the text.
-        label2_0 = gtk.Label("Specify the information to be collected during registration.\nPress 'Forward' to continue with the default settings, or make edits below.")
+        label2_0 = Gtk.Label("Specify the information to be collected during registration.\nPress 'Forward' to continue with the default settings, or make edits below.")
         #Now we put in a liststore with the settings. We start with the default settings.
         #Make the liststore, with 3 columns (title, type, settings)
-        self.regfieldsmodel = gtk.ListStore(str, str, str)
+        self.regfieldsmodel = Gtk.ListStore(str, str, str)
         #We will put the liststore in a treeview
-        self.regfieldview = gtk.TreeView()
-        column = gtk.TreeViewColumn('Field', gtk.CellRendererText(), text=0)
+        self.regfieldview = Gtk.TreeView()
+        column = Gtk.TreeViewColumn('Field', Gtk.CellRendererText(), text=0)
         self.regfieldview.append_column(column)
-        column = gtk.TreeViewColumn('Type', gtk.CellRendererText(), text=1)
+        column = Gtk.TreeViewColumn('Type', Gtk.CellRendererText(), text=1)
         self.regfieldview.append_column(column)
-        column = gtk.TreeViewColumn('Settings', gtk.CellRendererText(), text=2)
+        column = Gtk.TreeViewColumn('Settings', Gtk.CellRendererText(), text=2)
         self.regfieldview.append_column(column)
         #Now we populate the model with the default fields
         for field in fields:
@@ -75,46 +76,46 @@ class DefineFieldsWin(gtk.Window):
         self.regfieldview.set_model(self.regfieldsmodel)
         selection = self.regfieldview.get_selection()
         #And put it in a scrolled window, in an alignment
-        regfieldsw = gtk.ScrolledWindow()
-        regfieldsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        regfieldsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        regfieldsw = Gtk.ScrolledWindow()
+        regfieldsw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        regfieldsw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         regfieldsw.add(self.regfieldview)
-        regfieldalgn = gtk.Alignment(0, 0, 1, 1)
+        regfieldalgn = Gtk.Alignment.new(0, 0, 1, 1)
         regfieldalgn.add(regfieldsw)
         #Now we put the buttons on the side.
-        vbox2 = gtk.VBox(False, 10)
-        btnUP = gtk.Button(stock=gtk.STOCK_GO_UP)
+        vbox2 = Gtk.VBox(False, 10)
+        btnUP = GtkStockButton('up',"Up")
         btnUP.connect('clicked', self.regfield_up, selection)
         vbox2.pack_start(btnUP, False, False, 0)
-        btnDOWN = gtk.Button(stock=gtk.STOCK_GO_DOWN)
+        btnDOWN = GtkStockButton('down',"Down")
         btnDOWN.connect('clicked', self.regfield_down, selection)
         vbox2.pack_start(btnDOWN, False, False, 0)
-        btnEDIT = gtk.Button(stock=gtk.STOCK_EDIT)
+        btnEDIT = GtkStockButton('edit',"Edit")
         btnEDIT.connect('clicked', self.regfield_edit, selection)
         vbox2.pack_start(btnEDIT, False, False, 0)
-        btnREMOVE = gtk.Button(stock=gtk.STOCK_REMOVE)
+        btnREMOVE = GtkStockButton('remove',"Remove")
         btnREMOVE.connect('clicked', self.regfield_remove, selection)
         vbox2.pack_start(btnREMOVE, False, False, 0)
-        btnNEWentry = gtk.Button('New entrybox')
+        btnNEWentry = Gtk.Button('New entrybox')
         btnNEWentry.connect('clicked', self.regfield_new_entrybox, '', 0, None)
         vbox2.pack_start(btnNEWentry, False, False, 0)
-        btnNEWcombo = gtk.Button('New combobox')
+        btnNEWcombo = Gtk.Button('New combobox')
         btnNEWcombo.connect('clicked', self.regfield_new_combobox, '', '', None)
         vbox2.pack_start(btnNEWcombo, False, False, 0)
         selection.connect('changed', self.regfield_lock_required_fields, btnREMOVE, btnEDIT)
         #And an hbox for the fields and the buttons
-        hbox4 = gtk.HBox(False, 0)
+        hbox4 = Gtk.HBox(False, 0)
         hbox4.pack_start(regfieldalgn, True, True, 10)
         hbox4.pack_start(vbox2, False, False, 0)
         ##And an hbox with 3 buttons
-        hbox3 = gtk.HBox(False, 0)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        hbox3 = Gtk.HBox(False, 0)
+        btnCANCEL = GtkStockButton('close',"Close")
         btnCANCEL.connect('clicked', lambda btn: self.hide())
-        alignCANCEL = gtk.Alignment(0, 0, 0, 0)
+        alignCANCEL = Gtk.Alignment.new(0, 0, 0, 0)
         alignCANCEL.add(btnCANCEL)
-        btnBACK = gtk.Button(stock=gtk.STOCK_GO_BACK)
+        btnBACK = GtkStockButton('back',"Back")
         btnBACK.connect('clicked', back_clicked_cb)
-        btnNEXT = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
+        btnNEXT = GtkStockButton('forward',"Next")
         btnNEXT.connect('clicked', next_clicked_cb)
         ##And populate
         hbox3.pack_start(alignCANCEL, True, True, 0)
@@ -167,39 +168,41 @@ class DefineFieldsWin(gtk.Window):
 
     def regfield_new_entrybox(self, jnk_unused, name, maxchar, treeiter):
         '''Handled click on the New entrybox button'''
-        self.winnewentry = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.winnewentry.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.winnewentry = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        self.winnewentry.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.winnewentry.set_transient_for(self)
         self.winnewentry.set_modal(True)
-        self.winnewentry.set_title('fsTimer - New project')
-        self.winnewentry.set_position(gtk.WIN_POS_CENTER)
+        self.winnewentry.set_title('fsTimer - New entrybox')
+        self.winnewentry.set_position(Gtk.WindowPosition.CENTER)
         self.winnewentry.set_border_width(20)
         self.winnewentry.connect('delete_event', lambda b, jnk_unused: self.winnewentry.hide())
-        label0 = gtk.Label('An entrybox allows for any text to be entered.')
-        label1 = gtk.Label('Field name:')
-        nameentry = gtk.Entry(max=50)
+        label0 = Gtk.Label(label='An entrybox allows for any text to be entered.')
+        label1 = Gtk.Label(label='Field name:')
+        nameentry = Gtk.Entry()
+        nameentry.set_max_length(50)
         nameentry.set_text(name)
-        hbox1 = gtk.HBox(False, 10)
+        hbox1 = Gtk.HBox(False, 10)
         hbox1.pack_start(label1, False, False, 0)
         hbox1.pack_start(nameentry, False, False, 0)
-        label2 = gtk.Label('Max characters:')
-        maxcharadj = gtk.Adjustment(value=1, lower=1, upper=120, step_incr=1)
-        maxcharbtn = gtk.SpinButton(maxcharadj, digits=0, climb_rate=0)
+        label2 = Gtk.Label(label='Max characters:')
+        maxcharadj = Gtk.Adjustment(value=1, lower=1, upper=120, step_incr=1)
+        maxcharbtn = Gtk.SpinButton(digits=0, climb_rate=0)
+        maxcharbtn.set_adjustment(maxcharadj)
         maxcharbtn.set_value(int(maxchar))
-        hbox2 = gtk.HBox(False, 10)
+        hbox2 = Gtk.HBox(False, 10)
         hbox2.pack_start(label2, False, False, 0)
         hbox2.pack_start(maxcharbtn, False, False, 0)
-        label3 = gtk.Label('')
-        btnOK = gtk.Button(stock=gtk.STOCK_OK)
+        label3 = Gtk.Label(label='')
+        btnOK = GtkStockButton('ok',"OK")
         btnOK.connect('clicked', self.winnewentryOK, treeiter, nameentry, maxcharbtn, label3)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton('close',"Cancel")
         btnCANCEL.connect('clicked', lambda b: self.winnewentry.hide())
-        cancel_algn = gtk.Alignment(0, 0, 0, 0)
+        cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
         cancel_algn.add(btnCANCEL)
-        hbox3 = gtk.HBox(False, 10)
+        hbox3 = Gtk.HBox(False, 10)
         hbox3.pack_start(cancel_algn, True, True, 0)
         hbox3.pack_start(btnOK, False, False, 0)
-        vbox = gtk.VBox(False, 10)
+        vbox = Gtk.VBox(False, 10)
         vbox.pack_start(label0, False, False, 0)
         vbox.pack_start(hbox1, False, False, 0)
         vbox.pack_start(hbox2, False, False, 0)
@@ -225,38 +228,40 @@ class DefineFieldsWin(gtk.Window):
 
     def regfield_new_combobox(self, jnk_unused, name, options, treeiter):
         '''Handled click on the New combobox button'''
-        self.winnewcombo = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.winnewcombo.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.winnewcombo = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        self.winnewcombo.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.winnewcombo.set_transient_for(self)
         self.winnewcombo.set_modal(True)
-        self.winnewcombo.set_title('fsTimer - New project')
-        self.winnewcombo.set_position(gtk.WIN_POS_CENTER)
+        self.winnewcombo.set_title('fsTimer - New combobox')
+        self.winnewcombo.set_position(Gtk.WindowPosition.CENTER)
         self.winnewcombo.set_border_width(20)
         self.winnewcombo.connect('delete_event', lambda b, jnk_unused: self.winnewcombo.hide())
-        label0 = gtk.Label('A combobox allows the value to be one of a few options.')
-        label1 = gtk.Label('Field name:')
-        nameentry = gtk.Entry(max=50)
+        label0 = Gtk.Label(label='A combobox allows the value to be one of a few options.')
+        label1 = Gtk.Label(label='Field name:')
+        nameentry = Gtk.Entry()
+        nameentry.set_max_length(50)
         nameentry.set_text(name)
-        hbox1 = gtk.HBox(False, 10)
+        hbox1 = Gtk.HBox(False, 10)
         hbox1.pack_start(label1, False, False, 0)
         hbox1.pack_start(nameentry, False, False, 0)
-        label2 = gtk.Label('Options,  separated by commas:')
-        optionentry = gtk.Entry(max=50)
+        label2 = Gtk.Label('Options,  separated by commas:')
+        optionentry = Gtk.Entry()
+        optionentry.set_max_length(50)
         optionentry.set_text(options)
-        hbox2 = gtk.HBox(False, 10)
+        hbox2 = Gtk.HBox(False, 10)
         hbox2.pack_start(label2, False, False, 0)
         hbox2.pack_start(optionentry, False, False, 0)
-        label3 = gtk.Label('')
-        btnOK = gtk.Button(stock=gtk.STOCK_OK)
+        label3 = Gtk.Label(label='')
+        btnOK = GtkStockButton('ok',"OK")
         btnOK.connect('clicked', self.winnewcomboOK, treeiter, nameentry, optionentry, label3)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        btnCANCEL = GtkStockButton('close',"Cancel")
         btnCANCEL.connect('clicked', lambda b: self.winnewcombo.hide())
-        cancel_algn = gtk.Alignment(0, 0, 0, 0)
+        cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
         cancel_algn.add(btnCANCEL)
-        hbox3 = gtk.HBox(False, 10)
+        hbox3 = Gtk.HBox(False, 10)
         hbox3.pack_start(cancel_algn, True, True, 0)
         hbox3.pack_start(btnOK, False, False, 0)
-        vbox = gtk.VBox(False, 10)
+        vbox = Gtk.VBox(False, 10)
         vbox.pack_start(label0,False,False,0)
         vbox.pack_start(hbox1, False, False, 0)
         vbox.pack_start(hbox2, False, False, 0)
@@ -294,9 +299,8 @@ class DefineFieldsWin(gtk.Window):
                 self.fieldsdic[nameentry]['options'] = optionlist
                 self.regfieldsmodel.set_value(treeiter, 2, 'options: '+optstr)
                 self.winnewcombo.hide()
-            elif nameentry in self.fields:
-                #Not the original name, but an existing name.
-                label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            elif not self.name_validate(nameentry, label3):
+                pass
             else:
                 #A completely new name.
                 self.fields[self.fields.index(oldname)] = nameentry #replace the name in self.fields
@@ -307,8 +311,8 @@ class DefineFieldsWin(gtk.Window):
                 self.winnewcombo.hide()
         else:
             #no treeiter- this was a new entry. Two possibilities...
-            if nameentry in self.fields:
-                label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            if not self.name_validate(nameentry, label3):
+                pass
             else:
                 self.fields.append(nameentry)
                 self.fieldsdic[nameentry] = {'type':'combobox', 'options':optionlist} #new entry
@@ -327,9 +331,8 @@ class DefineFieldsWin(gtk.Window):
                 self.fieldsdic[nameentry]['max'] = int(maxchar)
                 self.regfieldsmodel.set_value(treeiter, 2, 'max characters: '+maxchar)
                 self.winnewentry.hide()
-            elif nameentry in self.fields:
-                #Not the original name, but an existing name.
-                label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            elif not self.name_validate(nameentry, label3):
+                pass
             else:
                 #A completely new name.
                 self.fields[self.fields.index(oldname)] = nameentry #replace the name in self.fields
@@ -340,8 +343,8 @@ class DefineFieldsWin(gtk.Window):
                 self.winnewentry.hide()
         else:
             #no treeiter- this was a new entry. Two possibilities...
-            if nameentry in self.fields:
-                label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            if not self.name_validate(nameentry, label3):
+                pass
             else:
                 self.fields.append(nameentry)
                 self.fieldsdic[nameentry] = {'type':'entrybox', 'max':int(maxchar)} #new entry
@@ -349,3 +352,14 @@ class DefineFieldsWin(gtk.Window):
                 self.winnewentry.hide()
         return
 
+    def name_validate(self, nameentry, label3):
+        if nameentry in self.fields:
+            label3.set_markup('<span color="red">This field already exists! Try again.</span>')
+            return False
+        elif '{' in nameentry or '}' in nameentry:
+            label3.set_markup('<span color="red">{ and } cannot be used in field name! Try again.</span>')
+            return False
+        elif nameentry in ['Time', 'Pace', 'Place', 'Lap Times']:
+            label3.set_markup('<span color="red">Name "{}" is reserved and cannot be used. Try again.</span>'.format(nameentry))
+        else:
+            return True

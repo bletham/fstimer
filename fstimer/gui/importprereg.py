@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -17,67 +17,72 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handling of the window dedicated to importation of pre-registration'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import fstimer.gui
 import os, csv, json
 import datetime
+from fstimer.gui.util_classes import GtkStockButton
 
 class ComboValueError(Exception):
     '''Exception launched when decoding reveals an invalid value for a combo field'''
     pass
 
-class ImportPreRegWin(gtk.Window):
+class ImportPreRegWin(Gtk.Window):
     '''Handling of the window dedicated to importation of pre-registration'''
 
-    def __init__(self, cwd, path, fields, fieldsdic):
+    def __init__(self, path, fields, fieldsdic):
         '''Builds and display the importation window'''
-        super(ImportPreRegWin, self).__init__(gtk.WINDOW_TOPLEVEL)
+        super(ImportPreRegWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.path = path
-        self.cwd = cwd
         self.fields = fields
         self.fieldsdic = fieldsdic
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
-        self.set_icon_from_file('fstimer/data/icon.png')
-        self.set_title('fsTimer - ' + path)
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
+        fname = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                '../data/icon.png'))
+        self.set_icon_from_file(fname)
+        self.set_title('fsTimer - ' + os.path.basename(path))
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.hide())
         self.set_border_width(10)
         self.set_size_request(600, 400)
         # Start with some intro text.
-        label1 = gtk.Label('Select a pre-registration csv file to import.')
+        label1 = Gtk.Label(label='Select a pre-registration csv file to import.')
         #Continue to the load file.
-        btnFILE = gtk.Button(stock=gtk.STOCK_OPEN)
+        btnFILE = GtkStockButton('open',"Open")
         ## Textbuffer
-        textbuffer = gtk.TextBuffer()
+        textbuffer = Gtk.TextBuffer()
         try:
             textbuffer.create_tag("blue", foreground="blue")
             textbuffer.create_tag("red", foreground="red")
         except TypeError:
             pass
-        textview = gtk.TextView(textbuffer)
+        textview = Gtk.TextView()
+        textview.set_buffer(textbuffer)
         textview.set_editable(False)
         textview.set_cursor_visible(False)
-        textsw = gtk.ScrolledWindow()
-        textsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        textsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        textsw = Gtk.ScrolledWindow()
+        textsw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        textsw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         textsw.add(textview)
-        textalgn = gtk.Alignment(0, 0, 1, 1)
+        textalgn = Gtk.Alignment.new(0, 0, 1, 1)
         textalgn.add(textsw)
-        hbox2 = gtk.HBox(False, 5)
+        hbox2 = Gtk.HBox(False, 5)
         btnFILE.connect('clicked', self.select_preregistration, textbuffer)
-        btn_algn = gtk.Alignment(1, 0, 1, 0)
+        btn_algn = Gtk.Alignment.new(1, 0, 1, 0)
         hbox2.pack_start(btnFILE, False, False, 0)
         hbox2.pack_start(btn_algn, True, True, 0)
         ## buttons
-        btnOK = gtk.Button(stock=gtk.STOCK_OK)
+        btnOK = GtkStockButton('ok',"OK")
         btnOK.connect('clicked', lambda b: self.hide())
-        cancel_algn = gtk.Alignment(0, 0, 1, 0)
-        hbox3 = gtk.HBox(False, 10)
+        cancel_algn = Gtk.Alignment.new(0, 0, 1, 0)
+        hbox3 = Gtk.HBox(False, 10)
         hbox3.pack_start(cancel_algn, True, True, 0)
         hbox3.pack_start(btnOK, False, False, 0)
-        vbox = gtk.VBox(False, 0)
+        vbox = Gtk.VBox(False, 0)
         vbox.pack_start(label1, False, False, 5)
         vbox.pack_start(hbox2, False, True, 5)
         vbox.pack_start(textalgn, True, True, 5)
@@ -88,32 +93,32 @@ class ImportPreRegWin(gtk.Window):
     def propose_advanced_import(self, csv_fields, textbuffer1):
         '''Propose advanced import mechanism where project fields can be build
            from the csv ones using python expressions'''
-        self.advancedwin = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.advancedwin.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.advancedwin = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        self.advancedwin.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.advancedwin.set_transient_for(self)
         self.advancedwin.set_modal(True)
         self.advancedwin.set_title('fsTimer - CSV import')
-        self.advancedwin.set_position(gtk.WIN_POS_CENTER)
+        self.advancedwin.set_position(Gtk.WindowPosition.CENTER)
         self.advancedwin.set_border_width(20)
         self.advancedwin.set_size_request(600, 400)
         self.advancedwin.connect('delete_event', lambda b, jnk_unused: self.advancedwin.hide())
         # top label
-        toplabel = gtk.Label("For each field, specify the corresponding CSV column.\n")
+        toplabel = Gtk.Label("For each field, specify the corresponding CSV column.\n")
         # Treeview with 3 columns : field, combobox and free text
-        self.fieldview = gtk.TreeView()
-        self.fieldview.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
+        self.fieldview = Gtk.TreeView()
+        self.fieldview.set_grid_lines(Gtk.TreeViewGridLines.BOTH)
         # Associated model with 5 columns : the 4th one is a boolean indicating
         # whether the 3rd one (Advanced mapping) should be sensitive
-        self.fieldsmodel = gtk.ListStore(str, str, str, bool)
+        self.fieldsmodel = Gtk.ListStore(str, str, str, bool)
         for field in self.fields:
             self.fieldsmodel.append([field, field if field in csv_fields else '-- select --', '', False])
         self.fieldview.set_model(self.fieldsmodel)
         # build first column (project field)
-        column = gtk.TreeViewColumn('Field', gtk.CellRendererText(), text=0)
+        column = Gtk.TreeViewColumn('Field', Gtk.CellRendererText(), text=0)
         self.fieldview.append_column(column)
         # vuild 2nd column (csv field to be used, as a combo box)
-        combo_renderer = gtk.CellRendererCombo()
-        liststore_csv_fields = gtk.ListStore(str)
+        combo_renderer = Gtk.CellRendererCombo()
+        liststore_csv_fields = Gtk.ListStore(str)
         liststore_csv_fields.append(['-- Leave empty --'])
         for field in csv_fields:
             liststore_csv_fields.append([field])
@@ -122,44 +127,45 @@ class ImportPreRegWin(gtk.Window):
         combo_renderer.set_property("text-column", 0)
         combo_renderer.set_property("editable", True)
         combo_renderer.set_property("has-entry", False)
-        column = gtk.TreeViewColumn('CSV column', combo_renderer, text=1)
+        column = Gtk.TreeViewColumn('CSV column', combo_renderer, text=1)
         self.fieldview.append_column(column)
         # build the 3rd column (Advanced mapping)
-        advanced_renderer = gtk.CellRendererText()
-        column = gtk.TreeViewColumn('Advanced mapping', advanced_renderer, text=2, sensitive=3, editable=3)
+        advanced_renderer = Gtk.CellRendererText()
+        column = Gtk.TreeViewColumn('Advanced mapping', advanced_renderer, text=2, sensitive=3, editable=3)
         self.fieldview.append_column(column)
         # handler for the combo changes
         combo_renderer.connect("edited", self.combo_changed)
         advanced_renderer.connect("edited", self.text_changed)
         # And put it in a scrolled window, in an alignment
-        fieldsw = gtk.ScrolledWindow()
-        fieldsw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        fieldsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        fieldsw = Gtk.ScrolledWindow()
+        fieldsw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        fieldsw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         fieldsw.add(self.fieldview)
-        fieldalgn = gtk.Alignment(0, 0, 1, 1)
+        fieldalgn = Gtk.Alignment.new(0, 0, 1, 1)
         fieldalgn.add(fieldsw)
         # a text buffer for errors
-        textbuffer2 = gtk.TextBuffer()
+        textbuffer2 = Gtk.TextBuffer()
         try:
             textbuffer2.create_tag("red", foreground="red")
             textbuffer2.create_tag("blue", foreground="blue")
         except TypeError:
             pass
-        textview = gtk.TextView(textbuffer2)
+        textview = Gtk.TextView()
+        textview.set_buffer(textbuffer2)
         textview.set_editable(False)
         textview.set_cursor_visible(False)
         # hbox for the buttons
-        hbox = gtk.HBox(False, 0)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
+        hbox = Gtk.HBox(False, 0)
+        btnCANCEL = GtkStockButton('close',"Cancel")
         btnCANCEL.connect('clicked', self.advanced_import_cancel, textbuffer1)
-        btnOK = gtk.Button(stock=gtk.STOCK_OK)
+        btnOK = GtkStockButton('ok',"OK")
         btnOK.connect('clicked', self.advanced_import_ok, textbuffer1, textbuffer2)
-        alignOK = gtk.Alignment(1, 0, 0, 0)
+        alignOK = Gtk.Alignment.new(1, 0, 0, 0)
         alignOK.add(btnOK)
         hbox.pack_start(btnCANCEL, False, True, 0)
         hbox.pack_start(alignOK, True, True, 0)
         # populate
-        vbox = gtk.VBox(False, 10)
+        vbox = Gtk.VBox(False, 10)
         vbox.pack_start(toplabel, False, False, 0)
         vbox.pack_start(fieldalgn, True, True, 0)
         vbox.pack_start(textview, False, False, 0)
@@ -173,27 +179,27 @@ class ImportPreRegWin(gtk.Window):
         iter_end = textbuffer.get_end_iter()
         textbuffer.insert_with_tags_by_name(iter_end, 'Nothing done.', 'blue')
 
-    def combo_changed(self, widget_unused, path, text):
+    def combo_changed(self, widget_unused, gtkpath, text):
         '''Handles a change in the combo boxes' selections'''
-        self.fieldsmodel[path][1] = text
+        self.fieldsmodel[gtkpath][1] = text
         if text == '-- Advanced expression --':
-            if len(self.fieldsmodel[path][2]) == 0:
-                self.fieldsmodel[path][2] = '-- enter python expression --'
-            self.fieldsmodel[path][3] = True
+            if len(self.fieldsmodel[gtkpath][2]) == 0:
+                self.fieldsmodel[gtkpath][2] = '-- enter python expression --'
+            self.fieldsmodel[gtkpath][3] = True
         else:
-            self.fieldsmodel[path][3] = False
+            self.fieldsmodel[gtkpath][3] = False
 
-    def text_changed(self, widget_unused, path, text):
+    def text_changed(self, widget_unused, gtkpath, text):
         '''Handles a change in the advanced boxes'''
-        self.fieldsmodel[path][2] = text
+        self.fieldsmodel[gtkpath][2] = text
 
     def advanced_import_ok(self, jnk_unused, textbuffer1, textbuffer2):
         '''Handles click on OK button in the advanced interface'''
         textbuffer2.delete(textbuffer2.get_start_iter(), textbuffer2.get_end_iter())
         self.fields_mapping = {}
-        for path in range(len(self.fieldsmodel)):
-            field = self.fieldsmodel[path][0]
-            csv_col = self.fieldsmodel[path][1]
+        for gtkpath in range(len(self.fieldsmodel)):
+            field = self.fieldsmodel[gtkpath][0]
+            csv_col = self.fieldsmodel[gtkpath][1]
             if csv_col == '-- select --':
                 textbuffer2.insert_with_tags_by_name(textbuffer2.get_end_iter(), 'Nothing selected for field %s' % field, 'red')
                 return
@@ -201,9 +207,9 @@ class ImportPreRegWin(gtk.Window):
                 self.fields_mapping[field] = lambda reg, col=csv_col: ''
             elif csv_col == '-- Advanced expression --':
                 try:
-                    code = compile(self.fieldsmodel[path][2], '', 'eval')
+                    code = compile(self.fieldsmodel[gtkpath][2], '', 'eval')
                     self.fields_mapping[field] = lambda reg, code=code: eval(code)
-                except SyntaxError, e:
+                except SyntaxError as e:
                     iter_end = textbuffer2.get_end_iter()
                     textbuffer2.insert_with_tags_by_name(iter_end, 'Invalid syntax for expression of field %s: ' % field, 'red')
                     textbuffer2.insert_with_tags_by_name(textbuffer2.get_end_iter(), str(e), 'blue')
@@ -232,19 +238,19 @@ class ImportPreRegWin(gtk.Window):
 
     def select_preregistration(self, jnk_unused, textbuffer):
         '''Handle selection of a pre-reg file using a filechooser'''
-        chooser = gtk.FileChooserDialog(title='Select pre-registration csv', action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OK, gtk.RESPONSE_OK))
-        ffilter = gtk.FileFilter()
+        chooser = Gtk.FileChooserDialog(title='Select pre-registration csv', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=('Cancel', Gtk.ResponseType.CANCEL, 'OK', Gtk.ResponseType.OK))
+        ffilter = Gtk.FileFilter()
         ffilter.set_name('csv files')
         ffilter.add_pattern('*.csv')
         chooser.add_filter(ffilter)
-        chooser.set_current_folder(os.path.join(self.cwd, self.path, ''))
+        chooser.set_current_folder(self.path)
         response = chooser.run()
-        if response == gtk.RESPONSE_OK:
+        if response == Gtk.ResponseType.OK:
             filename = chooser.get_filename()
             textbuffer.delete(textbuffer.get_start_iter(), textbuffer.get_end_iter())
             textbuffer.set_text('Loading '+os.path.basename(filename)+'...\n')
             try:
-                fin = csv.DictReader(open(filename, 'r'))
+                fin = csv.DictReader(open(filename, 'r', encoding='utf-8'))
                 self.csvreg = []
                 for row in fin:
                     self.csvreg.append(row)
@@ -279,6 +285,6 @@ Correct the error and try again.""" % (row+1, value, field, optstr)
                 tmpdict[field] = value
             preregdata.append(tmpdict.copy())
             row += 1
-        with open(os.path.join(self.cwd, self.path, self.path+'_registration_prereg.json'), 'wb') as fout:
+        with open(os.path.join(self.path, os.path.basename(self.path)+'_registration_prereg.json'), 'w', encoding='utf-8') as fout:
             json.dump(preregdata, fout)
-        textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), 'Success! Imported pre-registration saved to '+self.path+'_registration_prereg.json\nFinished!', 'blue')
+        textbuffer.insert_with_tags_by_name(textbuffer.get_end_iter(), 'Success! Imported pre-registration saved to '+os.path.basename(self.path)+'_registration_prereg.json\nFinished!', 'blue')

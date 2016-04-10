@@ -14,7 +14,7 @@
 
 <b>Section 1</b> <a href="http://fstimer.org/download.htm">Installing fsTimer</a><br>
 <b>Section 2</b> <a href="documentation_sec2.htm">Overview</a><br>
-<b>Section 3</b> <a href="documentation_sec3.htm">Checklist for timing with fsTimer</a><br>
+<b>Section 3</b> <a href="documentation_sec3.htm">Suggestions for race setup</a><br>
 <b>Section 4</b> <a href="documentation_sec4.htm">Detailed descriptions of fsTimer components</a><br>
 <h5><b>4.1</b> <a href="documentation_sec4_1.htm">Setting up for a new race</a><br></h5>
 <h5><b>4.2</b> <a href="documentation_sec4_2.htm">Importing preregistration - details</a><br></h5>
@@ -39,7 +39,7 @@ For handicap races, "Handicap" will be added to the list of registration fields 
 
 All racers must be given a handicap or they will not show up in the results printout. The handicap must be specified as hh:mm:ss. When inputting a handicap in the registration window, it will verify that the handicap is in the right format and will not allow the entry to be created/edited if handicap is in the wrong format:<br><br>:
 
-<img width="310" height="359" src="documentation_figs/fstimer_fig70.png"><br><br> <!--388x449 --> 
+<img width="281" height="274" src="documentation_figs/fstimer_fig70.png"><br><br> <!--352x343 --> 
 
 Above is a handicap of one minute. If a racer has no handicap, then it must be specified as 0:00:00.<br><br>
 
@@ -47,14 +47,14 @@ The timing window has an additional column "Corrected time" which displays the m
 
 <img width="362" height="381" src="documentation_figs/fstimer_fig71.png"><br><br> <!--452x476 --> 
 
-Racer 100 had a handicap of 0:01:00. Racer 104 had no handicap specified. Racer 101 had a handicap of 0:00:50. Racer 102 had a handicap of 0:00:00. Note that racer 102 is the correct way to specify that the racer has no delay in starting.<br><br>
+Here racer 101 had a handicap of 0:01:00, racer 102 had a handicap of 0:00:00, and racer 103 had a handicap of 0:00:50. Racer 104 had no handicap specified (it was left blank in the registration database). Note that racer 102 is the correct way to specify that the racer has no delay in starting (set it to 0:00:00).<br><br>
 
-The results printout will show the corrected time:<br><br>
+The results printout will show the corrected time (and the Handicap, if specified when creating the project):<br><br>
 
 
 <img width="544" height="188" src="documentation_figs/fstimer_fig72.png"><br><br> <!--680x235 --> 
 
-Note that <b>racer 104 does not show up in the results</b> because he did not have a handicap specified. The same thing would happen if his handicap was not correctly formatted. This can be corrected by simpling saving the times, editing the registration file to have a correctly formatted handicap, generating a new timing dictionary, starting the timing window with that timing dictionary, and then loading the saved timing session. (This procedure is described in more detail in <a href="documentation_sec4_5.htm">Section 4.5</a>).<br><br>
+During project creation we specified the times to be ranked by Time, which for a handicap race means the corrected time. Note that 104 has no time listed, because no handicap was specified. This could be corrected by editing the registration data ("Options" menu, "Edit registration data") to add a handicap for 104.<br><br>
 
 Continue on to <a href="documentation_sec5.htm">Additional details for developers</a>.
 </div>

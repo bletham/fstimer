@@ -17,7 +17,7 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''This module provides a set of GTK windows that are used by fsTimer for its gui'''
 
-import gtk
+from gi.repository import Gdk
 
 # background color for all windows
-bgcolor = gtk.gdk.color_parse('#F0F0F0')
+bgcolor = Gdk.color_parse('#F0F0F0')

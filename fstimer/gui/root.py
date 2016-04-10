@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -17,67 +17,73 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handles the root window of the application'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import fstimer.gui
-import webbrowser
+import webbrowser, os
+from fstimer.gui.util_classes import GtkStockButton
+from fstimer.gui.util_classes import MenuItemIcon
 
-class RootWin(gtk.Window):
+class RootWin(Gtk.Window):
     '''Handles the root window of the application'''
 
     def __init__(self, path, show_about_cb, importprereg_cb,
-                 prereg_cb, compreg_cb, pretime_cb):
+                 prereg_cb, compreg_cb, pretime_cb, edit_cb):
         '''Creates the root window with choices for the tasks'''
-        super(RootWin, self).__init__(gtk.WINDOW_TOPLEVEL)
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
-        self.set_icon_from_file('fstimer/data/icon.png')
-        self.set_title('fsTimer - ' + path)
-        self.set_position(gtk.WIN_POS_CENTER)
-        self.connect('delete_event', gtk.main_quit)
+        super(RootWin, self).__init__(Gtk.WindowType.TOPLEVEL)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
+        fname = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                '../data/icon.png'))
+        self.set_icon_from_file(fname)
+        self.set_title('fsTimer - ' + os.path.basename(path))
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.connect('delete_event', Gtk.main_quit)
         self.set_border_width(0)
         # Generate the menubar
-        mb = gtk.MenuBar()
-        helpmenu = gtk.Menu()
-        helpm = gtk.MenuItem('Help')
+        mb = Gtk.MenuBar()
+        helpmenu = Gtk.Menu()
+        helpm = Gtk.MenuItem('Menu')
         helpm.set_submenu(helpmenu)
-        menuhelp = gtk.ImageMenuItem(gtk.STOCK_HELP)
-        menuhelp.connect('activate', lambda jnk: webbrowser.open('documentation/documentation_sec2.htm'))
+        menuedit = MenuItemIcon('edit', 'Edit project settings', edit_cb, True)
+        helpmenu.append(menuedit)
+        menuhelp = MenuItemIcon('help', 'Documentation', lambda x: webbrowser.open_new('http://fstimer.org/documentation/documentation_sec2.htm'))
         helpmenu.append(menuhelp)
-        menuabout = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
-        menuabout.connect('activate', show_about_cb)
+        menuabout = MenuItemIcon('about', 'About', show_about_cb, self)
         helpmenu.append(menuabout)
         mb.append(helpm)
         ### Frame
-        rootframe = gtk.Frame(label='al')
-        rootframe_label = gtk.Label('')
-        rootframe_label.set_markup('<b>fsTimer - ' + path + '</b>')
+        rootframe = Gtk.Frame(label='al')
+        rootframe_label = Gtk.Label(label='')
+        rootframe_label.set_markup('<b>fsTimer - ' + os.path.basename(path) + '</b>')
         rootframe.set_label_widget(rootframe_label)
         rootframe.set_border_width(20)
         #And now fill the frame with a table
-        roottable = gtk.Table(4, 2, False)
+        roottable = Gtk.Table(4, 2, False)
         roottable.set_row_spacings(20)
         roottable.set_col_spacings(20)
         roottable.set_border_width(10)
         #And internal buttons
-        rootbtnPREREG = gtk.Button('Preregister')
+        rootbtnPREREG = Gtk.Button('Import')
         rootbtnPREREG.connect('clicked', importprereg_cb)
-        rootlabelPREREG = gtk.Label('')
+        rootlabelPREREG = Gtk.Label(label='')
         rootlabelPREREG.set_alignment(0, 0.5)
-        rootlabelPREREG.set_markup('Prepare pre-registration file.')
-        rootbtnREG = gtk.Button('Register')
+        rootlabelPREREG.set_markup('Import registration info from spreadsheet.')
+        rootbtnREG = Gtk.Button('Register')
         rootbtnREG.connect('clicked', prereg_cb)
-        rootlabelREG = gtk.Label('')
+        rootlabelREG = Gtk.Label(label='')
         rootlabelREG.set_alignment(0, 0.5)
         rootlabelREG.set_markup('Register racer information and assign ID numbers.')
-        rootbtnCOMP = gtk.Button('Compile')
+        rootbtnCOMP = Gtk.Button('Compile')
         rootbtnCOMP.connect('clicked', compreg_cb)
-        rootlabelCOMP = gtk.Label('')
+        rootlabelCOMP = Gtk.Label(label='')
         rootlabelCOMP.set_alignment(0, 0.5)
-        rootlabelCOMP.set_markup('Compile registrations from multiple computers.')
-        rootbtnTIME = gtk.Button('Time')
+        rootlabelCOMP.set_markup('Compile registration file(s)')
+        rootbtnTIME = Gtk.Button('Time')
         rootbtnTIME.connect('clicked', pretime_cb)
-        rootlabelTIME = gtk.Label('')
+        rootlabelTIME = Gtk.Label(label='')
         rootlabelTIME.set_alignment(0, 0.5)
         rootlabelTIME.set_markup('Record race times on the day of the race.')
         roottable.attach(rootbtnPREREG, 0, 1, 0, 1)
@@ -90,13 +96,13 @@ class RootWin(gtk.Window):
         roottable.attach(rootlabelTIME, 1, 2, 3, 4)
         rootframe.add(roottable)
         ### Buttons
-        roothbox = gtk.HBox(True, 0)
-        rootbtnQUIT = gtk.Button(stock=gtk.STOCK_QUIT)
-        rootbtnQUIT.connect('clicked', gtk.main_quit)
+        roothbox = Gtk.HBox(True, 0)
+        rootbtnQUIT = GtkStockButton('close',"Quit")
+        rootbtnQUIT.connect('clicked', Gtk.main_quit)
         roothbox.pack_start(rootbtnQUIT, False, False, 5)
         #Vbox
-        rootvbox = gtk.VBox(False, 0)
-        btnhalign = gtk.Alignment(1, 0, 0, 0)
+        rootvbox = Gtk.VBox(False, 0)
+        btnhalign = Gtk.Alignment.new(1, 0, 0, 0)
         btnhalign.add(roothbox)
         rootvbox.pack_start(mb, False, False, 0)
         rootvbox.pack_start(rootframe, True, True, 0)

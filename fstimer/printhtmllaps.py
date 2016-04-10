@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #fsTimer - free, open source software for race timing.
 #Copyright 2012-14 Ben Letham
@@ -33,30 +33,21 @@ class HTMLPrinterLaps(fstimer.printhtml.HTMLPrinter):
            @param categories: existing categories'''
         super(HTMLPrinterLaps, self).__init__(fields, categories)
 
-    def common_entry(self, bibid, timing_data, runner_data):
+    def common_entry(self, row):
         '''Returns the common part of the printout of the entry
            of a given runner for scratch or by category results
-           @type bibid: string
-           @param bibid: the bibid of the runner
-           @type timing_data: timedelta|list
-           @param timing_data: timing data for the runner. May be his/her time
-                               or a list of times for multi lap races
-           @type runner_data: dict
-           @param runner_data: data concerning the runner. A dictionnary
-                               of field name / field value'''
-        # first line, with total time and first lap
-        data = [str(timing_data[0]),
-                '1 - ' + str(timing_data[1]),
-                runner_data['First name'] + ' '+ runner_data['Last name'],
-                bibid,
-                runner_data['Gender'],
-                str(runner_data['Age'])]
-        for field in self.fields[7:]:
-            data.append(runner_data[field])
-        entry = '</td><td>'.join(data)+'</td></tr>\n'
-        # others lines, with other lap times
-        for i in range(2, len(timing_data)):
-            data = ['', '', str(i) + ' - ' + str(timing_data[i]), '', '', '', '']
-            data.extend(['']*(len(self.fields)-7))
-            entry += '<tr><td>' + '</td><td>'.join(data) + '</td></tr>\n'
+           @type bibid: string'''
+        # first line, as before
+        row_print = list(row)
+        if 'Lap Times' in self.fields:
+            idx_lap = self.fields.index('Lap Times')
+            lap_times = row[idx_lap]  # Take from str back to list
+            row_print[idx_lap] = lap_times[0]
+        entry = '</td><td>'.join(row_print)+'</td></tr>\n'
+        if 'Lap Times' in self.fields:
+            for i in range(1, len(lap_times)):
+                entry += '<tr><td></td><td>'  # extra for Place
+                row_print = ['' for j in range(len(row))]
+                row_print[idx_lap] = str(lap_times[i])
+                entry += '</td><td>'.join(row_print) + '</tr>\n'
         return entry

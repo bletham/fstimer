@@ -14,7 +14,7 @@
 
 <b>Section 1</b> <a href="http://fstimer.org/download.htm">Installing fsTimer</a><br>
 <b>Section 2</b> <a href="documentation_sec2.htm">Overview</a><br>
-<b>Section 3</b> <a href="documentation_sec3.htm">Checklist for timing with fsTimer</a><br>
+<b>Section 3</b> <a href="documentation_sec3.htm">Suggestions for race setup</a><br>
 <b>Section 4</b> <a href="documentation_sec4.htm">Detailed descriptions of fsTimer components</a><br>
 <b>Section 5</b> <b>Additional details for developers</b><br>
 </div>
@@ -28,15 +28,19 @@ The development version of fsTimer is on github at:<br><br>
 
 Contributions of code are always welcome!<br><br>
 
-<b>Features for the future</b><br><br>
-
-The next version of fsTimer will be 0.6, and will probably be released around March 2015. There are several items that are on the "to-do" list for a future version, possibly 0.6.
+<b>Changelog for fsTimer 0.6</b><br><br>
+fsTimer 0.5 was released on April 9, 2016 and is the fifth major release. The major changes since version 0.5 are:
 <ul>
-<li>Figure out what's the deal with this Mac OS issue where the area around the "Edit" and "New" buttons is selected instead of clicking on the button. I don't have a Mac so it might take some more time.
-<li>Make it possible to edit project settings, for instance, to change divisionals. This can currently be done only by manually editing the .reg file. In v0.5 the project creation windows were changed to load their defaults from a .reg file, so it will be an easy addition to use those same windows to edit an existing .reg file. We just need to handle what to do if we make edits to the list of fields, and then try to load an existing registration json that was built using the old fields list.
-<li>Add relay races as a race type. This would be like a lap race but racers would be on teams and (potentially) individuals would run each lap but we would want to rank by team time.
-<li>There is an outstanding issue in Windows when using a network drive. Apparently the python terminal in windows doesn't work if the file is stored on a network drive. It errors very ungracefully, so it'd be nice to somehow make this more graceful. This might not be possible and is a limitation I am perfectly happy to live with.
-</ul>
+<li>The entire codebase was migrated from python2 to python3, and from Gtk2/PyGTK to Gtk3/PyGObject.
+<li>The user can now specify which fields to include on the printouts, including fields that are computed from other fields by providing a Python expression.
+<li>During project creation, the user can specify to include "Pace" on the results printouts.
+<li>The user can specify the field according to which results will be ranked (previously had to be Time), and can also choose different ranking fields for each division, if so desired.
+<li>Project settings (divisions, printout fields, and ranking fields) can be edited, from the main window menu.
+<li>Registration data can be edited from the timing window, allowing for easy correction of errors that are observed in the printouts.
+<li>We no longer use any stock icon functionality, which was deprecated in Gtk 3.1. Icon buttons are manually created.
+<li>First name, Last name, and Gender are no longer required registration fields.
+<li>Various UI changes (moving buttons around, renaming things) based on user feedback.
+</ul><br><br>
 
 <b>Changelog for fsTimer 0.5</b><br><br>
 fsTimer 0.5 was released on Nov. 11, 2014 and is the fourth major release. Version 0.5 came with major improvements, thanks in large part to the development efforts of Sebastien. The major changes since version 0.4 are:

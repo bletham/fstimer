@@ -21,7 +21,7 @@
 <h5><b>2.4</b> <a href="documentation_sec2_4.htm">Compiling registrations</a><br></h5>
 <h5><b>2.5</b> <b>Race timing</b><br></h5>
 -->
-<b>Section 3</b> <a href="documentation_sec3.htm">Checklist for timing with fsTimer</a><br>
+<b>Section 3</b> <a href="documentation_sec3.htm">Suggestions for race setup</a><br>
 <b>Section 4</b> <a href="documentation_sec4.htm">Detailed descriptions of fsTimer components</a><br>
 <h5><b>4.1</b> <b>Setting up for a new race</b><br></h5>
 <h5><b>4.2</b> <a href="documentation_sec4_2.htm">Importing preregistration - details</a><br></h5>
@@ -44,11 +44,13 @@ The first step to creating a new project is to choose a project name. The name m
 
 If you want to use a name that is already taken by an existing file or folder, you will have to rename or delete that file or folder.<br><br>
 
+Using the drop-down menu you can (optionally) select a project from which to import the settings. This will pre-fill all of the later windows in the project creation process with the settings from that project.<br><br>
+
 The next window allows you to choose the type of the race:<br><br>
 
 <img width="516" height="221" src="documentation_figs/fstimer_fig61.png"><br><br> <!--645x277-->
 
-A standard race is one where all racers have the same start time. In a handicap race, a "Handicap" time must be specified for all racers. Their final time is then calculated as the marked time minus the handicap. This allows racers to start at different times - a racer could start five minutes late, and by specifying a handicap of "0:05:00" for that racer, his time in the results would be corrected. Usually this is done for a race where all runners provide their handicap relative to a base time, and runners start at different times with the hope of all crossing the finish line around the same time.<br><br>
+A standard race is one where all racers have the same start time. In a handicap race, a "Handicap" time must be specified for all racers. Their final time is then calculated as the marked time minus the handicap. This allows racers to start at different times - a racer could start five minutes late, and by specifying a handicap of "0:05:00" for that racer, his or her time in the results would be corrected. Usually this is done for a race where all runners provide their handicap relative to a base time, and runners start at different times with the hope of all crossing the finish line around the same time.<br><br>
 
 For lap timing, times are marked each time a racer completes a lap. The results printout will then display the total time along with the time for each of the individual laps.<br><br>
 
@@ -56,9 +58,9 @@ The next window allows you to specify the fields that will show up in the regist
 
 <img width="482" height="341" src="documentation_figs/fstimer_fig19.png"><br><br> <!--602x426-->
 
-The "Up" and "Down" buttons allow you to change the order of the fields. This is the order in which they will appear in the registration database: The top entry in this window will be the furthest left column in the registration window, and the bottom entry in this window will be the furthest right column in the registration window. If you have many fields and some of them you want to be able to see without having to sideways scroll in the registration window, you should put them towards the top of this lsit.<br><br>
+The "Up" and "Down" buttons allow you to change the order of the fields. This is the order in which they will appear in the registration database: The top entry in this window will be the furthest left column in the registration window, and the bottom entry in this window will be the furthest right column in the registration window. This is also the order that they will show up in the results printouts, should you choose to have them in the results printouts.<br><br>
 
-The "Remove" button removes a field. Last name, First name, ID, Age, and Gender, however, are hard-coded fields due to their importance for creating divisional results. (If it is a "handicap" race, then the field "Handicap" is also required). These fields cannot be removed. The "New.." buttons allow you to create a new entrybox or combobox. A combobox means in the registration database the entry will have to take one of a set collection of values. In the window for creating a new registration entry below, "Gender" is a combobox with options "male" and "female" (and blank). An entrybox is a box for freely entering text, like "Last name" and "First name" in the registration entry below.<br><br>
+The "Remove" button removes a field. ID and Age, however, are hard-coded fields and cannot be removed. ID is critical for the timing itself. If you don't want to use Age, you can simply leave that field blank. If it is a "handicap" race, then the field "Handicap" is also required. The "New.." buttons allow you to create a new entrybox or combobox. A combobox means in the registration database the entry will have to take one of a set collection of values. In the window for creating a new registration entry below, "Gender" is a combobox with options "male" and "female" (and blank). An entrybox is a box for freely entering text, like "Last name" and "First name" in the registration entry below.<br><br>
 
 <img width="310" height="332" src="documentation_figs/fstimer_fig29.png"><br><br> <!--388x415-->
 
@@ -72,25 +74,45 @@ When creating a new combobox, you will specify the name of the field (e.g., Gend
 
 fsTimer will not allow you to create two fields with the same name.<br><br>
 
-<img width="482" height="341" src="documentation_figs/fstimer_fig32.png"><br><br> <!--602x426-->
-
-When you have finished specifying the registration fields, you move on to controlling the behavior of the "Add family" button, as described in Section 2.6. You should select all of the fields that are <i>not</i> the same for all members of a family, probably First name, ID, Age, and Gender.  <br><br>
-
-<img width="420" height="275" src="documentation_figs/fstimer_fig20.png"><br><br> <!--525x344-->
-
-Finally you must specify the divisionals. Again, "Up" and "Down" change the order in which the divisions will appear in the divisional results.<br><br>
+Next you can specify the divisionals. Again, "Up" and "Down" change the order in which the divisions will appear in the divisional results.<br><br>
 
 <img width="642" height="421" src="documentation_figs/fstimer_fig21.png"><br><br> <!--802x526-->
 
-"New" allows you to add a division. Divisions may be defined using a combination of age and any of the comboboxes that were defined as registration fields. For example, if "Grade" was specified as a combobox in when creating the registration fields, then you could define divisionals using "Grade." The name of the division that you specify will be used in the divisional results. Then, use the checkboxes to specify which fields you want to use to define the division. In the example below, "Gender" and "Grade" have been checked, so only those two fields will be used to define the division.<br><br>
+"New" allows you to add a division. Divisions may be defined using a combination of age and any of the comboboxes that were defined as registration fields. For example, if "League" was specified as a combobox in when creating the registration fields, then you could define divisionals using "League." The name of the division that you specify will be used in the divisional results. Then, use the checkboxes to specify which fields you want to use to define the division. In the example below, "Gender" and "League" have been checked, so only those two fields will be used to define the division.<br><br>
 
 <img width="642" height="421" src="documentation_figs/fstimer_fig33.png"><br><br> <!--802x526-->
 
-Note that it is OK to have overlapping divisions, if you want. If a runner falls into multiple divisions (e.g., "boys" and "7th grade boys") then he/she will simply be listed in each of the divisional results.<br><br>
+Note that it is OK to have overlapping divisions, if you want. If a runner falls into multiple divisions (e.g., "All females" and "Female, North league") then he or she will simply be listed in each of the divisional results.<br><br>
 
-"Edit" and "Remove" work exactly as you would expect.<br><br>
+"Edit" and "Remove" work exactly as you would expect. "Copy" creates a new division that copies the settings of the currently selected division.<br><br>
 
-Once the divisions are specified, a new subdirectory in the fstimer directory with the specified project name will be created (that is, if the project name was project_name, then the directory fstimer/project_name is created). Inside of this directory will be a file project_name.reg. This file stores all of the information that you just specified (registration fields, which fields to blank when adding a family member, and divisional divisions) in json format. If you want to use the same project settings across multiple computers (as you will when you want to do registration on multiple computers), then just copy the entire project_name directory into the fstimer directory on all computers.<br><br>
+In the next window we choose which information we want to include on the results printouts. These can include any of the registration fields, Time, Pace, and any custom combination of registration field data and time.<br><br>
+
+<img width="484" height="505" src="documentation_figs/fstimer_fig75.png"><br><br> <!--606x632-->
+
+From the top group of checkboxes, you can select which registration fields to include on the results printouts. Next you can select to include Time and/or Pace. If the check box next to Pace is marked, then Pace will be included in the results, computed as Time / distance using the distance that you specify in the Distance entry box. If you enter "5" and your race is a 5k, then the Pace that is calculated will be min/km. If you enter "3.107" for your 5k, then the pace that is calculated will be min/mile.<br><br>
+
+The last section on the window allows you to create custom computed fields, which can be calculated using any of the registration fields, plus Time. You refer to a field by putting the field name (case sensitive!) in curly brackets, as in the screenshot above. So, in the computed results {First name} refers to field {First name}. You can then use any Python operations that you could use on those fields. {Age} and {Time} are numbers (floats), all other registration fields will be treated as text (strings). {Time} will be the time in seconds.<br><br>
+
+For example, the expression:<br>
+{First name} + ' ' + {Last name}<br>
+concatenates First name with Last name, with a space in between (notice that there is a space between the single quotes). Pressing "New" and entering the expression below produces a field in which each runner's time is reduced by 10 seconds for each year of age:<br><br>
+
+<img width="484" height="505" src="documentation_figs/fstimer_fig76.png"><br><br> <!--606x632-->
+
+This field would allow us to have a race where older racers are given a time discount according to their age (each year means a 10 second advantage). If you enter fields that don't exist or if the expression isn't proper Python syntax, fsTimer will tell you that it is invalid. <br><br>
+
+The final window in creating a new project allows us to choose which field the results will be ranked by, for both overall results and for division results. You can rank by any field that will be used in the results (those selected or defined on the previous window). In the example below the overall results will be ranked by Adjusted Time (defined in the previous window), and the divisional results will be sorted by Time, except 70 and up which is sorted by Name:<br><br>
+
+<img width="484" height="345" src="documentation_figs/fstimer_fig77.png"><br><br> <!--606x432-->
+
+Once the rankings are specified, a new subdirectory in the fstimer directory with the specified project name will be created (that is, if the project name was project_name, then the directory fstimer/project_name is created). Inside of this directory will be a file project_name.reg. This file stores all of the information that you just specified (registration fields, divisionals, results fields, and ranking fields) in json format. If you want to use the same project on multiple computers (as you will if you want to do registration on multiple computers), then just copy the entire project_name directory into the fstimer directory on all computers.<br><br>
+
+At any point in the future you can edit the project settings by selecting "Edit project settings" from the "Menu" on the main window:<br><br>
+
+<img width="395" height="273" src="documentation_figs/fstimer_fig78.png"><br><br> <!--494x342-->
+
+You cannot edit the race type or the change the registration fields. You can, however, edit the divisions, change which fields show up in the rankings, and change how results are ranked. Pressing "Edit project settings" will take you back to the window where you specify divisions, and you can move forward from there. For the project to be updated with the new settings you must press "Next" through all of the windows, and after the final (rankings) window the project settings will be updated.<br><br>
 
 
 Continue on to <a href="documentation_sec4_2.htm">Section 4.2 Importing preregistration - details</a>.

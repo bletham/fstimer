@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -17,20 +17,23 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handling of the timing window'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GLib, Gdk
 import fstimer.gui
 import fstimer.gui.editt0
 import fstimer.gui.edittime
 import fstimer.gui.editblocktimes
+from fstimer.gui.register import RegistrationWin
 import datetime
 import time
 import os
 import re
 import json
-import pango
+from gi.repository import Pango
 from collections import defaultdict, Counter
+from fstimer.gui.util_classes import MsgDialog
+from fstimer.gui.util_classes import GtkStockButton
 
 class MergeError(Exception):
     '''Exception used in case of merging error'''
@@ -41,25 +44,45 @@ def time_format(t):
     milli = int((t - int(t)) * 10)
     hours, rem = divmod(int(t), 3600)
     minutes, seconds = divmod(rem, 60)
-    days, hours = divmod(hours, 24)
-    s = '%02d:%02d:%02d.%01d' % (hours, minutes, seconds, milli)
-    if days > 0:
-        s = '%s day%s, ' % (days, 's' if days > 1 else '') + s
+    if hours > 0:
+        s = '%d:%02d:%02d.%01d' % (hours, minutes, seconds, milli)
+    else:
+        s = '%d:%02d.%01d' % (minutes, seconds, milli)
     return s
 
 def time_parse(dt):
     '''converts string time to datetime.timedelta'''
-    d = re.match(r'((?P<days>\d+) days, )?((?P<hours>\d+):)?(?P<minutes>\d+):(?P<seconds>\d+)(\.(?P<milliseconds>\d+))?', dt).groupdict(0)
-    d['milliseconds'] = int(d['milliseconds'])*100
+    if dt and dt[0] == '-':
+        return datetime.timedelta(0) #we don't allow negative times
+    d = re.match(r'((?P<hours>\d+):)?(?P<minutes>\d+):(?P<seconds>\d+)(\.(?P<milliseconds>\d+))?', dt).groupdict(0)
+    d['milliseconds'] = int(d['milliseconds'])*100  # they are actually centiseconds in the string
     return datetime.timedelta(**dict(((key, int(value)) for key, value in d.items())))
 
-class TimingWin(gtk.Window):
+def time_diff(t1, t2):
+    '''takes the diff of two string times and returns it as a time, rectified to 0. t1-t2.'''
+    delta_t = time_parse(t1) - time_parse(t2)
+    if delta_t < datetime.timedelta(0):
+        return '0:00.0'
+    else:
+        return time_format(delta_t.total_seconds())
+
+def time_sum(t1, t2):
+    '''takes the sum of two string times and returns it as a time, t1+t2.'''
+    timesum = time_parse(t1) + time_parse(t2)
+    return time_format(timesum.total_seconds())
+
+class TimingWin(Gtk.Window):
     '''Handling of the timing window'''
 
-    def __init__(self, path, parent, timebtn, rawtimes, timing, print_cb, projecttype, numlaps):
+    def __init__(self, path, parent, timebtn, rawtimes, timing, print_cb, projecttype, numlaps,
+                 fields, fieldsdic, write_timing_cb):
         '''Builds and display the compilation error window'''
-        super(TimingWin, self).__init__(gtk.WINDOW_TOPLEVEL)
+        super(TimingWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.path = path
+        self.projecttype = projecttype
+        self.fields = fields
+        self.fieldsdic = fieldsdic
+        self.write_timing_cb = write_timing_cb
         self.timebtn = timebtn
         self.rawtimes = rawtimes
         self.timing = timing
@@ -67,47 +90,48 @@ class TimingWin(gtk.Window):
         self.wineditblocktime = None
         self.winedittime = None
         self.t0win = None
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.set_transient_for(parent)
         self.set_modal(True)
-        self.set_title('fsTimer - ' + path)
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_title('fsTimer - ' + os.path.basename(path))
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.done_timing(b))
         self.set_border_width(10)
         self.set_size_request(450, 450)
         # We will put the timing info in a liststore in a scrolledwindow
-        self.timemodel = gtk.ListStore(str, str)
+        self.timemodel = Gtk.ListStore(str, str)
         # We will put the liststore in a treeview
-        self.timeview = gtk.TreeView()
-        column = gtk.TreeViewColumn('ID', gtk.CellRendererText(), text=0)
+        self.timeview = Gtk.TreeView()
+        column = Gtk.TreeViewColumn('ID', Gtk.CellRendererText(), text=0)
         self.timeview.append_column(column)
-        column = gtk.TreeViewColumn('Time', gtk.CellRendererText(), text=1)
+        column = Gtk.TreeViewColumn('Time', Gtk.CellRendererText(), text=1)
         self.timeview.append_column(column)
         #An extra column if it is a handicap race
         if projecttype == 'handicap':
-            renderer = gtk.CellRendererText()
-            column = gtk.TreeViewColumn('Corrected Time', renderer)
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn('Corrected Time', renderer)
             column.set_cell_data_func(renderer, self.print_corrected_time)
             self.timeview.append_column(column)
         #Another extra column if it is a lap race
         if self.numlaps > 1:
-            renderer = gtk.CellRendererText()
-            column = gtk.TreeViewColumn('Completed laps', renderer)
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn('Completed laps', renderer)
             column.set_cell_data_func(renderer, self.print_completed_laps)
             self.timeview.append_column(column)
         self.timeview.set_model(self.timemodel)
         self.timeview.connect('size-allocate', self.scroll_times)
         treeselection = self.timeview.get_selection()
         # make it multiple selecting
-        treeselection.set_mode(gtk.SELECTION_MULTIPLE)
+        treeselection.set_mode(Gtk.SelectionMode.MULTIPLE)
         # And put it in a scrolled window, in an alignment
-        self.timesw = gtk.ScrolledWindow()
-        self.timesw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        self.timesw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.timesw = Gtk.ScrolledWindow()
+        self.timesw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        self.timesw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.timesw.add(self.timeview)
-        timealgn = gtk.Alignment(0, 0, 1, 1)
+        timealgn = Gtk.Alignment.new(0, 0, 1, 1)
         timealgn.add(self.timesw)
-        self.entrybox = gtk.Entry(max=40)
+        self.entrybox = Gtk.Entry()
+        self.entrybox.set_max_length(40)
         self.offset = 0 #this is len(times) - len(ids)
         self.entrybox.connect('activate', self.record_time)
         self.entrybox.connect('changed', self.check_for_newtime)
@@ -115,20 +139,21 @@ class TimingWin(gtk.Window):
         self.timestr = re.sub(' +', '_', time.ctime()).replace(':', '')
         #we save with the current time in the filename so no chance of being overwritten accidentally
         # Now lets go on to boxes
-        tophbox = gtk.HBox()
+        tophbox = Gtk.HBox()
         # our default t0, and the stuff on top for setting/edit t0
         self.t0 = 0.
-        btn_t0 = gtk.Button('Start!')
+        btn_t0 = Gtk.Button('Start!')
         btn_t0.connect('clicked', self.set_t0)
         # time display
-        self.clocklabel = gtk.Label()
-        self.clocklabel.modify_font(pango.FontDescription("sans 20"))
+        self.clocklabel = Gtk.Label()
+        self.clocklabel.modify_font(Pango.FontDescription("sans 20"))
         self.clocklabel.set_markup(time_format(0))
         tophbox.pack_start(btn_t0, False, False, 10)
         tophbox.pack_start(self.clocklabel, False, False, 10)
-        timevbox1 = gtk.VBox(False, 8)
+        timevbox1 = Gtk.VBox(False, 8)
         timevbox1.pack_start(tophbox, False, False, 0)
         timevbox1.pack_start(timealgn, True, True, 0)
+        timevbox1.pack_start(Gtk.Label('Select box below in order to mark times:'), False, False, 0)
         timevbox1.pack_start(self.entrybox, False, False, 0)
         # we will keep track of how many racers are still out.
         self.racers_reg = []
@@ -137,91 +162,97 @@ class TimingWin(gtk.Window):
         self.racers_total = len(self.racers_reg[0])
         self.racers_in = [0] * self.numlaps
         self.lapcounter = defaultdict(int)
-        self.racerslabel = gtk.Label()
+        self.racerslabel = Gtk.Label()
         self.update_racers_label()
         timevbox1.pack_start(self.racerslabel, False, False, 0)
-        vbox1align = gtk.Alignment(0, 0, 1, 1)
+        vbox1align = Gtk.Alignment.new(0, 0, 1, 1)
         vbox1align.add(timevbox1)
         # buttons on the right side
         #First an options button that will actually be a menu
-        options_menu = gtk.Menu()
-        menu_editt0 = gtk.MenuItem('Edit starting time')
+        options_menu = Gtk.Menu()
+        menu_editreg = Gtk.MenuItem('Edit registration data')
+        menu_editreg.connect_object("activate", self.edit_reg, None)
+        menu_editreg.show()
+        options_menu.append(menu_editreg)
+        menu_resett0 = Gtk.MenuItem('Restart clock')
+        menu_resett0.connect_object("activate", self.restart_t0, None)
+        menu_resett0.show()
+        options_menu.append(menu_resett0)
+        menu_editt0 = Gtk.MenuItem('Edit starting time')
         menu_editt0.connect_object("activate", self.edit_t0, None)
         menu_editt0.show()
         options_menu.append(menu_editt0)
-        menu_savecsv = gtk.MenuItem('Save results to CSV')
+        menu_savecsv = Gtk.MenuItem('Save results to CSV')
         menu_savecsv.connect_object("activate", print_cb, None, True) #True is to print csv
         menu_savecsv.show()
         options_menu.append(menu_savecsv)
-        menu_resume = gtk.MenuItem('Load saved timing session')
+        menu_resume = Gtk.MenuItem('Load saved timing session')
         menu_resume.connect_object("activate", self.resume_times, None, False) #False is for not merging
         menu_resume.show()
         options_menu.append(menu_resume)
-        menu_merge = gtk.MenuItem('Merge in saved IDs or times')
+        menu_merge = Gtk.MenuItem('Merge in saved IDs or times')
         menu_merge.connect_object("activate", self.resume_times, None, True) #True is for merging
         menu_merge.show()
         options_menu.append(menu_merge)
-        btnOPTIONS = gtk.Button('Options')
+        btnOPTIONS = Gtk.Button('Options')
         btnOPTIONS.connect_object("event", self.options_btn, options_menu)
-        options_align = gtk.Alignment(1, 0.1, 1, 0)
+        options_align = Gtk.Alignment.new(1, 0.1, 1, 0)
         options_align.add(btnOPTIONS)
         #Then the block of editing buttons
-        btnDROPID = gtk.Button('Drop ID')
+        btnDROPID = Gtk.Button('Drop ID')
         btnDROPID.connect('clicked', self.timing_rm_ID)
-        btnDROPTIME = gtk.Button('Drop time')
+        btnDROPTIME = Gtk.Button('Drop time')
         btnDROPTIME.connect('clicked', self.timing_rm_time)
-        btnEDIT = gtk.Button(stock=gtk.STOCK_EDIT)
+        btnEDIT = GtkStockButton('edit',"Edit")
         btnEDIT.connect('clicked', self.edit_time)
-        edit_vbox = gtk.VBox(True, 8)
+        edit_vbox = Gtk.VBox(True, 8)
         edit_vbox.pack_start(btnDROPID, False, False, 0)
         edit_vbox.pack_start(btnDROPTIME, False, False, 0)
         edit_vbox.pack_start(btnEDIT, False, False, 0)
-        edit_align = gtk.Alignment(1, 0, 1, 0)
+        edit_align = Gtk.Alignment.new(1, 0, 1, 0)
         edit_align.add(edit_vbox)
         #Then the print and save buttons
-        btnPRINT = gtk.Button(stock=gtk.STOCK_PRINT)
+        btnPRINT = Gtk.Button('Printouts')
         btnPRINT.connect('clicked', print_cb, False)
-        btnSAVE = gtk.Button(stock=gtk.STOCK_SAVE)
+        btnSAVE = GtkStockButton('save',"Save")
         btnSAVE.connect('clicked', self.save_times)
-        save_vbox = gtk.VBox(True, 8)
+        save_vbox = Gtk.VBox(True, 8)
         save_vbox.pack_start(btnPRINT, False, False, 0)
         save_vbox.pack_start(btnSAVE, False, False, 0)
-        save_align = gtk.Alignment(1, 1, 1, 0)
+        save_align = Gtk.Alignment.new(1, 1, 1, 0)
         save_align.add(save_vbox)
         #And finally the finish button
-        btnOK = gtk.Button('Done')
+        btnOK = GtkStockButton('close',"Close")
         btnOK.connect('clicked', self.done_timing)
-        done_align = gtk.Alignment(1, 0.7, 1, 0)
+        done_align = Gtk.Alignment.new(1, 0.7, 1, 0)
         done_align.add(btnOK)
-        vsubbox = gtk.VBox(True, 0)
+        vsubbox = Gtk.VBox(True, 0)
         vsubbox.pack_start(options_align, True, True, 0)
         vsubbox.pack_start(edit_align, True, True, 0)
         vsubbox.pack_start(save_align, True, True, 0)
         vsubbox.pack_start(done_align, True, True, 0)
-        vspacer = gtk.Alignment(1, 1, 0, 0)
+        vspacer = Gtk.Alignment.new(1, 1, 0, 0)
         vspacer.add(vsubbox)
-        timehbox = gtk.HBox(False, 8)
+        timehbox = Gtk.HBox(False, 8)
         timehbox.pack_start(vbox1align, True, True, 0)
         timehbox.pack_start(vspacer, False, False, 0)
         self.add(timehbox)
         self.show_all()
 
-    def print_corrected_time(self, column, renderer, model, itr):
+    def print_corrected_time(self, column, renderer, model, itr, data):
         '''computes a handicap corrected time from en entry in the timing model'''
         bibid, st = model.get(itr, 0, 1)
         if st and self.timing[bibid]['Handicap']:
-            t = time_parse(st)
             try:
-                th = time_parse(self.timing[bibid]['Handicap'])
-                nt = t - th
-                renderer.set_property('text', str(nt)[:-5])
+                nt = time_diff(st, self.timing[bibid]['Handicap'])
+                renderer.set_property('text', nt)
             except AttributeError:
                 #Handicap is present but is not formatted correctly.
                 renderer.set_property('text', '')
         else:
             renderer.set_property('text', '')
 
-    def print_completed_laps(self, column, renderer, model, itr):
+    def print_completed_laps(self, column, renderer, model, itr, data):
         '''computes number of laps completed by this (registered) racer'''
         bibid, st = model.get(itr, 0, 1)
         if bibid:
@@ -256,12 +287,23 @@ class TimingWin(gtk.Window):
         # keep updating
         return True
 
-    def set_t0(self, jnk_unused):
+    def set_t0(self, btn):
         '''Handles click on Start button
            Sets t0 to the current time'''
         self.t0 = time.time()
-        gtk.timeout_add(100, self.update_clock) #update clock every 100ms
+        GLib.timeout_add(100, self.update_clock) #update clock every 100ms
+        btn.set_sensitive(False)
 
+    def restart_t0(self, jnk_unused):
+        '''Handles click on restart clock button'''
+        restart_t0_dialog = MsgDialog(self, 'warning', ['yes', 'no'], 'Are you sure?', 
+                                      'Are you sure you want to restart the race clock?\nThis cannot be undone.')
+        restart_t0_dialog.set_default_response(Gtk.ResponseType.NO)
+        response = restart_t0_dialog.run()
+        restart_t0_dialog.destroy()
+        if response == Gtk.ResponseType.YES:
+            self.t0 = time.time()
+    
     def edit_t0(self, jnk_unused):
         '''Handles click on Edit button for the t0 value.
            Loads up a window and query the new t0'''
@@ -274,12 +316,35 @@ class TimingWin(gtk.Window):
 
     def options_btn(self, menu, event):
         '''Handles opening the menu on click of the options button'''
-        if event.type == gtk.gdk.BUTTON_PRESS:
-            menu.popup(None, None, None, event.button, event.time)
+        if event.type == Gdk.EventType.BUTTON_PRESS:
+            menu.popup(parent_menu_shell=None,parent_menu_item=None, func=None, data=None, button=event.get_button()[1], activate_time=event.get_time())
             return True
         else:
             return False
 
+    def edit_reg(self, jnk_unused):
+        filename = os.path.join(self.path, os.path.basename(self.path)+'_registration_compiled.json')
+        with open(filename, 'r', encoding='utf-8') as fin:
+            self.reg_file = json.load(fin)
+        regwin = RegistrationWin(
+            self.path, self.fields, self.fieldsdic, self.reg_file, self.projecttype, self.save_reg, self, False,
+            'Loaded '+filename)
+    
+    def save_reg(self):
+        # Re-create the timing dictionary
+        timedict = defaultdict(lambda: defaultdict(str))
+        for reg in self.reg_file:
+            # Any registration without an ID is left out of the timing dictionary
+            if reg['ID']:
+                # have we already added this ID to the timing dictionary?
+                if reg['ID'] in timedict.keys():
+                    return 'ID {} NOT UNIQUE'.format(reg['ID']), False
+                else:
+                    timedict[reg['ID']] = reg
+        # Write the files and set the new timedict
+        filename = self.write_timing_cb(self.reg_file, timedict)
+        return filename, True
+    
     def edit_time(self, jnk_unused):
         '''Handles click on Edit button for a time
            Chooses which edit time window to open,
@@ -304,6 +369,11 @@ class TimingWin(gtk.Window):
     def editsingletimedone(self, treeiter, new_id, new_time):
         '''Handled result of the editing of a given time'''
         row = self.timemodel.get_path(treeiter)[0]
+        if not re.match('^[0-9:.]*$', new_time):
+            md = MsgDialog(self, 'error', ['ok'], 'Error!', 'Time is not valid format.')
+            md.run()
+            md.destroy()
+            return
         if row < self.offset:
             if new_id:
                 # we are putting an ID in a slot that we hadn't reached yet
@@ -383,30 +453,22 @@ class TimingWin(gtk.Window):
     def editblocktimedone(self, pathlist, operation, timestr):
         '''Handled result of the editing of a block of times
            Goes through every time in pathlist and do the requested operation'''
-        for path in pathlist:
+        for gtkpath in pathlist:
             # Figure out which row this is, and which treeiter
-            treeiter = self.timemodel.get_iter(path)
-            row = path[0]
+            treeiter = self.timemodel.get_iter(gtkpath)
+            row = gtkpath[0]
             # Now figure out the new time. First get the old time as a string
             old_time_str = self.timemodel.get_value(treeiter, 1)
             try:
-                # Now we convert it to timedelta
-                old_time = time_parse(old_time_str)
-                # time adjustment
-                adj_time = time_parse(timestr)
-                # Combine the timedeltas to get the new time
                 if operation == 'ADD':
-                    new_time = str(old_time + adj_time)[:-5]
+                    new_time = time_sum(old_time_str, timestr)
                 elif operation == 'SUBTRACT':
-                    if old_time > adj_time:
-                        new_time = str(old_time - adj_time)[:-5]
-                    else:
-                        new_time = '0:00:00.0' #We don't allow negative times.
+                    new_time = time_diff(old_time_str, timestr)
                 # Save them, and write out to the timemodel
                 self.rawtimes['times'][row] = str(new_time)
                 self.timemodel.set_value(treeiter, 1, str(new_time))
             except AttributeError:
-                # This will happen for instance if the path has a blank time
+                # This will happen for instance if the gtkpath has a blank time
                 pass
         self.wineditblocktime.hide()
 
@@ -429,16 +491,11 @@ class TimingWin(gtk.Window):
             if ididx >= 0:
                 # Otherwise, there is no ID here so there is nothing to do.
                 # Ask if we are sure.
-                rmID_dialog = gtk.MessageDialog(self,
-                                                gtk.DIALOG_MODAL,
-                                                gtk.MESSAGE_QUESTION,
-                                                gtk.BUTTONS_YES_NO,
-                                                'Are you sure you want to drop this ID and shift all later IDs down earlier in the list?\nThis cannot be undone.')
-                rmID_dialog.set_title('Woah!')
-                rmID_dialog.set_default_response(gtk.RESPONSE_NO)
+                rmID_dialog = MsgDialog(self, 'warning', ['yes', 'no'], 'Are you sure?', 'Are you sure you want to drop this ID and shift all later IDs down earlier in the list?\nThis cannot be undone.')
+                rmID_dialog.set_default_response(Gtk.ResponseType.NO)
                 response = rmID_dialog.run()
                 rmID_dialog.destroy()
-                if response == gtk.RESPONSE_YES:
+                if response == Gtk.ResponseType.YES:
                     # Make the shift in self.rawtimes and self.offset
                     self.rawtimes['ids'].pop(ididx)
                     self.offset += 1
@@ -478,16 +535,11 @@ class TimingWin(gtk.Window):
             if timeidx >= 0:
                 # Otherwise, there is no time here so there is nothing to do.
                 # Ask if we are sure.
-                rmtime_dialog = gtk.MessageDialog(self,
-                                                  gtk.DIALOG_MODAL,
-                                                  gtk.MESSAGE_QUESTION,
-                                                  gtk.BUTTONS_YES_NO,
-                                                  'Are you sure you want to drop this time and shift all later times down earlier in the list?\nThis cannot be undone.')
-                rmtime_dialog.set_title('Woah!')
-                rmtime_dialog.set_default_response(gtk.RESPONSE_NO)
+                rmtime_dialog = MsgDialog(self, 'warning', ['yes', 'no'], 'Are you sure?', 'Are you sure you want to drop this time and shift all later times down earlier in the list?\nThis cannot be undone.')
+                rmtime_dialog.set_default_response(Gtk.ResponseType.NO)
                 response = rmtime_dialog.run()
                 rmtime_dialog.destroy()
-                if response == gtk.RESPONSE_YES:
+                if response == Gtk.ResponseType.YES:
                     # Make the shift in self.rawtimes and self.offset
                     self.rawtimes['times'].pop(timeidx)
                     self.offset -= 1
@@ -510,17 +562,17 @@ class TimingWin(gtk.Window):
 
     def resume_times(self, jnk_unused, isMerge):
         '''Handles click on Resume button'''
-        chooser = gtk.FileChooserDialog(title='Choose timing results to resume', action=gtk.FILE_CHOOSER_ACTION_OPEN, buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OK, gtk.RESPONSE_OK))
-        chooser.set_current_folder(os.path.join(os.getcwd(), self.path))
-        ffilter = gtk.FileFilter()
+        chooser = Gtk.FileChooserDialog(title='Choose timing results to resume', parent=self, action=Gtk.FileChooserAction.OPEN, buttons=('Cancel', Gtk.ResponseType.CANCEL, 'OK', Gtk.ResponseType.OK))
+        chooser.set_current_folder(self.path)
+        ffilter = Gtk.FileFilter()
         ffilter.set_name('Timing results')
         ffilter.add_pattern('*_times.json')
         chooser.add_filter(ffilter)
         response = chooser.run()
-        if response == gtk.RESPONSE_OK:
+        if response == Gtk.ResponseType.OK:
             filename = chooser.get_filename()
             try:
-                with open(filename, 'rb') as fin:
+                with open(filename, 'r', encoding='utf-8') as fin:
                     saveresults = json.load(fin)
                 newrawtimes = saveresults['rawtimes']
                 if isMerge:
@@ -543,7 +595,7 @@ class TimingWin(gtk.Window):
                     self.rawtimes['times'] = newrawtimes['times']
                     #self.timestr = saveresults['timestr'] #We will _not_ overwrite when resuming.
                     self.t0 = saveresults['t0']
-                    gtk.timeout_add(100, self.update_clock) #start the stopwatch
+                    GLib.timeout_add(100, self.update_clock) #start the stopwatch
                 # Recompute how many racers have checked in
                 self.racers_in = [0] * self.numlaps
                 for ID in self.rawtimes['ids']:
@@ -562,11 +614,8 @@ class TimingWin(gtk.Window):
                     adj_ids = list(self.rawtimes['ids'])
                 for entry in zip(adj_ids, adj_times):
                     self.timemodel.append(list(entry))
-            except (IOError, ValueError, TypeError, MergeError), e:
-                error_dialog = gtk.MessageDialog(self, gtk.DIALOG_MODAL,
-                                                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                                                 'ERROR: Failed to %s : %s.' % ('merge' if isMerge else 'result', e))
-                error_dialog.set_title('Oops...')
+            except (IOError, ValueError, TypeError, MergeError) as e:
+                error_dialog = MsgDialog(self, 'error', ['ok'], 'Oops...', 'ERROR: Failed to %s : %s.' % ('merge' if isMerge else 'resume', e))
                 response = error_dialog.run()
                 error_dialog.destroy()
         chooser.destroy()
@@ -578,31 +627,23 @@ class TimingWin(gtk.Window):
         saveresults['rawtimes'] = self.rawtimes
         saveresults['timestr'] = self.timestr
         saveresults['t0'] = self.t0
-        with open(os.path.join(self.path, self.path+'_'+self.timestr+'_times.json'), 'wb') as fout:
+        with open(os.path.join(self.path, os.path.basename(self.path)+'_'+self.timestr+'_times.json'), 'w', encoding='utf-8') as fout:
             json.dump(saveresults, fout)
-        md = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, "Times saved!")
+        md = MsgDialog(self, 'information', ['ok'], 'Saved!', 'Times saved!')
         md.run()
         md.destroy()
 
     def done_timing(self, source):
         '''Handles click on the Done button
-           Gives two dialogs before closing.'''
-        if str(type(source)) == "<type 'gtk.Button'>":
-            oktime_dialog1 = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, 'Are you sure you want to leave?')
-            oktime_dialog1.set_title('Really done?')
-            response1 = oktime_dialog1.run()
-            oktime_dialog1.destroy()
-        else:
-            # in case of delete_event the window closes regardless.
-            response1 = gtk.RESPONSE_YES
-        if response1 == gtk.RESPONSE_YES:
-            oktime_dialog2 = gtk.MessageDialog(self, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, 'Do you want to save before finishing?\nUnsaved data will be lost.')
-            oktime_dialog2.set_title('Save?')
-            response2 = oktime_dialog2.run()
-            oktime_dialog2.destroy()
-            if response2 == gtk.RESPONSE_YES:
-                self.save_times(None)
-            self.hide()
+           Gives a dialog before closing.'''
+        oktime_dialog2 = MsgDialog(self, 'question', ['yes', 'no', 'cancel'], 'Save?', 'Do you want to save before finishing?\nUnsaved data will be lost.')
+        response2 = oktime_dialog2.run()
+        oktime_dialog2.destroy()
+        if response2 == Gtk.ResponseType.CANCEL:
+            return
+        elif response2 == Gtk.ResponseType.YES:
+            self.save_times(None)
+        self.hide()
 
     def update_racers(self, ID):
         '''Updates racers_reg and racers_in after arrival of user ID'''
@@ -647,7 +688,7 @@ class TimingWin(gtk.Window):
 
     def new_blank_time(self):
         '''Record a new time'''
-        t = str(datetime.timedelta(milliseconds=int(1000*(time.time()-self.t0))))[:-5]
+        t = time_format(time.time()-self.t0)
         self.rawtimes['times'].insert(0, t) #we prepend to rawtimes, just as we prepend to timemodel
         if self.offset >= 0:
             # No IDs in the buffer, so just prepend it to the liststore.

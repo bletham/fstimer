@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-15 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -17,52 +17,57 @@
 #The author/copyright holder can be contacted at bletham@gmail.com
 '''Handling of the introduction windows to select/create a project'''
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import os
+from os.path import normpath, join, dirname, abspath
 import fstimer.gui
+from fstimer.gui.util_classes import GtkStockButton
 
-class IntroWin(gtk.Window):
+class IntroWin(Gtk.Window):
     '''Handles an introduction window to select/create a project'''
 
     def __init__(self, load_project_cb, create_project_cb):
         '''Builds and display the introduction window'''
-        super(IntroWin, self).__init__(gtk.WINDOW_TOPLEVEL)
-        self.modify_bg(gtk.STATE_NORMAL, fstimer.gui.bgcolor)
-        self.set_icon_from_file('fstimer/data/icon.png')
+        super(IntroWin, self).__init__(Gtk.WindowType.TOPLEVEL)
+        self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
+        icon_fname = normpath(join(dirname(abspath(__file__)),'../data/icon.png'))
+        self.set_icon_from_file(icon_fname)
         self.set_title('fsTimer')
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(20)
-        self.connect('delete_event', gtk.main_quit)
+        self.connect('delete_event', Gtk.main_quit)
         # Create the vbox that will contain everything
-        vbox = gtk.VBox(False, 10)
+        vbox = Gtk.VBox(False, 10)
         self.add(vbox)
         # Main logo
-        logo = gtk.Image()
-        logo.set_from_file('fstimer/data/fstimer_logo.png')
+        logo = Gtk.Image()
+        logo.set_from_file(normpath(join(dirname(abspath(__file__)),'../data/fstimer_logo.png')))
         # Welcome text
-        label0 = gtk.Label('')
-        label = gtk.Label('Select an existing project, or begin a new project.')
+        label0 = Gtk.Label(label='')
+        label = Gtk.Label('Select an existing project, or begin a new project.')
         # A combobox to select the project
-        combobox = gtk.combo_box_new_text()
+        combobox = Gtk.ComboBoxText()
         projectlist = [' -- Select an existing project --']
-        projectlist.extend([i for i in os.listdir('.') if os.path.isdir(i) and os.path.exists(i+'/'+i+'.reg')]) #List the folders in pwd that contain a .reg registration file
+        rootdir = normpath(join(dirname(abspath(__file__)),'../../'))
+        projectlist.extend([i for i in os.listdir(rootdir) if os.path.isdir(join(rootdir,i)) and os.path.exists(join(rootdir,i+'/'+i+'.reg'))]) #List the folders in pwd that contain a .reg registration file
         projectlist.sort()
         for project in projectlist:
             combobox.append_text(project)
         combobox.set_active(0)
         #An hbox for the buttons.
-        hbox = gtk.HBox(False, 0)
-        btnNEW = gtk.Button(stock=gtk.STOCK_NEW)
+        hbox = Gtk.HBox(False, 0)
+        #And build the buttons
+        btnNEW = GtkStockButton('new','New')
         btnNEW.connect('clicked', create_project_cb)
-        btnOK = gtk.Button(stock=gtk.STOCK_OK)
+        btnOK = GtkStockButton('ok','OK')
         btnOK.connect('clicked', load_project_cb, combobox, projectlist)
         btnOK.set_sensitive(False)
         #Set combobox to lock btnOK, so we can't press OK until we have selected a project
         combobox.connect('changed', self.lock_btnOK, combobox, btnOK)
-        btnCANCEL = gtk.Button(stock=gtk.STOCK_CANCEL)
-        btnCANCEL.connect('clicked', gtk.main_quit)
+        btnCANCEL = GtkStockButton('close','Close')
+        btnCANCEL.connect('clicked', Gtk.main_quit)
         #Now fill the hbox.
         hbox.pack_start(btnCANCEL, True, True, 0)
         hbox.pack_start(btnNEW, True, True, 50)
