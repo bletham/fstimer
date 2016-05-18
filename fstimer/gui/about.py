@@ -36,7 +36,7 @@ class AboutWin(Gtk.AboutDialog):
                 '../data/icon.png'))
         self.set_logo(GdkPixbuf.Pixbuf.new_from_file(fname))
         self.set_program_name('fsTimer')
-        self.set_version('0.6')
+        self.set_version('0.6.1')
         self.set_copyright("""Copyright 2012-16 Ben Letham\
         \nThis program comes with ABSOLUTELY NO WARRANTY; for details see license.\
         \nThis is free software, and you are welcome to redistribute it under certain conditions; see license for details""")
