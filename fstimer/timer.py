@@ -656,7 +656,7 @@ class PyTimer(object):
             # Each value of laptimesdic is a list, sorted in order from
             # fastest time (1st lap) to longest time (last lap).
             laptimesdic = defaultdict(list)
-            for (tag, time) in sorted(timeslist, key=lambda x:x[1]):
+            for (tag, time) in sorted(timeslist, key=lambda x: time_parse(x[1])):
                 laptimesdic[tag].append(time)
             # compute the lap times.
             lap_times = {}
