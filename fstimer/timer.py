@@ -20,6 +20,7 @@
 
 '''Main class of the fsTimer package'''
 
+import logging
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -315,6 +316,8 @@ class PyTimer(object):
 
     def store_new_project(self, jnk_unused, edit):
         '''Stores a new project to file and goes to root window'''
+        logger = logging.getLogger('fstimer')
+        logger.debug(self.path)
         if not edit:
             os.system('mkdir '+ self.path)
         regdata = {}
@@ -325,6 +328,7 @@ class PyTimer(object):
         regdata['printfields'] = self.printfields
         regdata['divisions'] = self.divisions
         regdata['rankings'] = self.rankings
+        logger.debug(regdata)
         with open(join(self.path, basename(self.path)+'.reg'), 'w', encoding='utf-8') as fout:
             json.dump(regdata, fout)
         if edit:
