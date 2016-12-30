@@ -28,10 +28,9 @@ from fstimer.printer.printcsvlaps import CSVPrinterLaps
 from fstimer.printer.printhtml import HTMLPrinter
 from fstimer.printer.printhtmllaps import HTMLPrinterLaps
 from collections import defaultdict
-from fstimer.gui.util_classes import MsgDialog
 from fstimer.time_ops import time_format, time_parse, time_diff
 
-def print_times(btn_unused, pytimer, use_csv):
+def print_times(pytimer, use_csv):
     '''print times to files'''
     # choose the right Printer Class
     if use_csv:
@@ -125,11 +124,6 @@ def print_times(btn_unused, pytimer, use_csv):
         for div in pytimer.divisions:
             div_out.write(divresults[div[0]])
         div_out.write(printer.footer())
-    # display user dialog that all was successful
-    md = MsgDialog(pytimer.timewin, 'information', ['ok'], 'Success!',
-                   "Results saved to " + printer.file_extension() + "!")
-    md.run()
-    md.destroy()
 
 def get_divisions(timing, tag, divisions):
     '''Get the divisions for a given timing entry'''

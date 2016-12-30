@@ -152,7 +152,7 @@ class TimingWin(Gtk.Window):
         menu_editt0.show()
         options_menu.append(menu_editt0)
         menu_savecsv = Gtk.MenuItem('Save results to CSV')
-        menu_savecsv.connect_object("activate", print_times, None, pytimer, True) #True is to print csv
+        menu_savecsv.connect_object("activate", self.print_csv, pytimer)
         menu_savecsv.show()
         options_menu.append(menu_savecsv)
         menu_resume = Gtk.MenuItem('Load saved timing session')
@@ -182,7 +182,7 @@ class TimingWin(Gtk.Window):
         edit_align.add(edit_vbox)
         #Then the print and save buttons
         btnPRINT = Gtk.Button('Printouts')
-        btnPRINT.connect('clicked', print_times, pytimer, False)
+        btnPRINT.connect('clicked', self.print_html, pytimer)
         btnSAVE = GtkStockButton('save',"Save")
         btnSAVE.connect('clicked', self.save_times)
         save_vbox = Gtk.VBox(True, 8)
@@ -668,3 +668,19 @@ class TimingWin(Gtk.Window):
             self.timemodel.set_value(self.timemodel.get_iter(-self.offset-1), 1, t)
         self.offset += 1
         self.entrybox.set_text('')
+
+    def print_csv(self, pytimer):
+        res = print_times(pytimer, True)  # True is to print csv
+        # Display message that was successful
+        md = MsgDialog(pytimer.timewin, 'information', ['ok'], 'Success!',
+                       "Results saved to CSV.")
+        md.run()
+        md.destroy()
+
+    def print_html(self, btn_unused, pytimer):
+        res = print_times(pytimer, False)
+        # Display message that was successful
+        md = MsgDialog(pytimer.timewin, 'information', ['ok'], 'Success!',
+                       "Results saved to HTML.")
+        md.run()
+        md.destroy()
