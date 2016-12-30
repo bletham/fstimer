@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-15 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import fstimer.gui.editt0
 import fstimer.gui.edittime
 import fstimer.gui.editblocktimes
 from fstimer.gui.register import RegistrationWin
-import datetime
 import time
 import os
 import re
@@ -34,66 +33,36 @@ from gi.repository import Pango
 from collections import defaultdict, Counter
 from fstimer.gui.util_classes import MsgDialog
 from fstimer.gui.util_classes import GtkStockButton
+from fstimer.printer.formatter import print_times
+from fstimer.time_ops import time_format, time_sum, time_diff
 
 class MergeError(Exception):
     '''Exception used in case of merging error'''
     pass
 
-def time_format(t):
-    '''formats time for display in the timing window'''
-    milli = int((t - int(t)) * 10)
-    hours, rem = divmod(int(t), 3600)
-    minutes, seconds = divmod(rem, 60)
-    if hours > 0:
-        s = '%d:%02d:%02d.%01d' % (hours, minutes, seconds, milli)
-    else:
-        s = '%d:%02d.%01d' % (minutes, seconds, milli)
-    return s
-
-def time_parse(dt):
-    '''converts string time to datetime.timedelta'''
-    if dt and dt[0] == '-':
-        return datetime.timedelta(0) #we don't allow negative times
-    d = re.match(r'((?P<hours>\d+):)?(?P<minutes>\d+):(?P<seconds>\d+)(\.(?P<milliseconds>\d+))?', dt).groupdict(0)
-    d['milliseconds'] = int(d['milliseconds'])*100  # they are actually centiseconds in the string
-    return datetime.timedelta(**dict(((key, int(value)) for key, value in d.items())))
-
-def time_diff(t1, t2):
-    '''takes the diff of two string times and returns it as a time, rectified to 0. t1-t2.'''
-    delta_t = time_parse(t1) - time_parse(t2)
-    if delta_t < datetime.timedelta(0):
-        return '0:00.0'
-    else:
-        return time_format(delta_t.total_seconds())
-
-def time_sum(t1, t2):
-    '''takes the sum of two string times and returns it as a time, t1+t2.'''
-    timesum = time_parse(t1) + time_parse(t2)
-    return time_format(timesum.total_seconds())
 
 class TimingWin(Gtk.Window):
     '''Handling of the timing window'''
 
-    def __init__(self, path, parent, timebtn, rawtimes, timing, print_cb, projecttype, numlaps,
-                 fields, fieldsdic, write_timing_cb):
+    def __init__(self, pytimer, timebtn):
         '''Builds and display the compilation error window'''
         super(TimingWin, self).__init__(Gtk.WindowType.TOPLEVEL)
-        self.path = path
-        self.projecttype = projecttype
-        self.fields = fields
-        self.fieldsdic = fieldsdic
-        self.write_timing_cb = write_timing_cb
+        self.path = pytimer.path
+        self.projecttype = pytimer.projecttype
+        self.fields = pytimer.fields
+        self.fieldsdic = pytimer.fieldsdic
+        self.write_timing_cb = pytimer.write_updated_timing
         self.timebtn = timebtn
-        self.rawtimes = rawtimes
-        self.timing = timing
-        self.numlaps = numlaps
+        self.rawtimes = pytimer.rawtimes
+        self.timing = pytimer.timing
+        self.numlaps = pytimer.numlaps
         self.wineditblocktime = None
         self.winedittime = None
         self.t0win = None
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
-        self.set_transient_for(parent)
+        self.set_transient_for(pytimer.rootwin)
         self.set_modal(True)
-        self.set_title('fsTimer - ' + os.path.basename(path))
+        self.set_title('fsTimer - ' + os.path.basename(self.path))
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect('delete_event', lambda b, jnk: self.done_timing(b))
         self.set_border_width(10)
@@ -107,7 +76,7 @@ class TimingWin(Gtk.Window):
         column = Gtk.TreeViewColumn('Time', Gtk.CellRendererText(), text=1)
         self.timeview.append_column(column)
         #An extra column if it is a handicap race
-        if projecttype == 'handicap':
+        if self.projecttype == 'handicap':
             renderer = Gtk.CellRendererText()
             column = Gtk.TreeViewColumn('Corrected Time', renderer)
             column.set_cell_data_func(renderer, self.print_corrected_time)
@@ -158,7 +127,7 @@ class TimingWin(Gtk.Window):
         # we will keep track of how many racers are still out.
         self.racers_reg = []
         for i_unused in range(self.numlaps):
-            self.racers_reg.append(set([k for k in timing.keys()]))
+            self.racers_reg.append(set([k for k in self.timing.keys()]))
         self.racers_total = len(self.racers_reg[0])
         self.racers_in = [0] * self.numlaps
         self.lapcounter = defaultdict(int)
@@ -183,7 +152,7 @@ class TimingWin(Gtk.Window):
         menu_editt0.show()
         options_menu.append(menu_editt0)
         menu_savecsv = Gtk.MenuItem('Save results to CSV')
-        menu_savecsv.connect_object("activate", print_cb, None, True) #True is to print csv
+        menu_savecsv.connect_object("activate", print_times, None, pytimer, True) #True is to print csv
         menu_savecsv.show()
         options_menu.append(menu_savecsv)
         menu_resume = Gtk.MenuItem('Load saved timing session')
@@ -213,7 +182,7 @@ class TimingWin(Gtk.Window):
         edit_align.add(edit_vbox)
         #Then the print and save buttons
         btnPRINT = Gtk.Button('Printouts')
-        btnPRINT.connect('clicked', print_cb, False)
+        btnPRINT.connect('clicked', print_times, pytimer, False)
         btnSAVE = GtkStockButton('save',"Save")
         btnSAVE.connect('clicked', self.save_times)
         save_vbox = Gtk.VBox(True, 8)
