@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -21,33 +21,8 @@
 '''Printer class for html files for multi lap races'''
 
 from fstimer.printer.printhtml import HTMLPrinter
+from fstimer.printer.lapprinter import LapPrinter
 
-class HTMLPrinterLaps(HTMLPrinter):
+class HTMLPrinterLaps(LapPrinter, HTMLPrinter):
     '''Printer class for html files for multi lap races'''
-
-    def __init__(self, fields, categories):
-        '''constructor
-           @type fields: list
-           @param fields: fields of the output
-           @type categories: list
-           @param categories: existing categories'''
-        super(HTMLPrinterLaps, self).__init__(fields, categories)
-
-    def common_entry(self, row):
-        '''Returns the common part of the printout of the entry
-           of a given runner for scratch or by category results
-           @type bibid: string'''
-        # first line, as before
-        row_print = list(row)
-        if 'Lap Times' in self.fields:
-            idx_lap = self.fields.index('Lap Times')
-            lap_times = row[idx_lap]  # Take from str back to list
-            row_print[idx_lap] = lap_times[0]
-        entry = '</td><td>'.join(row_print)+'</td></tr>\n'
-        if 'Lap Times' in self.fields:
-            for i in range(1, len(lap_times)):
-                entry += '<tr><td></td><td>'  # extra for Place
-                row_print = ['' for j in range(len(row))]
-                row_print[idx_lap] = str(lap_times[i])
-                entry += '</td><td>'.join(row_print) + '</tr>\n'
-        return entry
+    pass

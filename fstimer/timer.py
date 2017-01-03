@@ -42,6 +42,7 @@ import fstimer.gui.compile
 import fstimer.gui.compileerrors
 import fstimer.gui.pretime
 import fstimer.gui.timing
+from fstimer.printer.formatter import print_startsheets
 from collections import defaultdict
 from fstimer.gui.util_classes import MsgDialog
 
@@ -453,14 +454,17 @@ class PyTimer(object):
         else:
             self.compilewin.setLabel(1, '<span color="blue">Checking for errors... no errors found!</span>')
         #Now save things
-        with open(join(self.path, basename(self.path)+'_registration_compiled.json'), 'w', encoding='utf-8') as fout:
-            json.dump(self.reg_nodups, fout)
-        with open(join(self.path, basename(self.path)+'_timing_dict.json'), 'w', encoding='utf-8') as fout:
-            json.dump(self.timedict, fout)
         regfn = join(self.path, basename(self.path) + '_registration_compiled.json')
         timefn = join(self.path, basename(self.path) + '_timing_dict.json')
-        self.compilewin.setLabel(2, '<span color="blue">Successfully wrote files:\n' + \
-                                 regfn + '\n' + timefn + '</span>')
+        with open(regfn, 'w', encoding='utf-8') as fout:
+            json.dump(self.reg_nodups, fout)
+        with open(timefn, 'w', encoding='utf-8') as fout:
+            json.dump(self.timedict, fout)
+        print_startsheets(self, use_csv=False)
+        self.compilewin.setLabel(
+            2,
+            '<span color="blue">Successfully wrote files:\n' + regfn + '\n' +
+            timefn + '\n\nStart sheets written to html.\n </span>')
         #And write the compiled registration to csv
         with open(join(self.path, basename(self.path)+'_registration.csv'), 'w', encoding='utf-8') as fout:
             dict_writer = csv.DictWriter(fout, self.fields)

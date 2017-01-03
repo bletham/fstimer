@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -25,15 +25,16 @@ from fstimer.printer.printer import Printer
 class HTMLPrinter(Printer):
     '''Printer class for html files for single lap races'''
 
-    def __init__(self, fields, categories):
+    def __init__(self, fields, categories, print_place):
         '''constructor
            @type fields: list
            @param fields: fields of the output
            @type categories: list
            @param categories: existing categories'''
-        super(HTMLPrinter, self).__init__(fields, categories)
-        self.place = 1
-        self.cat_place = {cat:1 for cat in self.categories}
+        super(HTMLPrinter, self).__init__(fields, categories, print_place)
+        self.row_start = '<tr><td>'
+        self.row_delim = '</td><td>'
+        self.row_end = '</td></tr>\n'
 
     def file_extension(self):
         '''returns the file extension to be used for files
@@ -70,8 +71,7 @@ class HTMLPrinter(Printer):
         #footer{ margin-top: 20px; margin-left: 20px; font: 10px sans-serif;}
         </style>
         </head>
-        <body>
-'''
+        <body>'''
 
     def footer(self):
         '''Returns the footer of the printout'''
@@ -80,7 +80,8 @@ class HTMLPrinter(Printer):
     def scratch_table_header(self):
         '''Returns the header of the printout for scratch results'''
         header = '<table id="tab"> <thead> <tr>\n'
-        header += '<th scope="col">Place</th>\n'
+        if self.print_place:
+            header += '<th scope="col">Place</th>\n'
         for field in self.fields:
             header += '<th scope="col">' + field + '</th>\n'
         header += '</tr> </thead> <tbody>\n'
@@ -102,22 +103,3 @@ class HTMLPrinter(Printer):
            @type category: string
            @param category: name of the category handled by the table'''
         return self.scratch_table_footer()
-
-    def common_entry(self, row):
-        '''Returns the common part of the printout of the entry
-           of a given runner for scratch or by category results'''
-        return '</td><td>'.join(row)+'</td></tr>\n'
-
-    def scratch_entry(self, row):
-        '''Returns the printout of the entry of a given runner
-           in the scratch results'''
-        result = '<tr><td>' + str(self.place) + '</td><td>' + self.common_entry(row)
-        self.place += 1
-        return result
-
-    def cat_entry(self, category, row):
-        '''Returns the printout of the entry of a given runner
-           in the divisional results'''
-        result = '<tr><td>' + str(self.cat_place[category]) + '</td><td>' + self.common_entry(row)
-        self.cat_place[category] += 1
-        return result
