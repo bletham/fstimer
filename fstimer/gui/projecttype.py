@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -26,7 +26,8 @@ from fstimer.gui.util_classes import GtkStockButton
 class ProjectTypeWin(Gtk.Window):
     '''Handles setting project settings'''
 
-    def __init__(self, project_types, projecttype, numlaps, back_clicked_cb, next_clicked_cb, parent):
+    def __init__(self, project_types, projecttype, numlaps, variablelaps,
+                 back_clicked_cb, next_clicked_cb, parent):
         '''Creates project type window'''
         super(ProjectTypeWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
@@ -42,13 +43,24 @@ class ProjectTypeWin(Gtk.Window):
         ##First is the project type
         label_0 = Gtk.Label(label='Select the race type.')
         rbs = {}
-        rbs[0] = Gtk.RadioButton(group=None, label='Standard.\t All runners begin at the same time.')
-        rbs[1] = Gtk.RadioButton(group=rbs[0], label='Handicap.\t Some runners are assigned a handicap and start the race later.')
+        rbs[0] = Gtk.RadioButton(
+            group=None,
+            label='Standard.\t All runners begin at the same time.')
+        rbs[1] = Gtk.RadioButton(
+            group=rbs[0],
+            label=('Handicap.\t Some runners are assigned a handicap and '
+                   'start the race later.'))
         #Set the correct button active
         rbs[project_types.index(projecttype)].set_active(True)
         ##Second are other race settigns.
-        label_1 = Gtk.Label(label='Additional race options:')
-        check_button = Gtk.CheckButton(label='Lap timing - Check the box and specify the number of laps if more than one:')
+        label_1 = Gtk.Label(label='Multi-lap races:')
+        check_button = Gtk.CheckButton(
+            label='Lap timing - Check the box and specify the number of laps:')
+        check_button2 = Gtk.CheckButton(
+            label='Racers complete variable number of laps')
+        check_button2.set_sensitive(False)
+        check_button.connect('toggled', self.lock_check_button2, check_button,
+                             check_button2)
         numlapsadj = Gtk.Adjustment(value=2, lower=2, upper=10, step_incr=1)
         numlapsbtn = Gtk.SpinButton(digits=0, climb_rate=0)
         numlapsbtn.set_adjustment(numlapsadj)
@@ -56,6 +68,8 @@ class ProjectTypeWin(Gtk.Window):
         if numlaps > 1:
             check_button.set_active(True)
             numlapsadj.set_value(numlaps)
+            if variablelaps:
+                check_button2.set_active(True)
         else:
             check_button.set_active(False)
             numlapsadj.set_value(2)
@@ -63,6 +77,9 @@ class ProjectTypeWin(Gtk.Window):
         hbox_0 = Gtk.HBox(False, 0)
         hbox_0.pack_start(check_button, False, False, 8)
         hbox_0.pack_start(numlapsbtn, False, False, 8)
+        # The next button
+        hbox_05 = Gtk.HBox(False, 0)
+        hbox_05.pack_start(check_button2, False, False, 8)
         # And an hbox with 2 buttons
         hbox_1 = Gtk.HBox(False, 0)
         btnCANCEL = GtkStockButton('close',"Close")
@@ -72,7 +89,8 @@ class ProjectTypeWin(Gtk.Window):
         btnBACK = GtkStockButton('back',"Back")
         btnBACK.connect('clicked', back_clicked_cb)
         btnNEXT = GtkStockButton('forward',"Next")
-        btnNEXT.connect('clicked', next_clicked_cb, rbs, check_button, numlapsbtn)
+        btnNEXT.connect('clicked', next_clicked_cb, rbs, check_button,
+                        check_button2, numlapsbtn)
         alignNEXT = Gtk.Alignment.new(1, 0, 1, 0)
         alignNEXT.add(btnNEXT)
         alignBACK = Gtk.Alignment.new(1, 0, 1, 0)
@@ -88,7 +106,14 @@ class ProjectTypeWin(Gtk.Window):
         vbox1.pack_start(rbs[1], False, False, 0)
         vbox2.pack_start(label_1, False, False, 0)
         vbox2.pack_start(hbox_0, False, False, 0)
+        vbox2.pack_start(hbox_05, False, False, 0)
         vbox2.pack_start(hbox_1, False, False, 0)
         vbox.pack_start(vbox1, False, False, 0)
         vbox.pack_start(vbox2, False, False, 0)
         self.show_all()
+
+    def lock_check_button2(self, unused, check_button, check_button2):
+        if check_button.get_active():
+            check_button2.set_sensitive(True)
+        else:
+            check_button2.set_sensitive(False)

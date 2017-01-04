@@ -76,6 +76,10 @@ class PyTimer(object):
         except KeyError:
             self.numlaps = 1
         try:
+            self.variablelaps = regdata['variablelaps']
+        except KeyError:
+            self.variablelaps = False
+        try:
             self.rankings = regdata['rankings']
         except KeyError:
             # old project, with no rankings, rankings is thus default one
@@ -131,6 +135,11 @@ class PyTimer(object):
         self.projecttype = regdata['projecttype']
         self.numlaps = regdata['numlaps']
         try:
+            self.variablelaps = regdata['variablelaps']
+        except KeyError:
+            # old project, for backwards compatibility
+            self.variablelaps = False
+        try:
             self.rankings = regdata['rankings']
         except KeyError:
             # old project, with no rankings, rankings is thus default one
@@ -145,11 +154,12 @@ class PyTimer(object):
         self.projecttypewin = fstimer.gui.projecttype.ProjectTypeWin(self.project_types,
                                                                      self.projecttype,
                                                                      self.numlaps,
+                                                                     self.variablelaps,
                                                                      self.back_to_new_project,
                                                                      self.define_fields,
                                                                      self.introwin)
 
-    def define_fields(self, jnk_unused, rbs, check_button, numlapsbtn):
+    def define_fields(self, jnk_unused, rbs, check_button, check_button2, numlapsbtn):
         '''Handled the definition of fields when creating a new project'''
         self.projecttypewin.hide()
         #First take care of the race settings from the previous window
@@ -159,8 +169,11 @@ class PyTimer(object):
                 break
         if check_button.get_active():
             self.numlaps = numlapsbtn.get_value_as_int()
+            if check_button2.get_active():
+                self.variablelaps = True
         else:
             self.numlaps = 1
+            self.variablelaps = False
         #We will use self.fields and self.fieldsdic as already loaded, but add/remove Handicap field according projecttype.
         if self.projecttype == 'handicap':
             if 'Handicap' not in self.fields:
@@ -319,6 +332,7 @@ class PyTimer(object):
         regdata = {}
         regdata['projecttype'] = self.projecttype
         regdata['numlaps'] = self.numlaps
+        regdata['variablelaps'] = self.variablelaps
         regdata['fields'] = self.fields
         regdata['fieldsdic'] = self.fieldsdic
         regdata['printfields'] = self.printfields

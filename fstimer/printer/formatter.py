@@ -44,7 +44,8 @@ def print_times(pytimer, use_csv):
     for ranking_key in ranking_keys:
         ranked_results[ranking_key] = get_sorted_results(
             pytimer.projecttype, pytimer.passid, pytimer.numlaps,
-            pytimer.timing, pytimer.rawtimes, ranking_key, cols, col_fns)
+            pytimer.variablelaps, pytimer.timing, pytimer.rawtimes,
+            ranking_key, cols, col_fns)
     fname_overall = '_'.join([os.path.basename(pytimer.path),
                               pytimer.timewin.timestr, 'alltimes'])
     fname_cat = '_'.join([os.path.basename(pytimer.path),
@@ -213,8 +214,8 @@ def get_sync_times_and_ids(rawtimes):
         adj_times = list(rawtimes['times'])
     return adj_ids, adj_times
 
-def get_sorted_results(projecttype, passid, numlaps, timing, rawtimes,
-                       ranking_key, cols, col_fns):
+def get_sorted_results(projecttype, passid, numlaps, variablelaps, timing,
+                       rawtimes, ranking_key, cols, col_fns):
     '''returns a sorted list of (id, result) items.
         The content of result depends on the race type'''
     # get raw times
@@ -241,7 +242,7 @@ def get_sorted_results(projecttype, passid, numlaps, timing, rawtimes,
     if numlaps > 1:
         # multi laps - groups times by tag
         # Each value of laptimesdic is a list, sorted in order from
-        # fastest time (1st lap) to longest time (last lap).
+        # earliest time (1st lap) to latest time (last lap).
         timeslist_sorted = []
         for (tag, time) in timeslist:
             try:
@@ -257,7 +258,7 @@ def get_sorted_results(projecttype, passid, numlaps, timing, rawtimes,
         total_times = {}
         for tag in laptimesdic:
             # First put the total race time
-            if len(laptimesdic[tag]) == numlaps:
+            if len(laptimesdic[tag]) == numlaps or variablelaps:
                 total_times[tag] = laptimesdic[tag][-1]
             else:
                 total_times[tag] = '_'
