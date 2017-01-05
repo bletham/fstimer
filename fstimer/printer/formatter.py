@@ -94,13 +94,13 @@ def gen_printouts(timing_dict, divisions, rankings, path, printer,
     # now save to files
     scratch_file = os.path.join(path,
                                 fname_overall + '.' + printer.file_extension())
-    with open(scratch_file, 'w') as scratch_out:
+    with open(scratch_file, 'w', encoding='utf-8') as scratch_out:
         scratch_out.write(printer.header())
         scratch_out.write(scratchresults)
         scratch_out.write(printer.footer())
     div_file = os.path.join(path,
                                 fname_cat + '.' + printer.file_extension())
-    with open(div_file, 'w') as div_out:
+    with open(div_file, 'w', encoding='utf-8') as div_out:
         div_out.write(printer.header())
         for div in divisions:
             div_out.write(divresults[div[0]])
