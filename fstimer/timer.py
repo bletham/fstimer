@@ -339,9 +339,7 @@ class PyTimer(object):
         regdata['divisions'] = self.divisions
         regdata['rankings'] = self.rankings
         logger.debug(regdata)
-        # Check if project directory exists
-        if not os.path.exists(self.path):
-            os.mkdir(self.path)
+        os.makedirs(self.path, exist_ok=True)
         with open(join(self.path, basename(self.path)+'.reg'), 'w', encoding='utf-8') as fout:
             json.dump(regdata, fout)
         if edit:
