@@ -66,6 +66,10 @@ class PyTimer(object):
         self.fields = regdata['fields']
         self.fieldsdic = regdata['fieldsdic']
         self.divisions = regdata['divisions']
+        # Backwards compatability before v0.7: Change "Age" to entrybox_int
+        for div in self.divisions:
+            if "Age" in div[1] and isinstance(div[1]["Age"], list):
+                self.fieldsdic['Age']['type'] = 'entrybox_int'
         try:
             self.projecttype = regdata['projecttype']
         except KeyError:
@@ -90,11 +94,7 @@ class PyTimer(object):
             self.printfields = regdata['printfields']
         except KeyError:
             # fill with default
-            self.printfields = {'Time': '{time}'}
-            for field in ['ID', 'Age', 'Gender']:
-                self.printfields[field] = '{' + field + '}'
-            if 'Name' not in self.fields:
-                self.printfields['Name'] = "{First name} + ' ' + {Last name}"
+            self.printfields = {'Time': '{time}', 'ID': '{ID}'}
         
         #Move on to the main window
         self.introwin.hide()
@@ -132,6 +132,10 @@ class PyTimer(object):
         self.fields = regdata['fields']
         self.fieldsdic = regdata['fieldsdic']
         self.divisions = regdata['divisions']
+        # Backwards compatability before v0.7: Change "Age" to entrybox_int
+        for div in self.divisions:
+            if "Age" in div[1] and isinstance(div[1]["Age"], list):
+                self.fieldsdic['Age']['type'] = 'entrybox_int'
         self.projecttype = regdata['projecttype']
         self.numlaps = regdata['numlaps']
         try:
@@ -241,7 +245,8 @@ class PyTimer(object):
         parent_win = self.rootwin if edit else self.introwin
         self.divisionswin.hide()
         self.printfieldswin = fstimer.gui.printfields.PrintFieldsWin(
-            self.fields, self.printfields, self.back_to_divisions, self.define_rankings, parent_win, edit)
+            self.fields, self.fieldsdic, self.printfields,
+            self.back_to_divisions, self.define_rankings, parent_win, edit)
     
     def back_to_divisions(self, jnk_unused, btnlist, btn_time, btn_pace, entry_pace, printfields_m):
         '''Goes back to define fields window from the print fields'''

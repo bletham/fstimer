@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -27,7 +27,8 @@ from fstimer.gui.util_classes import GtkStockButton
 class DefineFieldsWin(Gtk.Window):
     '''Handles the definition of the fields in a project'''
 
-    def __init__(self, fields, fieldsdic, projecttype, back_clicked_cb, next_clicked_cb, parent):
+    def __init__(self, fields, fieldsdic, projecttype, back_clicked_cb,
+                 next_clicked_cb, parent):
         '''Creates fields definition window'''
         super(DefineFieldsWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.fields = fields
@@ -44,14 +45,17 @@ class DefineFieldsWin(Gtk.Window):
         self.connect('delete_event', lambda b, jnk_unused: self.hide())
         #Specify the fields that are required and so will be locked.
         if projecttype == 'handicap':
-            self.reqfields = ['ID', 'Age', 'Handicap']
+            self.reqfields = ['ID', 'Handicap']
         else:
-            self.reqfields = ['ID', 'Age']
+            self.reqfields = ['ID']
         ##Now create the vbox.
         vbox1 = Gtk.VBox(False, 10)
         self.add(vbox1)
         ##Now add the text.
-        label2_0 = Gtk.Label("Specify the information to be collected during registration.\nPress 'Forward' to continue with the default settings, or make edits below.")
+        label2_0 = Gtk.Label(
+            "Specify the information to be collected during registration.\n"
+            "Press 'Forward' to continue with the default settings, or make "
+            "edits below.")
         #Now we put in a liststore with the settings. We start with the default settings.
         #Make the liststore, with 3 columns (title, type, settings)
         self.regfieldsmodel = Gtk.ListStore(str, str, str)
@@ -66,13 +70,15 @@ class DefineFieldsWin(Gtk.Window):
         #Now we populate the model with the default fields
         for field in fields:
             if fieldsdic[field]['type'] == 'entrybox':
-                self.regfieldsmodel.append([field, 'entrybox', 'max characters: '+str(fieldsdic[field]['max'])])
+                self.regfieldsmodel.append([field, 'Text entry', 'max characters: '+str(fieldsdic[field]['max'])])
+            elif fieldsdic[field]['type'] == 'entrybox_int':
+                self.regfieldsmodel.append([field, 'Number entry', 'max characters: '+str(fieldsdic[field]['max'])])
             elif fieldsdic[field]['type'] == 'combobox':
                 optstr = ''
                 for opt in fieldsdic[field]['options']:
                     optstr += opt + ', '
                 optstr = optstr[:-2] #drop the last ', '
-                self.regfieldsmodel.append([field, 'combobox', 'options: '+optstr])
+                self.regfieldsmodel.append([field, 'Selection box', 'options: '+optstr])
         self.regfieldview.set_model(self.regfieldsmodel)
         selection = self.regfieldview.get_selection()
         #And put it in a scrolled window, in an alignment
@@ -96,10 +102,13 @@ class DefineFieldsWin(Gtk.Window):
         btnREMOVE = GtkStockButton('remove',"Remove")
         btnREMOVE.connect('clicked', self.regfield_remove, selection)
         vbox2.pack_start(btnREMOVE, False, False, 0)
-        btnNEWentry = Gtk.Button('New entrybox')
-        btnNEWentry.connect('clicked', self.regfield_new_entrybox, '', 0, None)
+        btnNEWentry = Gtk.Button('New text entry')
+        btnNEWentry.connect('clicked', self.regfield_new_entrybox, '', 20, None, 'text')
         vbox2.pack_start(btnNEWentry, False, False, 0)
-        btnNEWcombo = Gtk.Button('New combobox')
+        btnNEWentry = Gtk.Button('New number entry')
+        btnNEWentry.connect('clicked', self.regfield_new_entrybox, '', 3, None, 'number')
+        vbox2.pack_start(btnNEWentry, False, False, 0)
+        btnNEWcombo = Gtk.Button('New selection box')
         btnNEWcombo.connect('clicked', self.regfield_new_combobox, '', '', None)
         vbox2.pack_start(btnNEWcombo, False, False, 0)
         selection.connect('changed', self.regfield_lock_required_fields, btnREMOVE, btnEDIT)
@@ -158,25 +167,35 @@ class DefineFieldsWin(Gtk.Window):
         if treeiter1:
             name = model.get_value(treeiter1, 0)
             typ = model.get_value(treeiter1, 1)
-            if typ == 'combobox':
+            if typ == 'Selection box':
                 options = model.get_value(treeiter1, 2)[9:]
                 self.regfield_new_combobox(None, name, options, treeiter1)
-            elif typ == 'entrybox':
+            elif typ == 'Text entry':
                 maxchar = model.get_value(treeiter1, 2)[16:]
-                self.regfield_new_entrybox(None, name, maxchar, treeiter1)
+                self.regfield_new_entrybox(None, name, maxchar, treeiter1, 'text')
+            elif typ == 'Number entry':
+                maxchar = model.get_value(treeiter1, 2)[16:]
+                self.regfield_new_entrybox(None, name, maxchar, treeiter1, 'number')
         return
 
-    def regfield_new_entrybox(self, jnk_unused, name, maxchar, treeiter):
+    def regfield_new_entrybox(self, jnk_unused, name, maxchar, treeiter, typ):
         '''Handled click on the New entrybox button'''
         self.winnewentry = Gtk.Window(Gtk.WindowType.TOPLEVEL)
         self.winnewentry.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.winnewentry.set_transient_for(self)
         self.winnewentry.set_modal(True)
-        self.winnewentry.set_title('fsTimer - New entrybox')
+        self.winnewentry.set_title('fsTimer - New {} entry'.format(typ))
         self.winnewentry.set_position(Gtk.WindowPosition.CENTER)
         self.winnewentry.set_border_width(20)
-        self.winnewentry.connect('delete_event', lambda b, jnk_unused: self.winnewentry.hide())
-        label0 = Gtk.Label(label='An entrybox allows for any text to be entered.')
+        self.winnewentry.connect(
+            'delete_event', lambda b, jnk_unused: self.winnewentry.hide())
+        if typ == 'text':
+            descr = ('text', 'text')
+        elif typ == 'number':
+            descr = ('number', 'integer')
+        label0 = Gtk.Label(label=(
+            'A {} entry allows for any {} to be entered,\n'
+            'up to the number of characters specified below.'.format(*descr)))
         label1 = Gtk.Label(label='Field name:')
         nameentry = Gtk.Entry()
         nameentry.set_max_length(50)
@@ -185,7 +204,8 @@ class DefineFieldsWin(Gtk.Window):
         hbox1.pack_start(label1, False, False, 0)
         hbox1.pack_start(nameentry, False, False, 0)
         label2 = Gtk.Label(label='Max characters:')
-        maxcharadj = Gtk.Adjustment(value=1, lower=1, upper=120, step_incr=1)
+        maxcharadj = Gtk.Adjustment(
+            value=1, lower=1, upper=120, step_incr=1)
         maxcharbtn = Gtk.SpinButton(digits=0, climb_rate=0)
         maxcharbtn.set_adjustment(maxcharadj)
         maxcharbtn.set_value(int(maxchar))
@@ -193,8 +213,9 @@ class DefineFieldsWin(Gtk.Window):
         hbox2.pack_start(label2, False, False, 0)
         hbox2.pack_start(maxcharbtn, False, False, 0)
         label3 = Gtk.Label(label='')
-        btnOK = GtkStockButton('ok',"OK")
-        btnOK.connect('clicked', self.winnewentryOK, treeiter, nameentry, maxcharbtn, label3)
+        btnOK = GtkStockButton('ok', "OK")
+        btnOK.connect('clicked', self.winnewentryOK, treeiter, nameentry,
+                      maxcharbtn, label3, typ)
         btnCANCEL = GtkStockButton('close',"Cancel")
         btnCANCEL.connect('clicked', lambda b: self.winnewentry.hide())
         cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
@@ -232,11 +253,13 @@ class DefineFieldsWin(Gtk.Window):
         self.winnewcombo.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
         self.winnewcombo.set_transient_for(self)
         self.winnewcombo.set_modal(True)
-        self.winnewcombo.set_title('fsTimer - New combobox')
+        self.winnewcombo.set_title('fsTimer - New selection box')
         self.winnewcombo.set_position(Gtk.WindowPosition.CENTER)
         self.winnewcombo.set_border_width(20)
-        self.winnewcombo.connect('delete_event', lambda b, jnk_unused: self.winnewcombo.hide())
-        label0 = Gtk.Label(label='A combobox allows the value to be one of a few options.')
+        self.winnewcombo.connect(
+            'delete_event', lambda b, jnk_unused: self.winnewcombo.hide())
+        label0 = Gtk.Label(label=('A selection box allows the value to be '
+                                  'one of a few options.'))
         label1 = Gtk.Label(label='Field name:')
         nameentry = Gtk.Entry()
         nameentry.set_max_length(50)
@@ -253,7 +276,8 @@ class DefineFieldsWin(Gtk.Window):
         hbox2.pack_start(optionentry, False, False, 0)
         label3 = Gtk.Label(label='')
         btnOK = GtkStockButton('ok',"OK")
-        btnOK.connect('clicked', self.winnewcomboOK, treeiter, nameentry, optionentry, label3)
+        btnOK.connect('clicked', self.winnewcomboOK, treeiter, nameentry,
+                      optionentry, label3)
         btnCANCEL = GtkStockButton('close',"Cancel")
         btnCANCEL.connect('clicked', lambda b: self.winnewcombo.hide())
         cancel_algn = Gtk.Alignment.new(0, 0, 0, 0)
@@ -316,39 +340,51 @@ class DefineFieldsWin(Gtk.Window):
             else:
                 self.fields.append(nameentry)
                 self.fieldsdic[nameentry] = {'type':'combobox', 'options':optionlist} #new entry
-                self.regfieldsmodel.append([nameentry, 'combobox', 'options: '+optstr])
+                self.regfieldsmodel.append([nameentry, 'Selection box', 'options: '+optstr])
                 self.winnewcombo.hide()
         return
 
-    def winnewentryOK(self, jnk_unused, treeiter, nameentry1, maxchar1, label3):
+    def winnewentryOK(self, jnk_unused, treeiter, nameentry1, maxchar1,
+                      label3, typ):
         '''Handled click on the OK button of the new entry dialog'''
+        if typ == 'text':
+            type_name = ''
+        elif typ == 'number':
+            type_name = '_int'
         maxchar = str(maxchar1.get_value_as_int())
         nameentry = nameentry1.get_text()
         if treeiter:
             oldname = self.regfieldsmodel.get_value(treeiter, 0)
             if nameentry == oldname:
-                #The original name. we only edited maxchar. Get the new maxchar
+                # We only edited maxchar. Get the new maxchar.
                 self.fieldsdic[nameentry]['max'] = int(maxchar)
-                self.regfieldsmodel.set_value(treeiter, 2, 'max characters: '+maxchar)
+                self.regfieldsmodel.set_value(
+                    treeiter, 2, 'max characters: ' + maxchar)
                 self.winnewentry.hide()
             elif not self.name_validate(nameentry, label3):
                 pass
             else:
-                #A completely new name.
-                self.fields[self.fields.index(oldname)] = nameentry #replace the name in self.fields
+                # A completely new name. Replace the name in self.fields
+                self.fields[self.fields.index(oldname)] = nameentry
                 self.fieldsdic.pop(oldname) #delete the old entry
-                self.fieldsdic[nameentry] = {'type':'entrybox', 'max':int(maxchar)} #new entry
-                self.regfieldsmodel.set_value(treeiter, 0, nameentry) #and update the liststore
-                self.regfieldsmodel.set_value(treeiter, 2, 'max characters: '+maxchar)
+                self.fieldsdic[nameentry] = {'type':'entrybox' + type_name,
+                                             'max':int(maxchar)}  # new entry
+                # And update the liststore
+                self.regfieldsmodel.set_value(treeiter, 0, nameentry)
+                self.regfieldsmodel.set_value(
+                    treeiter, 2, 'max characters: ' + maxchar)
                 self.winnewentry.hide()
         else:
-            #no treeiter- this was a new entry. Two possibilities...
+            # No treeiter - this was a new entry. Two possibilities...
             if not self.name_validate(nameentry, label3):
                 pass
             else:
                 self.fields.append(nameentry)
-                self.fieldsdic[nameentry] = {'type':'entrybox', 'max':int(maxchar)} #new entry
-                self.regfieldsmodel.append([nameentry, 'entrybox', 'max characters: '+maxchar])
+                self.fieldsdic[nameentry] = {'type':'entrybox' + type_name,
+                                             'max': int(maxchar)}  # new entry
+                self.regfieldsmodel.append([nameentry,
+                                            '{} entry'.format(typ.title()),
+                                            'max characters: ' + maxchar])
                 self.winnewentry.hide()
         return
 

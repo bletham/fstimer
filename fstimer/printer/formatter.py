@@ -51,8 +51,8 @@ def print_times(pytimer, use_csv):
     fname_cat = '_'.join([os.path.basename(pytimer.path),
                           pytimer.timewin.timestr, 'divtimes'])
     gen_printouts(
-        pytimer.timing, pytimer.divisions, pytimer.rankings, pytimer.path,
-        printer, ranked_results, fname_overall, fname_cat)
+        pytimer.timing, pytimer.fieldsdic, pytimer.divisions, pytimer.rankings,
+        pytimer.path, printer, ranked_results, fname_overall, fname_cat)
 
 def print_startsheets(pytimer, use_csv):
     '''print startsheets to files'''
@@ -70,10 +70,10 @@ def print_startsheets(pytimer, use_csv):
                               'all_startsheet'])
     fname_cat = '_'.join([os.path.basename(pytimer.path),
                           'divisions_startsheet'])
-    gen_printouts(pytimer.timedict, pytimer.divisions, rankings, pytimer.path,
-                  printer, ranked_results, fname_overall, fname_cat)
+    gen_printouts(pytimer.timedict, pytimer.fieldsdic, pytimer.divisions, rankings,
+                  pytimer.path, printer, ranked_results, fname_overall, fname_cat)
 
-def gen_printouts(timing_dict, divisions, rankings, path, printer,
+def gen_printouts(timing_dict, fieldsdic, divisions, rankings, path, printer,
                   ranked_results, fname_overall, fname_cat):
     scratchresults = printer.scratch_table_header()
     divresults = {div[0]: printer.cat_table_header(div[0])
@@ -84,7 +84,7 @@ def gen_printouts(timing_dict, divisions, rankings, path, printer,
             # Add this to the appropriate results
             if rankings['Overall'] == ranking_key:
                 scratchresults += printer.scratch_entry(row)
-            mydivs = get_divisions(timing_dict, tag, divisions)
+            mydivs = get_divisions(timing_dict, tag, divisions, fieldsdic)
             for div in mydivs:
                 if rankings[div] == ranking_key:
                     divresults[div] += printer.scratch_entry(row, div)
@@ -116,15 +116,18 @@ def get_col_fns(pytimer, cols):
             text = pytimer.printfields[col]
             # Sub {Time}
             text = text.replace('{Time}', 'time_parse(time).total_seconds()')
-            # Age
-            text = text.replace('{Age}', "int(userdata['Age'])")
             # ID
             text = text.replace('{ID}', "tag")
             # And the other registration fields
             for field in pytimer.fields:
-                if field not in ['Age', 'ID']:
-                    text = text.replace('{' + field + '}',
-                                        "userdata['{}']".format(field))
+                if field != 'ID':
+                    if pytimer.fieldsdic[field]['type'] == 'entrybox_int':
+                        text = text.replace(
+                            '{' + field + '}',
+                            "int(userdata['{}'])".format(field))
+                    else:
+                        text = text.replace('{' + field + '}',
+                                            "userdata['{}']".format(field))
         col_fns.append(text)
     return col_fns
 
@@ -176,19 +179,19 @@ def get_startsheet_columns(pytimer):
             cols.append(field)
     return cols
 
-def get_divisions(timing, tag, divisions):
+def get_divisions(timing, tag, divisions, fieldsdic):
     '''Get the divisions for a given timing entry'''
-    try:
-        age = int(timing[tag]['Age'])
-    except ValueError:
-        age = ''
     mydivs = []
     # go through the divisions
     for div in divisions:
         # check all fields
         for field in div[1]:
-            if field == 'Age':
-                if not age or age < div[1]['Age'][0] or age > div[1]['Age'][1]:
+            if fieldsdic[field]['type'] == 'entrybox_int':
+                try:
+                    val = int(timing[tag][field])
+                    if val < div[1][field][0] or val > div[1][field][1]:
+                        break
+                except ValueError:
                     break
             else:
                 if timing[tag][field] != div[1][field]:

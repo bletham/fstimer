@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ class PrintFieldsWin(Gtk.Window):
     '''Handling of the window dedicated to the definition of the field
        to reset when registering several members of a family'''
 
-    def __init__(self, fields, printfields, back_clicked_cb, next_clicked_cb, parent, edit):
+    def __init__(self, fields, fieldsdic, printfields, back_clicked_cb, next_clicked_cb, parent, edit):
         '''Creates print fields window'''
         super(PrintFieldsWin, self).__init__(Gtk.WindowType.TOPLEVEL)
         self.modify_bg(Gtk.StateType.NORMAL, fstimer.gui.bgcolor)
@@ -43,6 +43,7 @@ class PrintFieldsWin(Gtk.Window):
         self.connect('delete_event', lambda b, jnk: self.hide())
         self.printfields = printfields
         self.fields = fields
+        self.fieldsdic = fieldsdic
         # Now create the vbox.
         vbox = Gtk.VBox(False, 2)
         self.add(vbox)
@@ -208,7 +209,7 @@ class PrintFieldsWin(Gtk.Window):
             for var in vars_:
                 if var == '{Time}':
                     text_test = text_test.replace(var, "3.14159")
-                if var == '{Age}':
+                elif self.fieldsdic[var[1:-1]]['type'] == 'entrybox_int':
                     text_test = text_test.replace(var, "20")
                 else:
                     # Use a string of a number so that int() works
