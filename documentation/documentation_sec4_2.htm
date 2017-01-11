@@ -40,6 +40,10 @@ The import module allows for a csv file to be imported into an fsTimer registrat
 
 <img width="682" height="399" src="documentation_figs/fstimer_fig4.png"><br><br> <!--853x499-->
 
+If you have accented or non-Latin characters, however, the csv must be in UTF-8. Microsoft Excel will not produce a UTF-8 CSV file, so see these directions on how to get from an Excel spreadsheet to a UTF-8 CSV:<br>
+<a href="https://help.surveygizmo.com/help/encode-an-excel-file-to-utf-8-or-utf-16">https://help.surveygizmo.com/help/encode-an-excel-file-to-utf-8-or-utf-16</a>.<br>
+The Google Drive solution described towards the bottom of the page is probably the easiest, or the LibreOffice solution is great if you need to do this frequently.<br><br>
+
 See the fstimer_demo_online_registration.csv file that comes in the fstimer_demo project preloaded in fsTimer for an example of how the spreadsheet should be formatted. The first row is a header row, giving the name of each column.<br><br>
 
 After pressing "Open" and selecting a csv file, the field mapping window will open:<br><br>
@@ -62,7 +66,7 @@ If you are importing data into a combobox (recall, this is the type of field tha
 
 <img width="482" height="341" src="documentation_figs/fstimer_fig34.png"><br><br> <!--602x426-->
 
-The error tells you what the invalid value is ("Male" instead of "male", "female", or blank), and where in the csv the error is (row 25). Correct any errors until the csv imports directly. When the csv is successfully imported, it will write the corresponding registration database file to a file named project_name_registration_prereg.json, in the directory fstimer/project_name. The file name is printed in the text field on the pre-registration window. <b>Note</b> that if a file project_name_registration_prereg.json already exists (for instance, because you already imported another csv in this same project), <b>it will be overwritten</b>.<br><br>
+The error tells you what the invalid value is ("M" instead of "male", "female", or blank), and where in the csv the error is (row 25). Correct any errors until the csv imports directly. When the csv is successfully imported, it will write the corresponding registration database file to a file named project_name_registration_prereg.json, in the directory fstimer/project_name. The file name is printed in the text field on the pre-registration window. <b>Note</b> that if a file project_name_registration_prereg.json already exists (for instance, because you already imported another csv in this same project), <b>it will be overwritten</b>.<br><br>
 
 
 Continue on to <a href="documentation_sec4_3.htm">Section 4.3 Registration - details</a>.

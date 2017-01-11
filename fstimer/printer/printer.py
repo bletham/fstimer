@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -24,14 +24,22 @@ class Printer(object):
     '''Base class for an fstimer printer.
        Defines an API for implementation of real printers'''
 
-    def __init__(self, fields, categories):
+    def __init__(self, fields, categories, print_place):
         '''constructor
            @type fields: list
            @param fields: fields of the output
            @type categories: list
-           @param categories: existing categories'''
+           @param categories: existing categories
+           @type print_place: boolean
+           @param print_place: print place'''
         self.fields = fields
         self.categories = categories
+        self.print_place = print_place
+        self.place = 1
+        self.cat_place = {cat:1 for cat in self.categories}
+        self.row_start = ''
+        self.row_delim = ''
+        self.row_end = ''
 
     def file_extension(self):
         '''returns the file extension to be used for files
@@ -65,23 +73,23 @@ class Printer(object):
            @type category: string
            @param category: name of the category handled by the table'''
         return ''
+    
+    def common_entry(self, row):
+        return self.row_delim.join(row)
 
-    def scratch_entry(self, row):
+    def scratch_entry(self, row, category=None):
         '''Returns the printout of the entry of a given runner
            in the scratch results'''
-        return ''
+        return (self.row_start + self.get_place_str(category) +
+                self.common_entry(row) + self.row_end)
 
-    def cat_entry(self, row):
-        '''Returns the printout of the entry of a given runner
-           in the results by category
-           @type bibid: string
-           @param bibid: the bibid of the runner
-           @type category: string
-           @param category: name of the category for this runner
-           @type timing_data: timedelta|list
-           @param timing_data: timing data for the runner. May be his/her time
-                               or a list of times for multi lap races
-           @type runner_data: dict
-           @param runner_data: data concerning the runner. A dictionnary
-                               of field name / field value'''
-        return ''
+    def get_place_str(self, category):
+        if not self.print_place:
+            return ''
+        if category is None:
+            place = str(self.place)
+            self.place += 1
+        else:
+            place = str(self.cat_place[category])
+            self.cat_place[category] += 1
+        return place + self.row_delim

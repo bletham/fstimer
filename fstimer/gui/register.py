@@ -281,7 +281,7 @@ class RegistrationWin(Gtk.Window):
         for field in self.fields:
             # Determine which type of entry is appropriate, create it and fill it.
             # Entrybox
-            if self.fieldsdic[field]['type'] == 'entrybox':
+            if self.fieldsdic[field]['type'] in ['entrybox', 'entrybox_int']:
                 self.editregfields[field] = Gtk.Entry()
                 self.editregfields[field].set_max_length(self.fieldsdic[field]['max'])
                 if current_info:
@@ -341,7 +341,7 @@ class RegistrationWin(Gtk.Window):
         new_vals = {}
         for field in self.fields:
             #Entrybox
-            if self.fieldsdic[field]['type'] == 'entrybox':
+            if self.fieldsdic[field]['type'] in ['entrybox', 'entrybox_int']:
                 new_vals[field] = self.editregfields[field].get_text()
             #Combobox
             elif self.fieldsdic[field]['type'] == 'combobox':

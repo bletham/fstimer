@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-15 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 '''Main class of the fsTimer package'''
 
+import logging
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -41,11 +42,7 @@ import fstimer.gui.compile
 import fstimer.gui.compileerrors
 import fstimer.gui.pretime
 import fstimer.gui.timing
-import fstimer.printcsv
-import fstimer.printcsvlaps
-import fstimer.printhtml
-import fstimer.printhtmllaps
-from fstimer.gui.timing import time_diff, time_parse, time_format
+from fstimer.printer.formatter import print_startsheets
 from collections import defaultdict
 from fstimer.gui.util_classes import MsgDialog
 
@@ -69,6 +66,10 @@ class PyTimer(object):
         self.fields = regdata['fields']
         self.fieldsdic = regdata['fieldsdic']
         self.divisions = regdata['divisions']
+        # Backwards compatability before v0.7: Change "Age" to entrybox_int
+        for div in self.divisions:
+            if "Age" in div[1] and isinstance(div[1]["Age"], list):
+                self.fieldsdic['Age']['type'] = 'entrybox_int'
         try:
             self.projecttype = regdata['projecttype']
         except KeyError:
@@ -78,6 +79,10 @@ class PyTimer(object):
             self.numlaps = regdata['numlaps']
         except KeyError:
             self.numlaps = 1
+        try:
+            self.variablelaps = regdata['variablelaps']
+        except KeyError:
+            self.variablelaps = False
         try:
             self.rankings = regdata['rankings']
         except KeyError:
@@ -89,11 +94,7 @@ class PyTimer(object):
             self.printfields = regdata['printfields']
         except KeyError:
             # fill with default
-            self.printfields = {'Time': '{time}'}
-            for field in ['ID', 'Age', 'Gender']:
-                self.printfields[field] = '{' + field + '}'
-            if 'Name' not in self.fields:
-                self.printfields['Name'] = "{First name} + ' ' + {Last name}"
+            self.printfields = {'Time': '{time}', 'ID': '{ID}'}
         
         #Move on to the main window
         self.introwin.hide()
@@ -131,8 +132,17 @@ class PyTimer(object):
         self.fields = regdata['fields']
         self.fieldsdic = regdata['fieldsdic']
         self.divisions = regdata['divisions']
+        # Backwards compatability before v0.7: Change "Age" to entrybox_int
+        for div in self.divisions:
+            if "Age" in div[1] and isinstance(div[1]["Age"], list):
+                self.fieldsdic['Age']['type'] = 'entrybox_int'
         self.projecttype = regdata['projecttype']
         self.numlaps = regdata['numlaps']
+        try:
+            self.variablelaps = regdata['variablelaps']
+        except KeyError:
+            # old project, for backwards compatibility
+            self.variablelaps = False
         try:
             self.rankings = regdata['rankings']
         except KeyError:
@@ -148,11 +158,12 @@ class PyTimer(object):
         self.projecttypewin = fstimer.gui.projecttype.ProjectTypeWin(self.project_types,
                                                                      self.projecttype,
                                                                      self.numlaps,
+                                                                     self.variablelaps,
                                                                      self.back_to_new_project,
                                                                      self.define_fields,
                                                                      self.introwin)
 
-    def define_fields(self, jnk_unused, rbs, check_button, numlapsbtn):
+    def define_fields(self, jnk_unused, rbs, check_button, check_button2, numlapsbtn):
         '''Handled the definition of fields when creating a new project'''
         self.projecttypewin.hide()
         #First take care of the race settings from the previous window
@@ -162,8 +173,11 @@ class PyTimer(object):
                 break
         if check_button.get_active():
             self.numlaps = numlapsbtn.get_value_as_int()
+            if check_button2.get_active():
+                self.variablelaps = True
         else:
             self.numlaps = 1
+            self.variablelaps = False
         #We will use self.fields and self.fieldsdic as already loaded, but add/remove Handicap field according projecttype.
         if self.projecttype == 'handicap':
             if 'Handicap' not in self.fields:
@@ -231,7 +245,8 @@ class PyTimer(object):
         parent_win = self.rootwin if edit else self.introwin
         self.divisionswin.hide()
         self.printfieldswin = fstimer.gui.printfields.PrintFieldsWin(
-            self.fields, self.printfields, self.back_to_divisions, self.define_rankings, parent_win, edit)
+            self.fields, self.fieldsdic, self.printfields,
+            self.back_to_divisions, self.define_rankings, parent_win, edit)
     
     def back_to_divisions(self, jnk_unused, btnlist, btn_time, btn_pace, entry_pace, printfields_m):
         '''Goes back to define fields window from the print fields'''
@@ -315,16 +330,21 @@ class PyTimer(object):
 
     def store_new_project(self, jnk_unused, edit):
         '''Stores a new project to file and goes to root window'''
+        logger = logging.getLogger('fstimer')
+        logger.debug(self.path)
         if not edit:
             os.system('mkdir '+ self.path)
         regdata = {}
         regdata['projecttype'] = self.projecttype
         regdata['numlaps'] = self.numlaps
+        regdata['variablelaps'] = self.variablelaps
         regdata['fields'] = self.fields
         regdata['fieldsdic'] = self.fieldsdic
         regdata['printfields'] = self.printfields
         regdata['divisions'] = self.divisions
         regdata['rankings'] = self.rankings
+        logger.debug(regdata)
+        os.makedirs(self.path, exist_ok=True)
         with open(join(self.path, basename(self.path)+'.reg'), 'w', encoding='utf-8') as fout:
             json.dump(regdata, fout)
         if edit:
@@ -454,14 +474,17 @@ class PyTimer(object):
         else:
             self.compilewin.setLabel(1, '<span color="blue">Checking for errors... no errors found!</span>')
         #Now save things
-        with open(join(self.path, basename(self.path)+'_registration_compiled.json'), 'w', encoding='utf-8') as fout:
-            json.dump(self.reg_nodups, fout)
-        with open(join(self.path, basename(self.path)+'_timing_dict.json'), 'w', encoding='utf-8') as fout:
-            json.dump(self.timedict, fout)
         regfn = join(self.path, basename(self.path) + '_registration_compiled.json')
         timefn = join(self.path, basename(self.path) + '_timing_dict.json')
-        self.compilewin.setLabel(2, '<span color="blue">Successfully wrote files:\n' + \
-                                 regfn + '\n' + timefn + '</span>')
+        with open(regfn, 'w', encoding='utf-8') as fout:
+            json.dump(self.reg_nodups, fout)
+        with open(timefn, 'w', encoding='utf-8') as fout:
+            json.dump(self.timedict, fout)
+        print_startsheets(self, use_csv=False)
+        self.compilewin.setLabel(
+            2,
+            '<span color="blue">Successfully wrote files:\n' + regfn + '\n' +
+            timefn + '\n\nStart sheets written to html.\n </span>')
         #And write the compiled registration to csv
         with open(join(self.path, basename(self.path)+'_registration.csv'), 'w', encoding='utf-8') as fout:
             dict_writer = csv.DictWriter(fout, self.fields)
@@ -482,7 +505,7 @@ class PyTimer(object):
         # We will store 'raw' data, lists of times and IDs.
         self.rawtimes = {'times':[], 'ids':[]}
         # create Timing window
-        self.timewin = fstimer.gui.timing.TimingWin(self.path, self.rootwin, timebtn, self.rawtimes, self.timing, self.print_times, self.projecttype, self.numlaps, self.fields, self.fieldsdic, self.write_updated_timing)
+        self.timewin = fstimer.gui.timing.TimingWin(self, timebtn)
 
     def write_updated_timing(self, reg, timedict):
         filename = os.path.join(self.path, os.path.basename(self.path)+'_registration_compiled.json')
@@ -496,248 +519,3 @@ class PyTimer(object):
             dict_writer.writerows(reg)
         self.timing = timedict
         return filename
-
-    def print_times(self, jnk_unused, use_csv):
-        '''print times to files'''
-        # choose the right Printer Class
-        if use_csv:
-            if self.numlaps > 1:
-                printer_class = fstimer.printcsvlaps.CSVPrinterLaps
-            else:
-                printer_class = fstimer.printcsv.CSVPrinter
-        else:
-            if self.numlaps > 1:
-                printer_class = fstimer.printhtmllaps.HTMLPrinterLaps
-            else:
-                printer_class = fstimer.printhtml.HTMLPrinter
-        # Figure out what the columns will be.
-        cols = []
-        # Prefer first time, and then pace, if they are in the printfields
-        for field in ['Time', 'Pace']:
-            if field in self.printfields:
-                cols.append(field)
-        if self.numlaps > 1 and 'Time' in self.printfields:
-            cols.append('Lap Times')
-        # Then add in the calculated fields
-        for field in self.printfields:
-            if not field in ['Time', 'Pace'] and not field in self.fields:
-                cols.append(field)  # A computed field
-        # Finally registration fields
-        for field in self.fields:
-            if field in self.printfields:
-                cols.append(field)
-        # Prepare functions for computing each column
-        col_fns = []
-        for col in cols:
-            if col == 'Lap Times':
-                text = 'lap_time'
-            else:
-                text = self.printfields[col]
-                # Sub {Time}
-                text = text.replace('{Time}', 'time_parse(time).total_seconds()')
-                # Age
-                text = text.replace('{Age}', "int(userdata['Age'])")
-                # ID
-                text = text.replace('{ID}', "tag")
-                # And the other registration fields
-                for field in self.fields:
-                    if field not in ['Age', 'ID']:
-                        text = text.replace('{' + field + '}', "userdata['{}']".format(field))
-            col_fns.append(text)
-        # Get the list of different things we will rank by
-        ranking_keys = set(self.rankings.values())
-        # instantiate the printer
-        printer = printer_class(cols, [div[0] for div in self.divisions])
-        # Build the results
-        scratchresults = printer.scratch_table_header()
-        divresults = {div[0]:'\n'+printer.cat_table_header(div[0])
-                      for div in self.divisions}
-        # Do the ranking for each ranking key
-        ranked_results = {}
-        for ranking_key in ranking_keys:
-            rank_indx = cols.index(ranking_key)
-            ranked_results = self.get_sorted_results(rank_indx, cols, col_fns)
-            for tag, row in ranked_results:
-                # Add this to the appropriate results
-                if self.rankings['Overall'] == ranking_key:
-                    scratchresults += printer.scratch_entry(row)
-                mydivs = self.get_divisions(tag)
-                for div in mydivs:
-                    if self.rankings[div] == ranking_key:
-                        divresults[div] += printer.cat_entry(div, row)
-        scratchresults += printer.scratch_table_footer()
-        for div in divresults:
-            divresults[div] += printer.cat_table_footer(div)
-        # now save to files
-        scratch_file = os.path.join(self.path,
-                                    '_'.join([basename(self.path),
-                                                self.timewin.timestr,
-                                                'alltimes.' + printer.file_extension()]))
-        with open(scratch_file, 'w') as scratch_out:
-            scratch_out.write(printer.header())
-            scratch_out.write(scratchresults)
-            scratch_out.write(printer.footer())
-        div_file = os.path.join(self.path,
-                                '_'.join([basename(self.path),
-                                            self.timewin.timestr,
-                                            'divtimes.' + printer.file_extension()]))
-        with open(div_file, 'w') as div_out:
-            div_out.write(printer.header())
-            for div in self.divisions:
-                div_out.write(divresults[div[0]])
-            div_out.write(printer.footer())
-        # display user dialog that all was successful
-        md = MsgDialog(self.timewin, 'information', ['ok'], 'Success!', "Results saved to " + printer.file_extension() + "!")
-        md.run()
-        md.destroy()
-
-    def get_divisions(self, tag):
-        '''Get the divisions for a given timing entry'''
-        try:
-            age = int(self.timing[tag]['Age'])
-        except ValueError:
-            age = ''
-        mydivs = []
-        # go through the divisions
-        for div in self.divisions:
-            # check all fields
-            for field in div[1]:
-                if field == 'Age':
-                    if not age or age < div[1]['Age'][0] or age > div[1]['Age'][1]:
-                        break
-                else:
-                    if self.timing[tag][field] != div[1][field]:
-                        break
-            else:
-                mydivs.append(div[0])
-        return mydivs
-
-    def get_sync_times_and_ids(self):
-        '''returns a list of ids and a list of timedeltas that are
-           "synced", that is that have the same number of entries.
-           Entries without a counterpart are dropped'''
-        #Note that the newest entries are at the _start_ of the rawtimes lists
-        offset = len(self.rawtimes['times']) - len(self.rawtimes['ids'])
-        if offset < 0:
-            adj_ids = self.rawtimes['ids'][-offset:]
-            adj_times = list(self.rawtimes['times'])
-        elif offset > 0:
-            adj_ids = list(self.rawtimes['ids'])
-            adj_times = self.rawtimes['times'][offset:]
-        else:
-            adj_ids = list(self.rawtimes['ids'])
-            adj_times = list(self.rawtimes['times'])
-        return adj_ids, adj_times
-
-    def get_sorted_results(self, rank_indx, cols, col_fns):
-        '''returns a sorted list of (id, result) items.
-           The content of result depends on the race type'''
-        # get raw times
-        timeslist = zip(*self.get_sync_times_and_ids())
-        #Handle blank times, and handicap correction
-        # Handicap correction
-        if self.projecttype == 'handicap':
-            new_timeslist = []
-            for tag, time in timeslist:
-                if tag and time and tag != self.passid:
-                    try:
-                        new_timeslist.append((tag, time_diff(time,self.timing[tag]['Handicap'])))
-                    except AttributeError:
-                        #Either time or Handicap couldn't be converted to timedelta.
-                        new_timeslist.append((tag, '_'))
-                #else: We just drop entries with blank tag, blank time, or the pass ID
-            timeslist = list(new_timeslist) #replace
-        else:
-            #Drop times that are blank or have the passid
-            timeslist = [(tag, time) for tag, time in timeslist if tag and time and tag != self.passid]
-        # Compute lap times, if a lap race
-        if self.numlaps > 1:
-            # multi laps - groups times by tag
-            # Each value of laptimesdic is a list, sorted in order from
-            # fastest time (1st lap) to longest time (last lap).
-            laptimesdic = defaultdict(list)
-            for (tag, time) in sorted(timeslist, key=lambda x: time_parse(x[1])):
-                laptimesdic[tag].append(time)
-            # compute the lap times.
-            lap_times = {}
-            total_times = {}
-            for tag in laptimesdic:
-                # First put the total race time
-                if len(laptimesdic[tag]) == self.numlaps:
-                    total_times[tag] = laptimesdic[tag][-1]
-                else:
-                    total_times[tag] = '_'
-                # And the first lap
-                lap_times[tag] = ['1 - ' + laptimesdic[tag][0]]
-                # And now the subsequent laps
-                for ii in range(len(laptimesdic[tag])-1):
-                    try:
-                        lap_times[tag].append(str(ii+2) + ' - ' + time_diff(laptimesdic[tag][ii+1],laptimesdic[tag][ii]))
-                    except AttributeError:
-                        lap_times[tag].append(str(ii+2) + ' - _')
-            # Now correct timeslist to have the new total times
-            timeslist = list(total_times.items())
-        else:
-            lap_times = defaultdict(int)
-        # Compute each results row
-        result_rows = []
-        for tag, time in timeslist:
-            row = []
-            lap_time = lap_times[tag]
-            userdata = self.timing[tag]
-            for i, col_fn in enumerate(col_fns):
-                try:
-                    row.append((eval(col_fn)))
-                except (SyntaxError, TypeError, AttributeError, ValueError):
-                    if cols[i] == 'ID':
-                        row.append(tag)
-                    else:
-                        row.append(None)
-            result_rows.append((tag, row))
-        # sort by column rank_indx.
-        # Try sorting as float, but if that doesn't work, use string.
-        try:
-            # Define a sorter that will handle the Nones
-            def floatsort(x):
-                if x[1][rank_indx] is None:
-                    return 1e20
-                else:
-                    return x[1][rank_indx]
-            result_rows = sorted(result_rows, key=floatsort)
-        except TypeError:
-            def stringsort(x):
-                if x[1][rank_indx] is None:
-                    return ''
-                else:
-                    return x[1][rank_indx]
-            result_rows = sorted(result_rows, key=stringsort)
-        # remove duplicate entries: If a tag has multiple entries, keep only the most highly ranked.
-        # Also replace total times and pace times with formatted times, stringify everything but Lap Times,
-        # and replace Nones.
-        indx_format_time = []
-        for field in ['Time', 'Pace']:
-            if field in cols:
-                indx_format_time.append(cols.index(field))
-        taglist = set()
-        result_rows_dedup = []
-        for tag, row in result_rows:
-            if tag in taglist:
-                pass  # drop it
-            else:
-                taglist.add(tag)
-                row_new = []
-                for i, val in enumerate(row):
-                    if val is None:
-                        if i == rank_indx:
-                            val = '_'
-                        else:
-                            val = ''
-                    elif cols[i] in ['Time', 'Pace']:
-                        val = time_format(val)
-                    elif cols[i] == 'Lap Times':
-                        pass  # Leave it as is
-                    else:
-                        val = str(val)
-                    row_new.append(val)
-                result_rows_dedup.append((tag, row_new))
-        return result_rows_dedup

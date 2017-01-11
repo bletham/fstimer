@@ -50,7 +50,10 @@ class ImportPreRegWin(Gtk.Window):
         self.set_border_width(10)
         self.set_size_request(600, 400)
         # Start with some intro text.
-        label1 = Gtk.Label(label='Select a pre-registration csv file to import.')
+        label1 = Gtk.Label(
+            label=('Select a pre-registration csv file to import.\n\n'
+                   'If the spreadsheet has accented or non-Latin characters, it must be in utf-8,\n'
+                   'see Section 2.2 of the documentation for instructions.'))
         #Continue to the load file.
         btnFILE = GtkStockButton('open',"Open")
         ## Textbuffer

@@ -48,7 +48,7 @@ Using the drop-down menu you can (optionally) select a project from which to imp
 
 The next window allows you to choose the type of the race:<br><br>
 
-<img width="516" height="221" src="documentation_figs/fstimer_fig61.png"><br><br> <!--645x277-->
+<img width="477" height="264" src="documentation_figs/fstimer_fig61.png"><br><br> <!--645x277-->
 
 A standard race is one where all racers have the same start time. In a handicap race, a "Handicap" time must be specified for all racers. Their final time is then calculated as the marked time minus the handicap. This allows racers to start at different times - a racer could start five minutes late, and by specifying a handicap of "0:05:00" for that racer, his or her time in the results would be corrected. Usually this is done for a race where all runners provide their handicap relative to a base time, and runners start at different times with the hope of all crossing the finish line around the same time.<br><br>
 
@@ -56,19 +56,21 @@ For lap timing, times are marked each time a racer completes a lap. The results 
 
 The next window allows you to specify the fields that will show up in the registration database.<br><br>
 
-<img width="482" height="341" src="documentation_figs/fstimer_fig19.png"><br><br> <!--602x426-->
+<img width="485" height="379" src="documentation_figs/fstimer_fig19.png"><br><br> <!--602x426-->
 
 The "Up" and "Down" buttons allow you to change the order of the fields. This is the order in which they will appear in the registration database: The top entry in this window will be the furthest left column in the registration window, and the bottom entry in this window will be the furthest right column in the registration window. This is also the order that they will show up in the results printouts, should you choose to have them in the results printouts.<br><br>
 
-The "Remove" button removes a field. ID and Age, however, are hard-coded fields and cannot be removed. ID is critical for the timing itself. If you don't want to use Age, you can simply leave that field blank. If it is a "handicap" race, then the field "Handicap" is also required. The "New.." buttons allow you to create a new entrybox or combobox. A combobox means in the registration database the entry will have to take one of a set collection of values. In the window for creating a new registration entry below, "Gender" is a combobox with options "male" and "female" (and blank). An entrybox is a box for freely entering text, like "Last name" and "First name" in the registration entry below.<br><br>
+The "Remove" button removes a field. ID, however, cannot be removed inasmuch as it is critical for the timing itself. If it is a "handicap" race, then the field "Handicap" is also required. The "New.." buttons allow you to create a new "text entry," "number entry," or "selection box." A "selection box" means in the registration database the entry will have to take one of a set collection of values. In the window for creating a new registration entry below, "Gender" is a selection box with options "male" and "female" (and blank). An entry is a box for freely entering text, like "Last name" and "First name" in the registration entry below. If it is specified as a "Number entry", then whatever is entered will be required to be a number, or else it will not be printed in the results. Number entries are used for creating divisions, such as age ranges - the process of creating divisions is detailed further down.<br><br>
 
 <img width="310" height="332" src="documentation_figs/fstimer_fig29.png"><br><br> <!--388x415-->
 
-When creating a new entrybox, you will specify the name of the field (e.g., Last name) and the maximum number of characters to allow in the entrybox. The appropriate maximum number of characters will depend on the field (ID will probably require fewer than Address).<br><br>
+When creating a new text entry, you will specify the name of the field (e.g., Last name) and the maximum number of characters to allow in the entrybox. The appropriate maximum number of characters will depend on the field (ID will probably require fewer than Address).<br><br>
 
 <img width="482" height="341" src="documentation_figs/fstimer_fig30.png"><br><br> <!--602x426-->
 
-When creating a new combobox, you will specify the name of the field (e.g., Gender) as well as what the options in the combobox should be, separated by commas. For example, "male,female" would indicate that the options should be male and female. A blank option will automatically be added to any combobox, you don't need to worry about adding it yourself.<br><br>
+Number entries are created in the same way. The value in a number entry should always be an integer (i.e., not a decimal number). Number entries will allow you to enter text or decimal numbers, but invalid values like these will not be shown in the results.<br><br>
+
+When creating a new selection box, you will specify the name of the field (e.g., Gender) as well as what the options in the selection box should be, separated by commas. For example, "male,female" would indicate that the options should be male and female. A blank option will automatically be added to any selection box, you don't need to worry about adding it yourself.<br><br>
 
 <img width="482" height="341" src="documentation_figs/fstimer_fig31.png"><br><br> <!--602x426-->
 
@@ -78,7 +80,7 @@ Next you can specify the divisionals. Again, "Up" and "Down" change the order in
 
 <img width="642" height="421" src="documentation_figs/fstimer_fig21.png"><br><br> <!--802x526-->
 
-"New" allows you to add a division. Divisions may be defined using a combination of age and any of the comboboxes that were defined as registration fields. For example, if "League" was specified as a combobox in when creating the registration fields, then you could define divisionals using "League." The name of the division that you specify will be used in the divisional results. Then, use the checkboxes to specify which fields you want to use to define the division. In the example below, "Gender" and "League" have been checked, so only those two fields will be used to define the division.<br><br>
+"New" allows you to add a division. Divisions may be defined using a combination of number entries and selection boxes that were defined as registration fields. For example, if "League" was specified as a combobox in when creating the registration fields, then you could define divisionals using "League." If "Age" was specified as a number entry, then any range of values can be used in defining the division. The name of the division that you specify will be used in the divisional results. Then, use the checkboxes to specify which fields you want to use to define the division. In the example below, "Gender" and "League" have been checked, so only those two fields will be used to define the division.<br><br>
 
 <img width="642" height="421" src="documentation_figs/fstimer_fig33.png"><br><br> <!--802x526-->
 
@@ -92,7 +94,7 @@ In the next window we choose which information we want to include on the results
 
 From the top group of checkboxes, you can select which registration fields to include on the results printouts. Next you can select to include Time and/or Pace. If the check box next to Pace is marked, then Pace will be included in the results, computed as Time / distance using the distance that you specify in the Distance entry box. If you enter "5" and your race is a 5k, then the Pace that is calculated will be min/km. If you enter "3.107" for your 5k, then the pace that is calculated will be min/mile.<br><br>
 
-The last section on the window allows you to create custom computed fields, which can be calculated using any of the registration fields, plus Time. You refer to a field by putting the field name (case sensitive!) in curly brackets, as in the screenshot above. So, in the computed results {First name} refers to field {First name}. You can then use any Python operations that you could use on those fields. {Age} and {Time} are numbers (floats), all other registration fields will be treated as text (strings). {Time} will be the time in seconds.<br><br>
+The last section on the window allows you to create custom computed fields, which can be calculated using any of the registration fields, plus Time. You refer to a field by putting the field name (case sensitive!) in curly brackets, as in the screenshot above. So, in the computed results {First name} refers to field {First name}. You can then use any Python operations that you could use on those fields. {Time} is a float number, any "number entry" fields are integers, and all other registration fields will be treated as text (strings). {Time} will be the time in seconds.<br><br>
 
 For example, the expression:<br>
 {First name} + ' ' + {Last name}<br>

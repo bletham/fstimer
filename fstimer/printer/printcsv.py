@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -21,20 +21,21 @@
 '''Printer class for csv files for single lap races'''
 
 import os
-import fstimer.printer
+from fstimer.printer.printer import Printer
 
-class CSVPrinter(fstimer.printer.Printer):
+class CSVPrinter(Printer):
     '''Printer class for csv files for single lap races'''
 
-    def __init__(self, fields, categories):
+    def __init__(self, fields, categories, print_place):
         '''constructor
            @type fields: list
            @param fields: fields of the output
            @type categories: list
            @param categories: existing categories'''
-        super(CSVPrinter, self).__init__(fields, categories)
-        self.place = 1
-        self.cat_place = {cat:1 for cat in self.categories}
+        super(CSVPrinter, self).__init__(fields, categories, print_place)
+        self.row_start = ''
+        self.row_delim = ','
+        self.row_end = '\n'
 
     def file_extension(self):
         '''returns the file extension to be used for files
@@ -51,21 +52,8 @@ class CSVPrinter(fstimer.printer.Printer):
            @param category: name of the category handled by the table'''
         return category + '\n' + self.scratch_table_header()
 
-    def common_entry(self, row):
-        '''Returns the common part of the printout of the entry
-           of a given runner for scratch or by category results'''
-        return ','.join(row) + '\n'
-
-    def scratch_entry(self, row):
-        '''Returns the printout of the entry of a given runner
-           in the scratch results'''
-        result = str(self.place) + ',' + self.common_entry(row)
-        self.place += 1
-        return result
-
-    def cat_entry(self, category, row):
-        '''Returns the printout of the entry of a given runner
-           in the divisional results'''
-        result = str(self.cat_place[category]) + ',' + self.common_entry(row)
-        self.cat_place[category] += 1
-        return result
+    def cat_table_footer(self, category):
+        '''Returns the footer of the printout for results by category.
+           @type category: string
+           @param category: name of the category handled by the table'''
+        return '\n'

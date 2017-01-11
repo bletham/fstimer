@@ -1,5 +1,5 @@
 #fsTimer - free, open source software for race timing.
-#Copyright 2012-14 Ben Letham
+#Copyright 2012-17 Ben Letham
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ class AboutWin(Gtk.AboutDialog):
                 '../data/icon.png'))
         self.set_logo(GdkPixbuf.Pixbuf.new_from_file(fname))
         self.set_program_name('fsTimer')
-        self.set_version('0.6.1')
-        self.set_copyright("""Copyright 2012-16 Ben Letham\
+        self.set_version('0.7')
+        self.set_copyright("""Copyright 2012-17 Ben Letham\
         \nThis program comes with ABSOLUTELY NO WARRANTY; for details see license.\
         \nThis is free software, and you are welcome to redistribute it under certain conditions; see license for details""")
         self.set_comments('free, open source software for race timing.\nhttp://fstimer.org')
@@ -51,6 +51,6 @@ class AboutWin(Gtk.AboutDialog):
         self.set_license(gpl)
         self.set_authors(['Ben Letham',
                           'Sebastien Ponce',
-                          'Testing by Stewart Hamblin'])
+                          'Stewart Hamblin'])
         self.run()
         self.destroy()
